@@ -35,7 +35,23 @@ endpoints:
 quickstart: check_env
 	@echo "Restarting system..."
 	docker-compose down
-	docker-compose up -d --build
+	@if [ -z "$(PROFILE)" ]; then \
+		docker-compose up -d --build; \
+	else \
+		docker-compose --profile $(PROFILE) up -d --build; \
+	fi
+	@echo "Waiting for services to be ready..."
+	@timeout=60; \
+	while ! curl -s -f -o /dev/null http://localhost:3000/health; do \
+		if [ $$timeout -le 0 ]; then \
+			echo "Timed out waiting for Open WebUI"; \
+			exit 1; \
+		fi; \
+		printf "."; \
+		sleep 2; \
+		timeout=$$((timeout-2)); \
+	done
+	@echo ""
 	@echo "System restarted!"
 	@$(MAKE) endpoints
 
