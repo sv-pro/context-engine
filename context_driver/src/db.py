@@ -24,33 +24,36 @@ class Database:
 
     def _init_schema(self):
         with self.conn.cursor() as cur:
-            # Enable pgvector extension
+            # Create brain schema
+            cur.execute("CREATE SCHEMA IF NOT EXISTS brain;")
+            
+            # Enable pgvector extension (usually in public)
             cur.execute("CREATE EXTENSION IF NOT EXISTS vector;")
             
-            # Create notes table
+            # Create notes table in brain schema
             cur.execute("""
-                CREATE TABLE IF NOT EXISTS notes (
+                CREATE TABLE IF NOT EXISTS brain.notes (
                     id SERIAL PRIMARY KEY,
                     file_path TEXT UNIQUE NOT NULL,
                     title TEXT,
                     content TEXT,
                     metadata JSONB,
-                    embedding vector(768), -- Adjust dimension based on model
+                    embedding vector(768),
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 );
             """)
 
-            # Create edges table (links)
+            # Create edges table in brain schema
             cur.execute("""
-                CREATE TABLE IF NOT EXISTS edges (
-                    source_id INT REFERENCES notes(id) ON DELETE CASCADE,
-                    target_title TEXT, -- Storing title as link target might not exist yet
+                CREATE TABLE IF NOT EXISTS brain.edges (
+                    source_id INT REFERENCES brain.notes(id) ON DELETE CASCADE,
+                    target_title TEXT,
                     type TEXT,
                     PRIMARY KEY (source_id, target_title)
                 );
             """)
-            logger.info("Database schema initialized")
+            logger.info("Database schema (brain) initialized")
 
     def upsert_note(self, file_path, title, content, metadata):
         # Convert date objects to strings for JSON serialization
@@ -64,7 +67,7 @@ class Database:
 
         with self.conn.cursor() as cur:
             cur.execute("""
-                INSERT INTO notes (file_path, title, content, metadata, updated_at)
+                INSERT INTO brain.notes (file_path, title, content, metadata, updated_at)
                 VALUES (%s, %s, %s, %s, CURRENT_TIMESTAMP)
                 ON CONFLICT (file_path) DO UPDATE SET
                     title = EXCLUDED.title,
@@ -78,16 +81,30 @@ class Database:
 
     def update_embedding(self, note_id, vector):
         with self.conn.cursor() as cur:
-            cur.execute("UPDATE notes SET embedding = %s WHERE id = %s", (vector, note_id))
+            cur.execute("UPDATE brain.notes SET embedding = %s WHERE id = %s", (vector, note_id))
 
     def update_links(self, note_id, links):
         with self.conn.cursor() as cur:
             # Clear existing links for this note
-            cur.execute("DELETE FROM edges WHERE source_id = %s", (note_id,))
+            cur.execute("DELETE FROM brain.edges WHERE source_id = %s", (note_id,))
             
             # Insert new links
             for link in links:
                 cur.execute("""
-                    INSERT INTO edges (source_id, target_title, type)
+                    INSERT INTO brain.edges (source_id, target_title, type)
                     VALUES (%s, %s, 'wikilink')
                 """, (note_id, link))
+
+    def semantic_search(self, query_vector, limit=3):
+        """
+        Performs vector similarity search.
+        """
+        with self.conn.cursor() as cur:
+            cur.execute("""
+                SELECT title, content, metadata, 1 - (embedding <=> %s::vector) as similarity
+                FROM brain.notes
+                WHERE embedding IS NOT NULL
+                ORDER BY similarity DESC
+                LIMIT %s;
+            """, (query_vector, limit))
+            return cur.fetchall()
