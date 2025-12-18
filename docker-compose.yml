@@ -62,8 +62,25 @@ services:
       - ./volumes/redis:/data
     restart: always
 
+  context-driver:
+    build: ./context_driver
+    container_name: context-driver
+    volumes:
+      - ${BRAIN_DIR:-./volumes/brain}:/app/brain
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/llmbox
+      - OLLAMA_API_BASE=${OLLAMA_API_BASE:-http://host.docker.internal:11434}
+      - BRAIN_DIR=/app/brain
+    depends_on:
+      - db
+      - litellm
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: always
+
   ollama:
     image: ollama/ollama:latest
+
     container_name: ollama
     profiles: ["ollama"]
     ports:
