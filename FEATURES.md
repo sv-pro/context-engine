@@ -1,0 +1,116 @@
+# Future Features
+
+## Phase 2: Enhanced RAG
+
+### 1. Chunked Embeddings
+**Problem**: Large articles produce embeddings that blur semantic specificity.
+
+**Solution**: Split articles into overlapping chunks (~500 tokens each).
+
+```sql
+-- New schema
+CREATE TABLE brain.chunks (
+    id SERIAL PRIMARY KEY,
+    note_id INTEGER REFERENCES brain.notes(id),
+    chunk_index INTEGER,
+    content TEXT,
+    embedding vector(768),
+    metadata JSONB  -- {section: "Certificate Storage", start_line: 42}
+);
+```
+
+**Benefits**:
+- More precise semantic matching
+- Returns exact paragraph that answers the question
+- Better handling of long documents
+
+---
+
+### 2. MCP Knowledge Base Server
+**Problem**: One-shot retrieval limits the LLM's ability to explore the KB.
+
+**Solution**: Expose KB as an MCP tool server.
+
+```typescript
+// MCP Tools
+search_kb(query: string, limit?: number) → ChunkResult[]
+get_article(title: string) → ArticleContent
+list_articles() → ArticleMetadata[]
+get_related(title: string) → RelatedArticles[]
+```
+
+**Benefits**:
+- LLM can iteratively search and refine
+- Multi-hop reasoning across documents
+- User can see which tools the LLM used
+
+---
+
+### 3. Hybrid Search
+**Problem**: Pure semantic search misses exact keyword matches.
+
+**Solution**: Combine vector similarity with BM25 full-text search.
+
+```sql
+-- Hybrid ranking
+SELECT title, content,
+       0.7 * semantic_score + 0.3 * bm25_score AS hybrid_score
+FROM brain.notes
+ORDER BY hybrid_score DESC;
+```
+
+---
+
+### 4. Query Expansion
+**Problem**: User queries may use different vocabulary than KB content.
+
+**Solution**: Use LLM to expand queries before search.
+
+```
+User: "Where are certs stored?"
+Expanded: "certificate storage location encryption vault database"
+```
+
+---
+
+### 5. Citation & Source Tracking
+**Problem**: Hard to verify which KB article answered a question.
+
+**Solution**: Include source citations in responses.
+
+```json
+{
+  "content": "Private keys are stored in HashiCorp Vault...",
+  "sources": [
+    {"title": "SSL_Certificates", "section": "Certificate Storage", "similarity": 0.89}
+  ]
+}
+```
+
+---
+
+## Phase 3: Advanced Features
+
+### 6. Auto-Ingestion from External Sources
+- Watch Confluence/Notion pages
+- Import from GitHub wikis
+- Scrape internal documentation sites
+
+### 7. Feedback Loop
+- Track which answers were helpful
+- Use feedback to improve retrieval ranking
+- A/B test different chunking strategies
+
+### 8. Multi-Modal KB
+- Index images and diagrams
+- OCR for scanned documents
+- Video transcript search
+
+---
+
+## Priority Order
+1. Chunked Embeddings (highest impact)
+2. MCP Knowledge Base Server
+3. Hybrid Search
+4. Citation & Source Tracking
+5. Query Expansion

@@ -1,1 +1,4 @@
 What are the BGP techniques in the architecture?
+What are the SLA response times for attack detection?
+How do I configure geographic filtering?
+What's the difference between Standard and Enterprise support?
