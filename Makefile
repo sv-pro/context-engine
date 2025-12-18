@@ -20,10 +20,15 @@ check_env:
 # Show endpoints
 endpoints:
 	@echo ""
-	@echo "Important Endpoints:"
+	@echo "Available Endpoints:"
 	@echo "--------------------"
-	@echo "  Open WebUI: http://localhost:3000"
-	@echo "  LiteLLM:    http://localhost:4000"
+	@RUNNING=$$(docker-compose ps --services --filter "status=running"); \
+	if echo "$$RUNNING" | grep -q "open-webui"; then \
+		echo "  Open WebUI: http://localhost:3000"; \
+	fi; \
+	if echo "$$RUNNING" | grep -q "litellm"; then \
+		echo "  LiteLLM:    http://localhost:4000"; \
+	fi
 	@echo ""
 
 # Quickstart: Stop, Rebuild, Start
