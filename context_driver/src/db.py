@@ -53,6 +53,15 @@ class Database:
             logger.info("Database schema initialized")
 
     def upsert_note(self, file_path, title, content, metadata):
+        # Convert date objects to strings for JSON serialization
+        import datetime
+        serializable_metadata = {}
+        for k, v in metadata.items():
+            if isinstance(v, (datetime.date, datetime.datetime)):
+                serializable_metadata[k] = v.isoformat()
+            else:
+                serializable_metadata[k] = v
+
         with self.conn.cursor() as cur:
             cur.execute("""
                 INSERT INTO notes (file_path, title, content, metadata, updated_at)
@@ -63,7 +72,7 @@ class Database:
                     metadata = EXCLUDED.metadata,
                     updated_at = CURRENT_TIMESTAMP
                 RETURNING id;
-            """, (file_path, title, content, Json(metadata)))
+            """, (file_path, title, content, Json(serializable_metadata)))
             note_id = cur.fetchone()[0]
             return note_id
 
