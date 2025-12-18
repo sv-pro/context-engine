@@ -10,8 +10,15 @@ services:
       - ./volumes/open-webui:/app/backend/data
     environment:
       - OPENAI_API_BASE_URL=http://litellm:4000
+      # Database access
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/llmbox
+      - VECTOR_DB=pgvector
+      # Redis access (if enabled in OpenWebUI)
+      # - REDIS_URL=redis://redis:6379/0
     depends_on:
       - litellm
+      - db
+      - redis
     restart: always
 
   litellm:
@@ -28,6 +35,31 @@ services:
     environment:
       - OLLAMA_API_BASE=${OLLAMA_API_BASE:-http://host.docker.internal:11434}
       - LITELLM_MASTER_KEY=${LITELLM_MASTER_KEY}
+    depends_on:
+      - db
+      - redis
+    restart: always
+
+  db:
+    image: pgvector/pgvector:pg15
+    container_name: db
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=llmbox
+    volumes:
+      - ./volumes/db:/var/lib/postgresql/data
+    restart: always
+
+  redis:
+    image: redis:alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./volumes/redis:/data
     restart: always
 
   ollama:

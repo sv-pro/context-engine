@@ -1,8 +1,13 @@
 model_list:
-  - model_name: gpt-3.5-turbo
+  - model_name: llama3
     litellm_params:
-      model: ollama/llama2  # Using a placeholder model that maps to Ollama or can be mocked
+      model: ollama/llama3.2:latest
       api_base: os.environ/OLLAMA_API_BASE
 
+  - model_name: qwen-coder
+    litellm_params:
+      model: ollama/qwen2.5-coder:3b
+      api_base: os.environ/OLLAMA_API_BASE
+      
 general_settings:
   master_key: os.environ/LITELLM_MASTER_KEY
