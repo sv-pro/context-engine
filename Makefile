@@ -34,11 +34,19 @@ endpoints:
 # Quickstart: Stop, Rebuild, Start
 quickstart: check_env
 	@echo "Restarting system..."
-	docker-compose down
 	@if [ -z "$(PROFILE)" ]; then \
 		docker-compose up -d --build; \
 	else \
-		docker-compose --profile $(PROFILE) up -d --build; \
+		OLLAMA_API_BASE=http://ollama:11434 docker-compose --profile $(PROFILE) up -d --build; \
+		echo "Checking for Ollama models..."; \
+		if ! docker-compose exec ollama ollama list | grep -q "llama3.2"; then \
+			echo "Pulling llama3.2 model (this may take a while)..."; \
+			docker-compose exec ollama ollama pull llama3.2; \
+		fi; \
+		if ! docker-compose exec ollama ollama list | grep -q "nomic-embed-text"; then \
+			echo "Pulling nomic-embed-text model..."; \
+			docker-compose exec ollama ollama pull nomic-embed-text; \
+		fi; \
 	fi
 	@echo "Waiting for services to be ready..."
 	@timeout=60; \

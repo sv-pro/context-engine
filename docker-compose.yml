@@ -9,7 +9,10 @@ services:
     volumes:
       - ./volumes/open-webui:/app/backend/data
     environment:
-      - OPENAI_API_BASE_URL=http://litellm:4000
+      - OPENAI_API_BASE_URL=http://litellm:4000/v1
+      - OPENAI_API_KEY=${LITELLM_MASTER_KEY}
+      - OPENAI_API_BASE_URLS=http://litellm:4000/v1
+      - OPENAI_API_KEYS=${LITELLM_MASTER_KEY}
       # Database access
       - DATABASE_URL=postgresql://postgres:postgres@db:5432/llmbox
       - VECTOR_DB=pgvector
