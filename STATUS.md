@@ -1,6 +1,6 @@
 # LLM-Box Status
 
-## Current State: MVP Complete ✅
+## Current State: Phase 13 Complete ✅
 
 The RAG-enabled chat system is fully operational with the following capabilities:
 
@@ -12,6 +12,7 @@ The RAG-enabled chat system is fully operational with the following capabilities
 - **Meta-prompt bypass**: Internal Open WebUI tasks skip RAG for efficiency
 - **Streaming responses**: Properly formatted SSE for real-time output
 - **Database isolation**: Separate schemas for LiteLLM, WebUI, and Brain
+- **MCP Server**: Knowledge Base exposed as tools at `/mcp/sse`
 
 ### Architecture
 ```

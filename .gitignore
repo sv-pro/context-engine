@@ -5,3 +5,10 @@
 volumes/
 !volumes/brain/presentation/
 config/litellm/.env
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/

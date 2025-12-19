@@ -11,6 +11,8 @@ from watchdog.events import FileSystemEventHandler
 from db import Database
 from parser import parse_markdown
 from enricher import enrich_markdown
+from mcp_server import mcp as mcp_instance
+from mcp.server.fastmcp import FastMCP
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -404,6 +406,21 @@ async def sync_notes_status(request: Request):
         })
     except Exception as e:
         return JSONResponse({"available": False, "error": str(e)})
+
+
+# ==================== MCP Server Endpoints ====================
+
+@app.get("/mcp/sse")
+async def mcp_sse(request: Request):
+    """MCP SSE endpoint."""
+    async with mcp_instance.sse_handler(request) as handler:
+        return handler
+
+@app.post("/mcp/messages")
+async def mcp_messages(request: Request):
+    """MCP messages endpoint."""
+    async with mcp_instance.messages_handler(request) as handler:
+        return handler
 
 
 @app.post("/v1/chat/completions")

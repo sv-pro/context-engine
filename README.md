@@ -31,6 +31,7 @@ LLM Response: "Private keys are stored in HashiCorp Vault
 ### Core
 - **Open WebUI** - Beautiful chat interface
 - **RAG Pipeline** - Semantic search over your knowledge base
+- **MCP Server** - Tool-based article exploration for Agentic AI
 - **Chunked Embeddings** - 500-token chunks for precise retrieval
 - **Vendor LLM Priority** - OpenAI → Anthropic → Ollama fallback
 - **Meta-prompt Bypass** - Internal prompts skip RAG for efficiency
@@ -154,12 +155,14 @@ The system automatically selects the best available LLM:
 
 ### Context Driver (Port 8000)
 
-| Endpoint               | Method | Description                 |
-| ---------------------- | ------ | --------------------------- |
-| `/v1/chat/completions` | POST   | RAG-enhanced chat           |
-| `/sync-notes`          | POST   | Sync Open WebUI notes to KB |
-| `/sync-notes/status`   | GET    | Check note sync status      |
-| `/health`              | GET    | Health check                |
+| Endpoint               | Method | Description                  |
+| ---------------------- | ------ | ---------------------------- |
+| `/v1/chat/completions` | POST   | RAG-enhanced chat            |
+| `/sync-notes`          | POST   | Sync Open WebUI notes to KB  |
+| `/sync-notes/status`   | GET    | Check note sync status       |
+| `/mcp/sse`             | GET    | MCP Server-Sent Events (SSE) |
+| `/mcp/messages`        | POST   | MCP Messages transport       |
+| `/health`              | GET    | Health check                 |
 
 ### Example RAG Query
 
