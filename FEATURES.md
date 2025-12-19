@@ -26,7 +26,7 @@ CREATE TABLE brain.chunks (
 
 ---
 
-### 2. MCP Knowledge Base Server
+### 2. MCP Knowledge Base Server [DONE]
 **Problem**: One-shot retrieval limits the LLM's ability to explore the KB.
 
 **Solution**: Expose KB as an MCP tool server.
@@ -46,10 +46,17 @@ get_related(title: string) → RelatedArticles[]
 
 ---
 
-### 3. Hybrid Search
+### 3. Hybrid Search [DONE]
 **Problem**: Pure semantic search misses exact keyword matches.
 
-**Solution**: Combine vector similarity with BM25 full-text search.
+**Solution**: Combine vector similarity with BM25 full-text search using Reciprocal Rank Fusion (RRF).
+
+**Implementation**: 5 search strategies available:
+- `semantic`: Pure vector similarity
+- `keyword`: PostgreSQL full-text search (BM25)
+- `graph`: Graph-weighted semantic search with hub discovery
+- `hybrid`: RRF(semantic + keyword)
+- `super_hybrid`: RRF(semantic + keyword + graph) [DEFAULT]
 
 ```sql
 -- Hybrid ranking
@@ -73,7 +80,7 @@ Expanded: "certificate storage location encryption vault database"
 
 ---
 
-### 5. Citation & Source Tracking
+### 5. Citation & Source Tracking [DONE]
 **Problem**: Hard to verify which KB article answered a question.
 
 **Solution**: Include source citations in responses.
@@ -181,6 +188,6 @@ CREATE TABLE brain.cost_log (
 2. ✅ LLM Cost Tracking (Projected + LiteLLM Actuals)
 3. ✅ Open WebUI Notes Import
 4. ✅ Source Attribution & Citations
-5. MCP Knowledge Base Server
-6. Hybrid Search
-7. Query Expansion
+5. ✅ MCP Knowledge Base Server
+6. ✅ Hybrid Search (BM25 + Vector + Graph with RRF)
+7. ⏳ Query Expansion (Next)
