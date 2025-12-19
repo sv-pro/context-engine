@@ -28,6 +28,9 @@ endpoints:
 	fi; \
 	if echo "$$RUNNING" | grep -q "litellm"; then \
 		echo "  LiteLLM:    http://localhost:4000"; \
+	fi; \
+	if echo "$$RUNNING" | grep -q "context-driver"; then \
+		echo "  Dashboard:  http://localhost:8000/cost-dashboard"; \
 	fi
 	@echo ""
 
