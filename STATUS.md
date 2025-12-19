@@ -1,4 +1,4 @@
-# LLM-Box Status
+# Context-Engine Status
 
 ## Current State: Phase 13 Complete ✅
 

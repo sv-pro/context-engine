@@ -1,4 +1,4 @@
-# LLM-Box: RAG-Enhanced Chat with Local Knowledge Base
+# Context-Engine: RAG-Enhanced Chat with Local Knowledge Base
 
 A self-hosted, privacy-first AI chat system with Retrieval-Augmented Generation (RAG) powered by your own knowledge base.
 
@@ -6,7 +6,7 @@ A self-hosted, privacy-first AI chat system with Retrieval-Augmented Generation 
 
 **Problem**: Generic LLMs don't know your specific domain knowledge. Enterprise documentation, product details, internal processes—none of it exists in the LLM's training data.
 
-**Solution**: LLM-Box intercepts chat requests, searches your local knowledge base using semantic similarity, and injects relevant context into the prompt before sending to the LLM. The result? An AI that knows YOUR information.
+**Solution**: Context-Engine intercepts chat requests, searches your local knowledge base using semantic similarity, and injects relevant context into the prompt before sending to the LLM. The result? An AI that knows YOUR information.
 
 ```
 User: "Where are private keys stored?"
@@ -82,8 +82,8 @@ LLM Response: "Private keys are stored in HashiCorp Vault
 
 ```bash
 # Clone and start
-git clone https://github.com/sv-pro/llm-box.git
-cd llm-box
+git clone https://github.com/sv-pro/context-engine.git
+cd context-engine
 
 # Optional: Add vendor API keys for cloud models
 echo "OPENAI_API_KEY=sk-..." >> .env
