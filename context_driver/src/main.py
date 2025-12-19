@@ -41,8 +41,12 @@ def get_preferred_model():
 REAL_MODEL = get_preferred_model()
 
 db = Database()
+cost_tracker = None
 
-def get_embedding(text):
+def get_embedding(text, cost_tracker=None):
+    """Get embedding vector for text, optionally logging cost."""
+    import time
+    start_time = time.time()
     try:
         url = f"{OLLAMA_API_BASE}/api/embeddings"
         response = requests.post(url, json={
@@ -50,6 +54,21 @@ def get_embedding(text):
             "prompt": text
         })
         response.raise_for_status()
+        
+        latency_ms = int((time.time() - start_time) * 1000)
+        
+        # Log cost if tracker available
+        if cost_tracker:
+            from cost_tracker import estimate_tokens
+            input_tokens = estimate_tokens(text)
+            cost_tracker.log_request(
+                operation="embedding",
+                model=EMBEDDING_MODEL,
+                input_tokens=input_tokens,
+                output_tokens=0,
+                latency_ms=latency_ms
+            )
+        
         return response.json()["embedding"]
     except Exception as e:
         logger.error(f"Failed to get embedding: {e}")
@@ -88,14 +107,14 @@ def process_file(file_path):
                 
                 # Generate embedding for each chunk
                 for chunk in chunks:
-                    chunk_vector = get_embedding(chunk.content)
+                    chunk_vector = get_embedding(chunk.content, cost_tracker=cost_tracker)
                     if chunk_vector:
                         db.update_chunk_embedding(note_id, chunk.chunk_index, chunk_vector)
                 
                 logger.info(f"Created {len(chunks)} chunks with embeddings for {title}")
             
             # Also keep note-level embedding as fallback
-            vector = get_embedding(parsed['content'])
+            vector = get_embedding(parsed['content'], cost_tracker=cost_tracker)
             if vector:
                 db.update_embedding(note_id, vector)
                 logger.info(f"Updated note-level embedding for {title}")
@@ -138,14 +157,139 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.error(f"Failed to initialize schema during lifespan: {e}")
         
+    # Initialize CostTracker
+    global cost_tracker
+    try:
+        from cost_tracker import CostTracker
+        cost_tracker = CostTracker(db.conn)
+        app.state.cost_tracker = cost_tracker
+        logger.info("CostTracker initialized for cost monitoring")
+    except Exception as e:
+        logger.warning(f"CostTracker not available: {e}")
+        app.state.cost_tracker = None
+
     # Startup: Start watcher in background thread
     observer = start_watching(BRAIN_DIR)
+    
+    # Initialize NoteSyncer
+    try:
+        from note_sync import NoteSyncer
+        app.state.note_syncer = NoteSyncer(db)
+        logger.info("NoteSyncer initialized for Open WebUI notes")
+    except Exception as e:
+        logger.warning(f"NoteSyncer not available: {e}")
+        app.state.note_syncer = None
+    
     yield
-    # Shutdown: Stop watcher
+
+    
+    # Shutdown: Stop watcher and close connections
     observer.stop()
     observer.join()
+    if app.state.note_syncer:
+        app.state.note_syncer.close()
 
 app = FastAPI(lifespan=lifespan)
+
+
+# ==================== Cost Dashboard Endpoints ====================
+
+@app.get("/cost-dashboard")
+async def cost_dashboard():
+    """Serve the cost tracking dashboard HTML."""
+    import os
+    dashboard_path = os.path.join(os.path.dirname(__file__), "static", "cost_dashboard.html")
+    try:
+        with open(dashboard_path, "r") as f:
+            html = f.read()
+        from fastapi.responses import HTMLResponse
+        return HTMLResponse(content=html)
+    except FileNotFoundError:
+        return JSONResponse({"error": "Dashboard not found"}, status_code=404)
+
+
+@app.get("/api/costs/summary")
+async def costs_summary(request: Request, days: int = 7):
+    """Get cost summary for the last N days."""
+    if not hasattr(request.app.state, 'cost_tracker') or request.app.state.cost_tracker is None:
+        return JSONResponse({"error": "CostTracker not available"}, status_code=503)
+    
+    try:
+        summary = request.app.state.cost_tracker.get_summary(days)
+        return JSONResponse(summary)
+    except Exception as e:
+        logger.error(f"Failed to get cost summary: {e}")
+        return JSONResponse({"error": str(e)}, status_code=500)
+
+
+@app.get("/api/costs/daily")
+async def costs_daily(request: Request, days: int = 7):
+    """Get daily cost breakdown."""
+    if not hasattr(request.app.state, 'cost_tracker') or request.app.state.cost_tracker is None:
+        return JSONResponse({"error": "CostTracker not available"}, status_code=503)
+    
+    try:
+        daily = request.app.state.cost_tracker.get_daily_breakdown(days)
+        return JSONResponse(daily)
+    except Exception as e:
+        logger.error(f"Failed to get daily costs: {e}")
+        return JSONResponse({"error": str(e)}, status_code=500)
+
+
+@app.get("/api/costs/requests")
+async def costs_requests(request: Request, limit: int = 50):
+    """Get recent request logs."""
+    if not hasattr(request.app.state, 'cost_tracker') or request.app.state.cost_tracker is None:
+        return JSONResponse({"error": "CostTracker not available"}, status_code=503)
+    
+    try:
+        requests_list = request.app.state.cost_tracker.get_recent_requests(limit)
+        return JSONResponse(requests_list)
+    except Exception as e:
+        logger.error(f"Failed to get request logs: {e}")
+        return JSONResponse({"error": str(e)}, status_code=500)
+
+
+
+@app.post("/sync-notes")
+async def sync_notes(request: Request):
+    """
+    Manually trigger synchronization of Open WebUI notes to brain KB.
+    """
+    if not hasattr(request.app.state, 'note_syncer') or request.app.state.note_syncer is None:
+        return JSONResponse({"error": "NoteSyncer not available"}, status_code=503)
+    
+    try:
+        syncer = request.app.state.note_syncer
+        synced_count = syncer.sync_all(lambda x: get_embedding(x, cost_tracker=cost_tracker))
+        return JSONResponse({
+            "status": "success",
+            "synced_notes": synced_count
+        })
+    except Exception as e:
+        logger.error(f"Failed to sync notes: {e}")
+        return JSONResponse({"error": str(e)}, status_code=500)
+
+
+@app.get("/sync-notes/status")
+async def sync_notes_status(request: Request):
+    """
+    Get the status of the Open WebUI notes syncer.
+    """
+    if not hasattr(request.app.state, 'note_syncer') or request.app.state.note_syncer is None:
+        return JSONResponse({"available": False})
+    
+    try:
+        syncer = request.app.state.note_syncer
+        notes = syncer.get_all_notes()
+        return JSONResponse({
+            "available": True,
+            "webui_notes_count": len(notes),
+            "last_sync_timestamp": syncer._last_sync_timestamp
+        })
+    except Exception as e:
+        return JSONResponse({"available": False, "error": str(e)})
+
 
 @app.post("/v1/chat/completions")
 async def chat_completions(request: Request):
@@ -189,17 +333,40 @@ async def chat_completions(request: Request):
                         yield f'data: {{"error": "{str(e)}"}}\n\n'.encode('utf-8')
                 return StreamingResponse(generate_stream(), media_type="text/event-stream")
             else:
+                import time as _time
+                start_time = _time.time()
                 response = requests.post(
                     f"{LITELLM_API_BASE}/chat/completions",
                     json=proxy_body,
                     headers={"Authorization": f"Bearer {LITELLM_MASTER_KEY}"},
                     timeout=60
                 )
-                return JSONResponse(status_code=response.status_code, content=response.json())
+                latency_ms = int((_time.time() - start_time) * 1000)
+                
+                # Log cost for meta-prompt
+                try:
+                    resp_json = response.json()
+                    usage = resp_json.get("usage", {})
+                    input_tokens = usage.get("prompt_tokens", 0)
+                    output_tokens = usage.get("completion_tokens", 0)
+                    
+                    if hasattr(request.app.state, 'cost_tracker') and request.app.state.cost_tracker:
+                        request.app.state.cost_tracker.log_request(
+                            operation="meta-prompt",
+                            model=REAL_MODEL,
+                            input_tokens=input_tokens,
+                            output_tokens=output_tokens,
+                            latency_ms=latency_ms
+                        )
+                except Exception as log_e:
+                    logger.warning(f"Failed to log meta-prompt cost: {log_e}")
+                    
+                return JSONResponse(status_code=response.status_code, content=resp_json)
 
         # 2. Semantic Search (only for real user queries)
         context_text = ""
-        query_vector = get_embedding(user_query)
+        cost_tracker = getattr(request.app.state, 'cost_tracker', None)
+        query_vector = get_embedding(user_query, cost_tracker=cost_tracker)
         if query_vector:
             results = db.semantic_search(query_vector, limit=3)
             if results:
@@ -264,6 +431,8 @@ async def chat_completions(request: Request):
             return StreamingResponse(generate_stream(), media_type="text/event-stream")
         else:
             # Non-streaming
+            import time as _time
+            start_time = _time.time()
             try:
                 response = requests.post(
                     f"{LITELLM_API_BASE}/chat/completions",
@@ -271,12 +440,32 @@ async def chat_completions(request: Request):
                     headers={"Authorization": f"Bearer {LITELLM_MASTER_KEY}"},
                     timeout=60
                 )
+                latency_ms = int((_time.time() - start_time) * 1000)
                 logger.info(f"LiteLLM Response Status: {response.status_code}")
+                
                 if response.status_code != 200:
                     logger.error(f"LiteLLM Error Body: {response.text}")
                     return JSONResponse(status_code=response.status_code, content=response.json())
                 
-                return JSONResponse(status_code=response.status_code, content=response.json())
+                # Log cost
+                try:
+                    resp_json = response.json()
+                    usage = resp_json.get("usage", {})
+                    input_tokens = usage.get("prompt_tokens", 0)
+                    output_tokens = usage.get("completion_tokens", 0)
+                    
+                    if hasattr(request.app.state, 'cost_tracker') and request.app.state.cost_tracker:
+                        request.app.state.cost_tracker.log_request(
+                            operation="chat",
+                            model=REAL_MODEL,
+                            input_tokens=input_tokens,
+                            output_tokens=output_tokens,
+                            latency_ms=latency_ms
+                        )
+                except Exception as log_e:
+                    logger.warning(f"Failed to log cost: {log_e}")
+                
+                return JSONResponse(status_code=response.status_code, content=resp_json)
             except requests.exceptions.Timeout:
                 logger.error("LiteLLM request timed out")
                 return JSONResponse({"error": "LiteLLM request timed out"}, status_code=504)

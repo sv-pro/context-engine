@@ -2,7 +2,7 @@
 
 ## Phase 2: Enhanced RAG
 
-### 1. Chunked Embeddings
+### 1. Chunked Embeddings [DONE]
 **Problem**: Large articles produce embeddings that blur semantic specificity.
 
 **Solution**: Split articles into overlapping chunks (~500 tokens each).
@@ -89,7 +89,7 @@ Expanded: "certificate storage location encryption vault database"
 
 ---
 
-### 6. LLM Cost Tracking & Logging
+### 6. LLM Cost Tracking & Logging [DONE]
 **Problem**: No visibility into actual LLM API costs across all operations.
 
 **Solution**: Track and log costs for ALL paid LLM requests:
@@ -134,6 +134,31 @@ CREATE TABLE brain.cost_log (
 ## Phase 3: Advanced Features
 
 
+### 7. Open WebUI Notes Import [DONE]
+**Problem**: Adding knowledge requires creating markdown files manually.
+
+**Solution**: Import notes created in Open WebUI directly into the brain KB.
+
+**Open WebUI Notes Schema** (webui.note table):
+| Column  | Type | Purpose      |
+| ------- | ---- | ------------ |
+| id      | text | Primary key  |
+| title   | text | Note title   |
+| data    | json | Note content |
+| user_id | text | Creator      |
+
+**Implementation**:
+1. Add polling/trigger to watch `webui.note` table
+2. Convert note `data` JSON to markdown
+3. Ingest into `brain.notes` and create chunks
+4. Handle updates and deletions (sync)
+
+**Future**: Also import Open WebUI "Knowledge" for structured data.
+
+---
+
+
+
 ### 6. Auto-Ingestion from External Sources
 - Watch Confluence/Notion pages
 - Import from GitHub wikis
@@ -152,8 +177,10 @@ CREATE TABLE brain.cost_log (
 ---
 
 ## Priority Order
-1. Chunked Embeddings (highest impact)
-2. MCP Knowledge Base Server
-3. Hybrid Search
-4. Citation & Source Tracking
-5. Query Expansion
+1. ✅ Chunked Embeddings
+2. ✅ LLM Cost Tracking
+3. ✅ Open WebUI Notes Import
+4. MCP Knowledge Base Server
+5. Hybrid Search
+6. Citation & Source Tracking
+7. Query Expansion
