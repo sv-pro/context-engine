@@ -258,7 +258,7 @@ async def lifespan(app: FastAPI):
     # Initialize NoteSyncer
     try:
         from note_sync import NoteSyncer
-        app.state.note_syncer = NoteSyncer(db)
+        app.state.note_syncer = NoteSyncer(db, brain_dir=BRAIN_DIR)
         
         # Start background polling for WebUI notes
         # Wrapper for embedding and keyword extraction

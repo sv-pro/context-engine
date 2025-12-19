@@ -107,3 +107,35 @@ presentation:
 	@echo "file://$(realpath volumes/brain/presentation/index.html)"
 	@echo ""
 	@echo "Open this file in your browser to view the walkthrough."
+
+# Benchmark targets
+.PHONY: benchmark benchmark-all benchmark-category benchmark-difficulty benchmark-help
+
+benchmark:
+	@echo "Running benchmark with strategy: $(or $(STRATEGY),super_hybrid)"
+	docker exec context-driver sh -c "cd /app/src && DATABASE_URL=postgresql://postgres:postgres@db:5432/litellm PYTHONPATH=/app/src python benchmark_runner.py --strategy $(or $(STRATEGY),super_hybrid)"
+
+benchmark-all:
+	@echo "Comparing all search strategies..."
+	docker exec context-driver sh -c "cd /app/src && DATABASE_URL=postgresql://postgres:postgres@db:5432/litellm PYTHONPATH=/app/src python benchmark_runner.py --all-strategies"
+
+benchmark-category:
+	@echo "Running benchmark for category: $(CATEGORY)"
+	docker exec context-driver sh -c "cd /app/src && DATABASE_URL=postgresql://postgres:postgres@db:5432/litellm PYTHONPATH=/app/src python benchmark_runner.py --category $(CATEGORY) --all-strategies"
+
+benchmark-difficulty:
+	@echo "Running benchmark for difficulty: $(DIFFICULTY)"
+	docker exec context-driver sh -c "cd /app/src && DATABASE_URL=postgresql://postgres:postgres@db:5432/litellm PYTHONPATH=/app/src python benchmark_runner.py --difficulty $(DIFFICULTY) --all-strategies"
+
+benchmark-help:
+	@echo "Benchmark targets:"
+	@echo "  make benchmark STRATEGY=<strategy>  - Test single strategy (semantic|keyword|graph|hybrid|super_hybrid)"
+	@echo "  make benchmark-all                  - Compare all strategies"
+	@echo "  make benchmark-category CATEGORY=<cat> - Test category (multi-hop|implicit-dependency|etc)"
+	@echo "  make benchmark-difficulty DIFFICULTY=<diff> - Test difficulty (easy|medium|hard)"
+	@echo ""
+	@echo "Examples:"
+	@echo "  make benchmark STRATEGY=super_hybrid"
+	@echo "  make benchmark-all"
+	@echo "  make benchmark-category CATEGORY=multi-hop"
+	@echo "  make benchmark-difficulty DIFFICULTY=hard"

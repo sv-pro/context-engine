@@ -21,16 +21,22 @@ WEBUI_DATABASE_URL = os.environ.get("WEBUI_DATABASE_URL", "postgresql://postgres
 class NoteSyncer:
     """Synchronizes Open WebUI notes with the brain knowledge base."""
     
-    def __init__(self, brain_db):
+    def __init__(self, brain_db, brain_dir: str = "/app/brain"):
         """
         Initialize the NoteSyncer.
         
         Args:
             brain_db: Database instance for brain operations
+            brain_dir: Path to brain directory (source of truth)
         """
         self.brain_db = brain_db
+        self.brain_dir = brain_dir
+        self.webui_notes_dir = os.path.join(brain_dir, "webui_notes")
         self.webui_conn = None
         self._last_sync_timestamp = 0
+        
+        # Ensure webui_notes directory exists
+        os.makedirs(self.webui_notes_dir, exist_ok=True)
     
     def _connect_webui(self):
         """Connect to Open WebUI database."""
@@ -103,8 +109,10 @@ class NoteSyncer:
         if isinstance(data, str):
             content = data
         elif isinstance(data, dict):
-            # Check for common fields
-            if 'content' in data:
+            # Open WebUI notes have 'md', 'html', 'json' fields
+            if 'md' in data:
+                content = data['md']
+            elif 'content' in data:
                 content = data['content']
             elif 'text' in data:
                 content = data['text']
@@ -121,102 +129,62 @@ class NoteSyncer:
         
         return markdown
     
-    def sync_note(self, note: Dict, get_embedding_fn, extract_keywords_fn=None) -> Optional[int]:
+    def sync_note(self, note: Dict, get_embedding_fn=None, extract_keywords_fn=None) -> Optional[str]:
         """
-        Sync a single note to the brain KB.
+        Sync a single note to the brain KB by writing it as a markdown file.
+        The file watcher will handle ingestion.
         
         Args:
             note: Note dictionary from webui.note
-            get_embedding_fn: Function to generate embeddings
-            extract_keywords_fn: Function to extract semantic keywords
+            get_embedding_fn: Not used (file watcher handles embedding)
+            extract_keywords_fn: Not used (file watcher handles keywords)
         
         Returns:
-            note_id in brain.notes or None if failed
+            file_path of written note or None if failed
         """
         try:
             note_id = note['id']
-            title = note['title'] or f"Untitled Note ({note_id[:8]})"
+            title = note['title'] or f"Untitled_Note_{note_id[:8]}"
             data = note['data']
+            
+            # Sanitize title for filename
+            safe_title = re.sub(r'[^a-zA-Z0-9_-]', '_', title)
+            file_name = f"{safe_title}.md"
+            file_path = os.path.join(self.webui_notes_dir, file_name)
             
             # Convert to markdown
             content = self.json_to_markdown(title, data)
             
-            # Create a synthetic file path for tracking
-            file_path = f"webui://notes/{note_id}"
+            # Add YAML frontmatter with metadata
+            frontmatter = [
+                "---",
+                f"title: {title}",
+                f"source: open_webui_notes",
+                f"webui_note_id: {note_id}",
+                f"user_id: {note['user_id']}",
+                f"created_at: {note['created_at']}",
+                f"updated_at: {note['updated_at']}",
+                "---",
+                ""
+            ]
             
-            # Upsert into brain.notes
-            brain_note_id, was_updated = self.brain_db.upsert_note(
-                file_path=file_path,
-                title=title,
-                content=content,
-                metadata={
-                    'source': 'open_webui_notes',
-                    'webui_note_id': note_id,
-                    'user_id': note['user_id'],
-                    'created_at': note['created_at'],
-                    'updated_at': note['updated_at']
-                }
-            )
+            full_content = "\n".join(frontmatter) + content
             
-            if not was_updated:
-                logger.info(f"Note {title} unchanged, skipping re-embedding.")
-                return brain_note_id
-
-            # Parse wikilinks for the footer
-            from parser import parse_markdown
-            parsed = parse_markdown(content)
+            # Write to file (brain directory is the source of truth)
+            with open(file_path, 'w', encoding='utf-8') as f:
+                f.write(full_content)
             
-            # Enrich content with metadata and links for in-memory/DB consistency 
-            # (Note: we don't write back to virtual webui:// paths, but we use enriched for embedding)
-            # Extract keywords if fn provided
-            keywords = []
-            if extract_keywords_fn:
-                logger.info(f"Extracting human-readable embedding for web note: {title}")
-                keywords = extract_keywords_fn(content, title)
-
-            # Enrich content with metadata and links for in-memory/DB consistency 
-            enriched_content = enrich_markdown(content, {
-                'source': file_path,
-                'source_type': 'open_webui_notes',
-                'ingested_at': note['created_at'],
-                'last_modified': note['updated_at'],
-                'keywords': keywords
-            }, parsed['links'])
-
-            logger.info(f"Synced note: {title} (brain_id={brain_note_id})")
-            
-            # Chunk and embed using the enriched content
-            from chunker import split_markdown
-            chunks = split_markdown(enriched_content, max_tokens=500, overlap_tokens=50)
-            
-            if chunks:
-                self.brain_db.upsert_chunks(brain_note_id, chunks)
-                
-                for chunk in chunks:
-                    chunk_vector = get_embedding_fn(chunk.content)
-                    if chunk_vector:
-                        self.brain_db.update_chunk_embedding(brain_note_id, chunk.chunk_index, chunk_vector)
-                
-                logger.info(f"Created {len(chunks)} chunks for note: {title}")
-            
-            # Also create note-level embedding
-            note_vector = get_embedding_fn(content)
-            if note_vector:
-                self.brain_db.update_embedding(brain_note_id, note_vector)
-            
-            return brain_note_id
+            logger.info(f"Wrote note to file: {file_path}")
+            return file_path
             
         except Exception as e:
-            logger.error(f"Failed to sync note {note.get('id')}: {e}")
+            logger.error(f"Failed to sync note {note.get('id', 'unknown')}: {e}")
             return None
     
-    def sync_all(self, get_embedding_fn, extract_keywords_fn=None) -> int:
+    def sync_all(self, get_embedding_fn=None, extract_keywords_fn=None) -> int:
         """
-        Sync all notes from Open WebUI to brain.
-        
-        Args:
-            get_embedding_fn: Function to generate embeddings
-            extract_keywords_fn: Function to extract semantic keywords
+        Sync all notes from Open WebUI to brain KB.
+        Writes notes as markdown files; file watcher handles ingestion.
         
         Returns:
             Number of notes synced
@@ -231,13 +199,10 @@ class NoteSyncer:
         logger.info(f"Synced {synced}/{len(notes)} notes from Open WebUI")
         return synced
     
-    def sync_updates(self, get_embedding_fn, extract_keywords_fn=None) -> int:
+    def sync_updates(self, get_embedding_fn=None, extract_keywords_fn=None) -> int:
         """
-        Sync only notes updated since last sync.
-        
-        Args:
-            get_embedding_fn: Function to generate embeddings
-            extract_keywords_fn: Function to extract semantic keywords
+        Sync only updated notes since last sync.
+        Writes notes as markdown files; file watcher handles ingestion.
         
         Returns:
             Number of notes synced
