@@ -20,7 +20,7 @@ BRAIN_DIR = os.environ.get("BRAIN_DIR", "/app/brain")
 OLLAMA_API_BASE = os.environ.get("OLLAMA_API_BASE", "http://host.docker.internal:11434")
 LITELLM_API_BASE = os.environ.get("LITELLM_API_BASE", "http://litellm:4000/v1")
 LITELLM_MASTER_KEY = os.environ.get("LITELLM_MASTER_KEY", "sk-1234-5678-admin")
-EMBEDDING_MODEL = "nomic-embed-text:latest"
+EMBEDDING_MODEL = "mxbai-embed-large:latest"
 
 # Vendor API Keys (optional)
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
@@ -77,14 +77,32 @@ def process_file(file_path):
             db.update_links(note_id, parsed['links'])
             logger.info(f"Updated {len(parsed['links'])} links for {title}")
 
+        # Chunk the content and create embeddings for each chunk
         if parsed['content']:
+            from chunker import split_markdown
+            chunks = split_markdown(parsed['content'], max_tokens=500, overlap_tokens=50)
+            
+            if chunks:
+                # Store chunks in database
+                db.upsert_chunks(note_id, chunks)
+                
+                # Generate embedding for each chunk
+                for chunk in chunks:
+                    chunk_vector = get_embedding(chunk.content)
+                    if chunk_vector:
+                        db.update_chunk_embedding(note_id, chunk.chunk_index, chunk_vector)
+                
+                logger.info(f"Created {len(chunks)} chunks with embeddings for {title}")
+            
+            # Also keep note-level embedding as fallback
             vector = get_embedding(parsed['content'])
             if vector:
                 db.update_embedding(note_id, vector)
-                logger.info(f"Updated embedding for {title}")
+                logger.info(f"Updated note-level embedding for {title}")
 
     except Exception as e:
         logger.error(f"Error processing {file_path}: {e}")
+
 
 class BrainEventHandler(FileSystemEventHandler):
     def on_created(self, event):

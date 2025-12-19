@@ -89,7 +89,50 @@ Expanded: "certificate storage location encryption vault database"
 
 ---
 
+### 6. LLM Cost Tracking & Logging
+**Problem**: No visibility into actual LLM API costs across all operations.
+
+**Solution**: Track and log costs for ALL paid LLM requests:
+
+**Operations to Track**:
+- Embedding generation (per-chunk and per-note)
+- Chat completions (RAG prompts + meta-prompts)
+- Model selection (OpenAI vs Anthropic vs Ollama)
+
+**Implementation**:
+```python
+# Cost estimator per 1K tokens
+COSTS = {
+    "gpt-4o-mini": {"input": 0.00015, "output": 0.0006},
+    "text-embedding-3-small": {"input": 0.00002},
+    "claude-3-haiku": {"input": 0.00025, "output": 0.00125},
+}
+```
+
+**Database Table**:
+```sql
+CREATE TABLE brain.cost_log (
+    id SERIAL PRIMARY KEY,
+    timestamp TIMESTAMP DEFAULT NOW(),
+    operation TEXT,  -- 'embedding', 'chat', 'meta-prompt'
+    model TEXT,
+    input_tokens INT,
+    output_tokens INT,
+    estimated_cost DECIMAL(10, 6),
+    metadata JSONB
+);
+```
+
+**Benefits**:
+- Daily/weekly cost reports
+- Per-article ingestion cost
+- Chat vs embedding cost breakdown
+- Alert on cost spikes
+
+---
+
 ## Phase 3: Advanced Features
+
 
 ### 6. Auto-Ingestion from External Sources
 - Watch Confluence/Notion pages
