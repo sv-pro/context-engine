@@ -9,9 +9,12 @@ services:
     volumes:
       - ./volumes/open-webui:/app/backend/data
     environment:
-      - OPENAI_API_BASE_URL=http://litellm:4000
+      - OPENAI_API_BASE_URL=http://litellm:4000/v1
+      - OPENAI_API_KEY=${LITELLM_MASTER_KEY}
+      - OPENAI_API_BASE_URLS=http://litellm:4000/v1
+      - OPENAI_API_KEYS=${LITELLM_MASTER_KEY}
       # Database access
-      - DATABASE_URL=postgresql://postgres:postgres@db:5432/llmbox
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/webui
       - VECTOR_DB=pgvector
       # Redis access (if enabled in OpenWebUI)
       # - REDIS_URL=redis://redis:6379/0
@@ -33,8 +36,11 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
     environment:
-      - OLLAMA_API_BASE=${OLLAMA_API_BASE:-http://host.docker.internal:11434}
+      - OLLAMA_API_BASE=${OLLAMA_API_BASE:-http://ollama:11434}
       - LITELLM_MASTER_KEY=${LITELLM_MASTER_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/litellm
     depends_on:
       - db
       - redis
@@ -51,6 +57,7 @@ services:
       - POSTGRES_DB=llmbox
     volumes:
       - ./volumes/db:/var/lib/postgresql/data
+      - ./config/db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     restart: always
 
   redis:
@@ -62,12 +69,36 @@ services:
       - ./volumes/redis:/data
     restart: always
 
+  context-driver:
+    build: ./context_driver
+    container_name: context-driver
+    volumes:
+      - ${BRAIN_DIR:-./volumes/brain}:/app/brain
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/litellm
+      - OLLAMA_API_BASE=http://ollama:11434
+      - LITELLM_API_BASE=http://litellm:4000/v1
+      - LITELLM_MASTER_KEY=${LITELLM_MASTER_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - BRAIN_DIR=/app/brain
+      - SEARCH_STRATEGY=${SEARCH_STRATEGY:-super_hybrid}
+    depends_on:
+      - db
+      - litellm
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: always
+
   ollama:
     image: ollama/ollama:latest
+
     container_name: ollama
     profiles: ["ollama"]
     ports:
-      - "11434:11434"
+      - "11435:11434"
     volumes:
       - ./volumes/ollama:/root/.ollama
     restart: always
