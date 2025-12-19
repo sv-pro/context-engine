@@ -88,6 +88,10 @@ class Database:
 
 
     def upsert_note(self, file_path, title, content, metadata):
+        """
+        Upserts a note and returns (id, was_updated).
+        was_updated is True if content or metadata changed, indicating re-embedding is needed.
+        """
         # Convert date objects to strings for JSON serialization
         import datetime
         serializable_metadata = {}
@@ -96,20 +100,42 @@ class Database:
                 serializable_metadata[k] = v.isoformat()
             else:
                 serializable_metadata[k] = v
+        
+        metadata_json = Json(serializable_metadata)
 
         with self.conn.cursor() as cur:
+            # Check if note exists and if content/metadata matches
             cur.execute("""
-                INSERT INTO brain.notes (file_path, title, content, metadata, updated_at)
-                VALUES (%s, %s, %s, %s, CURRENT_TIMESTAMP)
-                ON CONFLICT (file_path) DO UPDATE SET
-                    title = EXCLUDED.title,
-                    content = EXCLUDED.content,
-                    metadata = EXCLUDED.metadata,
-                    updated_at = CURRENT_TIMESTAMP
-                RETURNING id;
-            """, (file_path, title, content, Json(serializable_metadata)))
-            note_id = cur.fetchone()[0]
-            return note_id
+                SELECT id, title, content, metadata FROM brain.notes WHERE file_path = %s;
+            """, (file_path,))
+            existing = cur.fetchone()
+
+            if existing:
+                note_id, old_title, old_content, old_metadata = existing
+                # Check for changes
+                if old_title == title and old_content == content and old_metadata == serializable_metadata:
+                    # No changes, skip update
+                    return note_id, False
+                
+                # Changes detected, update
+                cur.execute("""
+                    UPDATE brain.notes SET
+                        title = %s,
+                        content = %s,
+                        metadata = %s,
+                        updated_at = CURRENT_TIMESTAMP
+                    WHERE id = %s;
+                """, (title, content, metadata_json, note_id))
+                return note_id, True
+            else:
+                # New note
+                cur.execute("""
+                    INSERT INTO brain.notes (file_path, title, content, metadata, created_at, updated_at)
+                    VALUES (%s, %s, %s, %s, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+                    RETURNING id;
+                """, (file_path, title, content, metadata_json))
+                res = cur.fetchone()
+                return res[0], True
 
     def update_embedding(self, note_id, vector):
         with self.conn.cursor() as cur:

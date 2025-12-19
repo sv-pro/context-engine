@@ -9,6 +9,10 @@ help:
 	@echo "  start       Start services (detached mode)"
 	@echo "  stop        Stop services"
 	@echo "  status      Show status of services"
+	@echo "  rebuild     Rebuild all images from scratch"
+	@echo "  rebuild-driver Rebuild only the context-driver"
+	@echo "  flush       Stop system and delete all volumes (factory reset)"
+	@echo "  presentation Show the project intro presentation path"
 
 # Check requirements
 check_env:
@@ -51,16 +55,17 @@ quickstart: check_env
 			docker-compose exec ollama ollama pull nomic-embed-text; \
 		fi; \
 	fi
-	@echo "Waiting for services to be ready..."
+	@echo "Waiting for Open WebUI (port 3000)..."
 	@timeout=60; \
 	while ! curl -s -f -o /dev/null http://localhost:3000/health; do \
-		if [ $$timeout -le 0 ]; then \
-			echo "Timed out waiting for Open WebUI"; \
-			exit 1; \
-		fi; \
-		printf "."; \
-		sleep 2; \
-		timeout=$$((timeout-2)); \
+		if [ $$timeout -le 0 ]; then echo "Open WebUI timed out"; exit 1; fi; \
+		printf "."; sleep 2; timeout=$$((timeout-2)); \
+	done
+	@echo "Waiting for Context Driver (port 8000)..."
+	@timeout=30; \
+	while ! curl -s -f -o /dev/null http://localhost:8000/health; do \
+		if [ $$timeout -le 0 ]; then echo "Context Driver timed out"; exit 1; fi; \
+		printf "."; sleep 1; timeout=$$((timeout-1)); \
 	done
 	@echo ""
 	@echo "System restarted!"
@@ -79,3 +84,26 @@ stop:
 status:
 	docker-compose ps
 	@$(MAKE) endpoints
+
+# Rebuild all
+rebuild: stop
+	docker-compose build --no-cache
+	docker-compose up -d --force-recreate
+	@$(MAKE) quickstart
+
+# Rebuild only driver
+rebuild-driver:
+	docker-compose build --no-cache context-driver
+	docker-compose up -d --force-recreate context-driver
+
+# Factory Reset
+flush:
+	docker-compose down -v
+	@echo "All volumes deleted. System is clean."
+
+# Show presentation path
+presentation:
+	@echo "Project Presentation (Reveal.js) is available at:"
+	@echo "file://$(realpath volumes/brain/presentation/index.html)"
+	@echo ""
+	@echo "Open this file in your browser to view the walkthrough."

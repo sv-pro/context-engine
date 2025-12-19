@@ -10,6 +10,7 @@ from psycopg2.extras import RealDictCursor
 from typing import List, Dict, Optional
 import json
 import re
+from enricher import enrich_markdown
 
 logger = logging.getLogger(__name__)
 
@@ -120,13 +121,14 @@ class NoteSyncer:
         
         return markdown
     
-    def sync_note(self, note: Dict, get_embedding_fn) -> Optional[int]:
+    def sync_note(self, note: Dict, get_embedding_fn, extract_keywords_fn=None) -> Optional[int]:
         """
         Sync a single note to the brain KB.
         
         Args:
             note: Note dictionary from webui.note
             get_embedding_fn: Function to generate embeddings
+            extract_keywords_fn: Function to extract semantic keywords
         
         Returns:
             note_id in brain.notes or None if failed
@@ -143,7 +145,7 @@ class NoteSyncer:
             file_path = f"webui://notes/{note_id}"
             
             # Upsert into brain.notes
-            brain_note_id = self.brain_db.upsert_note(
+            brain_note_id, was_updated = self.brain_db.upsert_note(
                 file_path=file_path,
                 title=title,
                 content=content,
@@ -156,11 +158,36 @@ class NoteSyncer:
                 }
             )
             
+            if not was_updated:
+                logger.info(f"Note {title} unchanged, skipping re-embedding.")
+                return brain_note_id
+
+            # Parse wikilinks for the footer
+            from parser import parse_markdown
+            parsed = parse_markdown(content)
+            
+            # Enrich content with metadata and links for in-memory/DB consistency 
+            # (Note: we don't write back to virtual webui:// paths, but we use enriched for embedding)
+            # Extract keywords if fn provided
+            keywords = []
+            if extract_keywords_fn:
+                logger.info(f"Extracting human-readable embedding for web note: {title}")
+                keywords = extract_keywords_fn(content, title)
+
+            # Enrich content with metadata and links for in-memory/DB consistency 
+            enriched_content = enrich_markdown(content, {
+                'source': file_path,
+                'source_type': 'open_webui_notes',
+                'ingested_at': note['created_at'],
+                'last_modified': note['updated_at'],
+                'keywords': keywords
+            }, parsed['links'])
+
             logger.info(f"Synced note: {title} (brain_id={brain_note_id})")
             
-            # Chunk and embed
+            # Chunk and embed using the enriched content
             from chunker import split_markdown
-            chunks = split_markdown(content, max_tokens=500, overlap_tokens=50)
+            chunks = split_markdown(enriched_content, max_tokens=500, overlap_tokens=50)
             
             if chunks:
                 self.brain_db.upsert_chunks(brain_note_id, chunks)
@@ -183,12 +210,13 @@ class NoteSyncer:
             logger.error(f"Failed to sync note {note.get('id')}: {e}")
             return None
     
-    def sync_all(self, get_embedding_fn) -> int:
+    def sync_all(self, get_embedding_fn, extract_keywords_fn=None) -> int:
         """
         Sync all notes from Open WebUI to brain.
         
         Args:
             get_embedding_fn: Function to generate embeddings
+            extract_keywords_fn: Function to extract semantic keywords
         
         Returns:
             Number of notes synced
@@ -197,18 +225,19 @@ class NoteSyncer:
         synced = 0
         
         for note in notes:
-            if self.sync_note(note, get_embedding_fn):
+            if self.sync_note(note, get_embedding_fn, extract_keywords_fn):
                 synced += 1
         
         logger.info(f"Synced {synced}/{len(notes)} notes from Open WebUI")
         return synced
     
-    def sync_updates(self, get_embedding_fn) -> int:
+    def sync_updates(self, get_embedding_fn, extract_keywords_fn=None) -> int:
         """
         Sync only notes updated since last sync.
         
         Args:
             get_embedding_fn: Function to generate embeddings
+            extract_keywords_fn: Function to extract semantic keywords
         
         Returns:
             Number of notes synced
@@ -219,7 +248,7 @@ class NoteSyncer:
             
             for note in notes:
                 # updated_at is in milliseconds
-                if self.sync_note(note, get_embedding_fn):
+                if self.sync_note(note, get_embedding_fn, extract_keywords_fn):
                     synced += 1
                     # Update timestamp
                     if note['updated_at'] > self._last_sync_timestamp:
@@ -233,12 +262,13 @@ class NoteSyncer:
             logger.error(f"Error during sync_updates: {e}")
             return 0
 
-    def start_polling(self, get_embedding_fn, interval_seconds: int = 60):
+    def start_polling(self, get_embedding_fn, extract_keywords_fn=None, interval_seconds: int = 60):
         """
         Start background polling for note updates.
         
         Args:
             get_embedding_fn: Function to generate embeddings
+            extract_keywords_fn: Function to extract semantic keywords
             interval_seconds: Polling interval
         """
         import threading
@@ -251,13 +281,13 @@ class NoteSyncer:
             
             # Initial sync of all notes
             try:
-                self.sync_all(get_embedding_fn)
+                self.sync_all(get_embedding_fn, extract_keywords_fn)
             except Exception as e:
                 logger.error(f"Initial notes sync failed: {e}")
 
             while not self._stop_polling:
                 try:
-                    self.sync_updates(get_embedding_fn)
+                    self.sync_updates(get_embedding_fn, extract_keywords_fn)
                 except Exception as e:
                     logger.error(f"Error in notes watchdog loop: {e}")
                 

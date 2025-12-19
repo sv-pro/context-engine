@@ -3,4 +3,5 @@
 
 # Docker volumes
 volumes/
+!volumes/brain/presentation/
 config/litellm/.env

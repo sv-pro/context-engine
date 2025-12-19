@@ -10,6 +10,7 @@ from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 from db import Database
 from parser import parse_markdown
+from enricher import enrich_markdown
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -75,6 +76,39 @@ def get_embedding(text, cost_tracker=None):
         logger.error(f"Failed to get embedding: {e}")
         return None
 
+def extract_semantic_keywords(content, title):
+    """
+    Calls the LLM to extract a 'human-readable embedding' (set of semantic keywords).
+    """
+    try:
+        prompt = (
+            f"Document Title: {title}\n\n"
+            f"Content Fragment:\n{content[:2000]}\n\n"
+            "INSTRUCTIONS:\n"
+            "Summarize this document into a set of 5-8 highly descriptive keywords or short tags.\n"
+            "These keywords should act as a 'human-readable embedding' - they should capture the unique identity and context of the document.\n"
+            "Return ONLY a comma-separated list of keywords. No prose, no intro."
+        )
+        
+        response = requests.post(
+            f"{LITELLM_API_BASE}/chat/completions",
+            json={
+                "model": REAL_MODEL,
+                "messages": [{"role": "user", "content": prompt}],
+                "temperature": 0.3
+            },
+            headers={"Authorization": f"Bearer {LITELLM_MASTER_KEY}"},
+            timeout=30
+        )
+        response.raise_for_status()
+        keywords = response.json()["choices"][0]["message"]["content"].strip()
+        # Clean up in case LLM added quotes or extra text
+        keywords = keywords.replace('"', '').replace('Keywords:', '').strip()
+        return [k.strip() for k in keywords.split(',') if k.strip()]
+    except Exception as e:
+        logger.warning(f"Failed to extract semantic keywords: {e}")
+        return []
+
 def process_file(file_path):
     try:
         if not os.path.exists(file_path):
@@ -85,40 +119,79 @@ def process_file(file_path):
         parsed = parse_markdown(content)
         title = parsed['metadata'].get('title', os.path.basename(file_path).replace('.md', ''))
         
-        note_id = db.upsert_note(
+        note_id, was_updated = db.upsert_note(
             file_path=file_path,
             title=title,
             content=parsed['content'],
             metadata=parsed['metadata']
         )
-        logger.info(f"Upserted note: {title} (ID: {note_id})")
+        
+        if was_updated:
+            logger.info(f"Upserted note: {title} (ID: {note_id})")
 
-        if parsed['links']:
-            db.update_links(note_id, parsed['links'])
-            logger.info(f"Updated {len(parsed['links'])} links for {title}")
+            if parsed['links']:
+                db.update_links(note_id, parsed['links'])
+                logger.info(f"Updated {len(parsed['links'])} links for {title}")
 
-        # Chunk the content and create embeddings for each chunk
-        if parsed['content']:
-            from chunker import split_markdown
-            chunks = split_markdown(parsed['content'], max_tokens=500, overlap_tokens=50)
-            
-            if chunks:
-                # Store chunks in database
-                db.upsert_chunks(note_id, chunks)
+            # Chunk the content and create embeddings for each chunk
+            if parsed['content']:
+                from chunker import split_markdown
+                chunks = split_markdown(parsed['content'], max_tokens=500, overlap_tokens=50)
                 
-                # Generate embedding for each chunk
-                for chunk in chunks:
-                    chunk_vector = get_embedding(chunk.content, cost_tracker=cost_tracker)
-                    if chunk_vector:
-                        db.update_chunk_embedding(note_id, chunk.chunk_index, chunk_vector)
+                if chunks:
+                    # Store chunks in database
+                    db.upsert_chunks(note_id, chunks)
+                    
+                    # Generate embedding for each chunk
+                    for chunk in chunks:
+                        chunk_vector = get_embedding(chunk.content, cost_tracker=cost_tracker)
+                        if chunk_vector:
+                            db.update_chunk_embedding(note_id, chunk.chunk_index, chunk_vector)
+                    
+                    logger.info(f"Created {len(chunks)} chunks with embeddings for {title}")
                 
-                logger.info(f"Created {len(chunks)} chunks with embeddings for {title}")
-            
-            # Also keep note-level embedding as fallback
-            vector = get_embedding(parsed['content'], cost_tracker=cost_tracker)
-            if vector:
-                db.update_embedding(note_id, vector)
-                logger.info(f"Updated note-level embedding for {title}")
+                # Also keep note-level embedding as fallback
+                vector = get_embedding(parsed['content'], cost_tracker=cost_tracker)
+                if vector:
+                    db.update_embedding(note_id, vector)
+                    logger.info(f"Updated note-level embedding for {title}")
+        else:
+            logger.debug(f"Note {title} unchanged, skipping re-embedding.")
+
+        # 4. Enrich and Write-back (only for real files, not virtual webui://)
+        if not file_path.startswith("webui://"):
+            try:
+                # Add ingestion/source metadata
+                enrich_metadata = parsed['metadata'].copy()
+                enrich_metadata['source'] = file_path
+                enrich_metadata['source_type'] = 'manual' if 'volumes/brain' in file_path else 'git'
+                
+                # Human-Readable Embedding: Extract keywords if missing
+                if 'keywords' not in enrich_metadata or not enrich_metadata['keywords']:
+                    logger.info(f"Extracting human-readable embedding (keywords) for {title}...")
+                    enrich_metadata['keywords'] = extract_semantic_keywords(parsed['content'], title)
+                    # Update DB metadata to avoid re-extracting next time
+                    db.upsert_note(file_path, title, parsed['content'], enrich_metadata)
+                
+                # Check if it was already in DB to get original ingested_at
+                with db.conn.cursor() as cur:
+                    cur.execute("SELECT created_at FROM brain.notes WHERE id = %s", (note_id,))
+                    row = cur.fetchone()
+                    if row:
+                        enrich_metadata['ingested_at'] = row[0].isoformat()
+                
+                enriched_content = enrich_markdown(parsed['content'], enrich_metadata, parsed['links'])
+                
+                # Compare with original content to avoid redundant writes
+                with open(file_path, 'r', encoding='utf-8') as f:
+                    original_content = f.read()
+                
+                if enriched_content.strip() != original_content.strip():
+                    with open(file_path, 'w', encoding='utf-8') as f:
+                        f.write(enriched_content)
+                    logger.info(f"Enriched document with metadata and footer: {title}")
+            except Exception as write_e:
+                logger.error(f"Failed to enrich {file_path}: {write_e}")
 
     except Exception as e:
         logger.error(f"Error processing {file_path}: {e}")
@@ -186,11 +259,14 @@ async def lifespan(app: FastAPI):
         app.state.note_syncer = NoteSyncer(db)
         
         # Start background polling for WebUI notes
-        # We define a simple wrapper for get_embedding that uses the current cost_tracker
+        # Wrapper for embedding and keyword extraction
         def embedding_fn(text):
             return get_embedding(text, cost_tracker=getattr(app.state, 'cost_tracker', None))
             
-        app.state.note_syncer.start_polling(embedding_fn, interval_seconds=60)
+        def keywords_fn(content, title):
+            return extract_semantic_keywords(content, title)
+            
+        app.state.note_syncer.start_polling(embedding_fn, keywords_fn, interval_seconds=60)
         logger.info("NoteSyncer watchdog started for Open WebUI notes")
     except Exception as e:
         logger.warning(f"NoteSyncer not available: {e}")
@@ -206,6 +282,10 @@ async def lifespan(app: FastAPI):
         app.state.note_syncer.close()
 
 app = FastAPI(lifespan=lifespan)
+
+@app.get("/health")
+async def health():
+    return {"status": "healthy", "timestamp": time.time()}
 
 
 # ==================== Cost Dashboard Endpoints ====================
@@ -291,7 +371,12 @@ async def sync_notes(request: Request):
     
     try:
         syncer = request.app.state.note_syncer
-        synced_count = syncer.sync_all(lambda x: get_embedding(x, cost_tracker=cost_tracker))
+        def embedding_fn(text):
+            return get_embedding(text, cost_tracker=cost_tracker)
+        def keywords_fn(content, title):
+            return extract_semantic_keywords(content, title)
+            
+        synced_count = syncer.sync_all(embedding_fn, keywords_fn)
         return JSONResponse({
             "status": "success",
             "synced_notes": synced_count
