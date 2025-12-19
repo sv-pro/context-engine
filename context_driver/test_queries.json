@@ -1,0 +1,153 @@
+{
+  "queries": [
+    {
+      "id": "q001",
+      "category": "configuration",
+      "query": "How do I configure geographic filtering?",
+      "relevant_docs": ["Geographic_Filtering.md"],
+      "relevant_chunks": [],
+      "expected_answer_contains": ["GeoIP", "country", "region"],
+      "difficulty": "easy"
+    },
+    {
+      "id": "q002",
+      "category": "troubleshooting",
+      "query": "Why is my SSL certificate not being recognized?",
+      "relevant_docs": ["SSL_Certificates.md", "Troubleshooting_Guide.md"],
+      "relevant_chunks": [],
+      "expected_answer_contains": ["certificate chain", "intermediate CA", "validation"],
+      "difficulty": "medium"
+    },
+    {
+      "id": "nt001",
+      "category": "multi-hop",
+      "query": "If I'm experiencing high latency AND seeing geographic filtering issues, what's the likely root cause and how do I fix it?",
+      "relevant_docs": [
+        "Latency_Optimization.md",
+        "Geographic_Filtering.md",
+        "Traffic_Scrubbing_Nodes.md",
+        "Network_Peering.md"
+      ],
+      "relevant_chunks": [],
+      "expected_answer_contains": ["node location", "peering configuration", "regional routing"],
+      "difficulty": "hard",
+      "reasoning_path": [
+        "1. Latency issues → check Traffic_Scrubbing_Nodes",
+        "2. Geographic filtering → check node distribution",
+        "3. Synthesis: Node in wrong region causes both issues",
+        "4. Solution: Network_Peering configuration"
+      ],
+      "why_straightforward_fails": "Single-shot semantic search returns only Latency_Optimization.md. Doesn't connect to geographic implications.",
+      "why_sophisticated_succeeds": "Graph traversal finds wikilinks between nodes → geographic filtering → peering. Multi-hop reasoning synthesizes the connection."
+    },
+    {
+      "id": "nt002",
+      "category": "implicit-dependency",
+      "query": "What prerequisites must be configured before enabling HTTPS inspection?",
+      "relevant_docs": [
+        "HTTPS_Inspection.md",
+        "SSL_Certificates.md",
+        "Firewall_Policies.md",
+        "DNS_Configuration.md"
+      ],
+      "relevant_chunks": [],
+      "expected_answer_contains": ["SSL certificate", "DNS configuration", "firewall rules", "certificate authority"],
+      "difficulty": "hard",
+      "reasoning_path": [
+        "1. HTTPS_Inspection mentions SSL certificates",
+        "2. SSL_Certificates requires DNS for validation",
+        "3. Firewall must allow certificate validation traffic",
+        "4. All three are prerequisites"
+      ],
+      "why_straightforward_fails": "Keyword search finds HTTPS_Inspection.md but misses implicit dependencies on DNS and firewall.",
+      "why_sophisticated_succeeds": "Graph search finds structural hubs. Reasoning about 'certificate validation' connects DNS and firewall as prerequisites."
+    },
+    {
+      "id": "nt003",
+      "category": "contradiction-resolution",
+      "query": "The documentation mentions both 'automatic' and 'manual' certificate renewal. Which one should I use and when?",
+      "relevant_docs": [
+        "SSL_Certificates.md",
+        "Getting_Started.md",
+        "Troubleshooting_Guide.md"
+      ],
+      "relevant_chunks": [],
+      "expected_answer_contains": ["automatic for standard", "manual for custom CA", "use case dependent"],
+      "difficulty": "hard",
+      "reasoning_path": [
+        "1. Getting_Started recommends automatic for new users",
+        "2. SSL_Certificates explains both methods",
+        "3. Troubleshooting shows manual is for custom CAs",
+        "4. Context determines recommendation"
+      ],
+      "why_straightforward_fails": "Returns both documents but doesn't resolve the contradiction. LLM might give conflicting advice.",
+      "why_sophisticated_succeeds": "Retrieves all contexts, reasons about user scenarios, provides conditional recommendation."
+    },
+    {
+      "id": "nt004",
+      "category": "temporal-reasoning",
+      "query": "I followed the old migration guide and now my system is broken. What changed and how do I fix it?",
+      "relevant_docs": [
+        "Changelog.md",
+        "Release_Notes.md",
+        "Troubleshooting_Guide.md",
+        "Backup_and_Recovery.md"
+      ],
+      "relevant_chunks": [],
+      "expected_answer_contains": ["breaking change", "version", "rollback", "migration steps"],
+      "difficulty": "hard",
+      "reasoning_path": [
+        "1. Changelog shows breaking changes in v2.0",
+        "2. Release_Notes explains migration path",
+        "3. Troubleshooting has rollback procedure",
+        "4. Backup_and_Recovery for data preservation"
+      ],
+      "why_straightforward_fails": "Semantic search for 'broken system' returns generic troubleshooting, misses version-specific context.",
+      "why_sophisticated_succeeds": "Temporal reasoning connects 'old guide' → Changelog → specific version issues → targeted fix."
+    },
+    {
+      "id": "nt005",
+      "category": "negative-information",
+      "query": "Can I use LLM-Box with AWS PrivateLink?",
+      "relevant_docs": [
+        "Network_Peering.md",
+        "On_Premise_Deployment.md",
+        "Architecture.md"
+      ],
+      "relevant_chunks": [],
+      "expected_answer_contains": ["not supported", "GRE tunnels", "IPsec", "alternative"],
+      "difficulty": "hard",
+      "reasoning_path": [
+        "1. Network_Peering lists supported methods",
+        "2. PrivateLink is NOT mentioned",
+        "3. Architecture shows only GRE/IPsec",
+        "4. Conclusion: Not currently supported"
+      ],
+      "why_straightforward_fails": "Keyword search for 'PrivateLink' returns no results. LLM might hallucinate support.",
+      "why_sophisticated_succeeds": "Retrieves networking docs, reasons about absence, provides accurate 'not supported' answer with alternatives."
+    },
+    {
+      "id": "nt006",
+      "category": "cross-domain",
+      "query": "How does enabling WAF rules impact my latency budget?",
+      "relevant_docs": [
+        "WAF_Rules.md",
+        "Latency_Optimization.md",
+        "Performance_Metrics.md",
+        "SLA_Guarantees.md"
+      ],
+      "relevant_chunks": [],
+      "expected_answer_contains": ["inspection overhead", "latency", "SLA threshold", "trade-off"],
+      "difficulty": "hard",
+      "reasoning_path": [
+        "1. WAF_Rules explains inspection overhead",
+        "2. Latency_Optimization shows typical delays",
+        "3. Performance_Metrics quantifies WAF impact",
+        "4. SLA_Guarantees defines acceptable thresholds",
+        "5. Synthesis: Calculate if WAF fits within SLA"
+      ],
+      "why_straightforward_fails": "Returns WAF_Rules.md but misses performance implications. Answer is incomplete.",
+      "why_sophisticated_succeeds": "Graph traversal finds performance docs linked to security. Synthesizes quantitative impact analysis."
+    }
+  ]
+}

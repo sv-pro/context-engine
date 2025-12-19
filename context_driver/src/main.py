@@ -521,16 +521,18 @@ async def chat_completions(request: Request):
         else:
             logger.warning("Failed to generate embedding for query, no context will be used.")
 
-        # 3. Augment Prompt with strict citation instructions
+        # 3. Augment Prompt with STRICT grounding instructions
         system_prompt = (
-            "You are a helpful assistant with access to a local knowledge base (the 'Brain').\n\n"
-            "INSTRUCTIONS:\n"
-            "1. Use the provided CONTEXT to answer the user's question.\n"
-            "2. You MUST cite your sources using [Source N] notation (e.g., [Source 1]) matching the headers in the context.\n"
-            "3. If the context contains the answer, stick to it and mention the source.\n"
-            "4. If the context does not contain the answer, state that clearly and then provide a general answer if possible.\n"
-            "5. Maintain a professional and helpful tone.\n\n"
-            f"CONTEXT:\n{context_text}"
+            "You are a knowledge base assistant with access to a local documentation repository (the 'Brain').\n\n"
+            "CRITICAL RULES:\n"
+            "1. You MUST ONLY use information from the provided CONTEXT below.\n"
+            "2. Do NOT generate, infer, or extrapolate information beyond what is explicitly stated in the CONTEXT.\n"
+            "3. If the CONTEXT does not contain the answer, you MUST respond with: 'I cannot find this information in the knowledge base.'\n"
+            "4. You MUST cite your sources using [Source N] notation (e.g., [Source 1]) matching the headers in the context.\n"
+            "5. Construct your answer by quoting or paraphrasing ONLY from the CONTEXT. Do not add your own knowledge.\n"
+            "6. If the question requires information from multiple sources, synthesize them but cite each source used.\n"
+            "7. If the CONTEXT is empty or irrelevant, state: 'No relevant information found in the knowledge base.'\n\n"
+            f"CONTEXT:\n{context_text if context_text else '[No context available]'}"
         )
 
         # Insert or update system message

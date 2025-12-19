@@ -20,6 +20,19 @@ model_list:
       model: anthropic/claude-3-haiku-20240307
       api_key: os.environ/ANTHROPIC_API_KEY
 
+  # Reasoning Models (OpenAI)
+  - model_name: o1-preview
+    litellm_params:
+      model: openai/o1-preview
+      api_key: os.environ/OPENAI_API_KEY
+      max_completion_tokens: 32768
+
+  - model_name: o1-mini
+    litellm_params:
+      model: openai/o1-mini
+      api_key: os.environ/OPENAI_API_KEY
+      max_completion_tokens: 65536
+
   - model_name: brain-rag
     litellm_params:
       model: custom_openai/context-brain
