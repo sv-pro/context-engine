@@ -13,6 +13,10 @@ help:
 	@echo "  rebuild-driver Rebuild only the context-driver"
 	@echo "  flush       Stop system and delete all volumes (factory reset)"
 	@echo "  presentation Show the project intro presentation path"
+	@echo ""
+	@echo "Benchmark targets:"
+	@echo "  benchmark-help  Show benchmark usage and examples"
+	@echo "  benchmark-all   Compare all search strategies"
 
 # Check requirements
 check_env:
