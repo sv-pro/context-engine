@@ -75,6 +75,14 @@ class Database:
                 ON brain.chunks USING ivfflat (embedding vector_cosine_ops)
                 WITH (lists = 100);
             """)
+
+            # Add GIN indices for Full-Text Search
+            cur.execute("""
+                CREATE INDEX IF NOT EXISTS idx_chunks_content_gin ON brain.chunks USING GIN (to_tsvector('english', content));
+            """)
+            cur.execute("""
+                CREATE INDEX IF NOT EXISTS idx_notes_content_gin ON brain.notes USING GIN (to_tsvector('english', content));
+            """)
             
             logger.info("Database schema (brain) initialized with chunks table")
 
@@ -196,6 +204,78 @@ class Database:
             
             results = cur.fetchall()
             return results
+
+    def keyword_search(self, query_text, limit=3):
+        """
+        Performs full-text keyword search on chunks.
+        """
+        with self.conn.cursor() as cur:
+            cur.execute("""
+                SELECT n.file_path, n.title, c.content, c.section, 
+                       ts_rank_cd(to_tsvector('english', c.content), plainto_tsquery('english', %s)) as similarity
+                FROM brain.chunks c
+                JOIN brain.notes n ON c.note_id = n.id
+                WHERE to_tsvector('english', c.content) @@ plainto_tsquery('english', %s)
+                ORDER BY similarity DESC
+                LIMIT %s;
+            """, (query_text, query_text, limit))
+            return cur.fetchall()
+
+    def search(self, query_text, query_vector, strategy='graph', limit=5):
+        """
+        Unified search router that supports multiple strategies and RRF merging.
+         Strategies: 'semantic', 'keyword', 'graph', 'hybrid', 'super_hybrid'
+        """
+        if strategy == 'semantic':
+            return self.semantic_search(query_vector, limit=limit)
+        elif strategy == 'keyword':
+            return self.keyword_search(query_text, limit=limit)
+        elif strategy == 'graph':
+            return self.graph_hybrid_search(query_vector, limit=limit)
+        elif strategy == 'hybrid':
+            return self._rrf_search(query_text, query_vector, limit=limit, include_graph=False)
+        elif strategy == 'super_hybrid':
+            return self._rrf_search(query_text, query_vector, limit=limit, include_graph=True)
+        else:
+            logger.warning(f"Unknown search strategy: {strategy}. Defaulting to semantic.")
+            return self.semantic_search(query_vector, limit=limit)
+
+    def _rrf_search(self, query_text, query_vector, limit=5, include_graph=False, k=60):
+        """
+        Implements Reciprocal Rank Fusion (RRF) to combine multiple search results.
+        score = sum(1 / (k + rank))
+        """
+        # Gather result sets
+        semantic_results = self.semantic_search(query_vector, limit=limit*2)
+        keyword_results = self.keyword_search(query_text, limit=limit*2)
+        
+        streams = [semantic_results, keyword_results]
+        if include_graph:
+            graph_results = self.graph_hybrid_search(query_vector, limit=limit*2)
+            streams.append(graph_results)
+
+        # Merge results using RRF
+        scores = {}  # (file_path, title, content, section) -> score
+        metadata = {} # (file_path, title, content, section) -> max_similarity
+
+        for stream in streams:
+            for rank, row in enumerate(stream):
+                # row structure: (file_path, title, content, section, similarity)
+                key = (row[0], row[1], row[2], row[3])
+                score = 1.0 / (k + rank + 1)
+                scores[key] = scores.get(key, 0) + score
+                metadata[key] = max(metadata.get(key, 0), row[4])
+
+        # Sort by RRF score
+        sorted_keys = sorted(scores.items(), key=lambda x: x[1], reverse=True)
+        
+        # Format final results
+        final_results = []
+        for key, score in sorted_keys[:limit]:
+            # Re-attach the max similarity seen across streams for UI/logging
+            final_results.append((key[0], key[1], key[2], key[3], metadata[key]))
+
+        return final_results
 
     def semantic_search_notes(self, query_vector, limit=3):
         """

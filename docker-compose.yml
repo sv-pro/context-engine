@@ -84,6 +84,7 @@ services:
       - OPENAI_API_KEY=${OPENAI_API_KEY:-}
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
       - BRAIN_DIR=/app/brain
+      - SEARCH_STRATEGY=${SEARCH_STRATEGY:-super_hybrid}
     depends_on:
       - db
       - litellm

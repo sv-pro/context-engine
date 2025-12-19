@@ -21,6 +21,7 @@ OLLAMA_API_BASE = os.environ.get("OLLAMA_API_BASE", "http://host.docker.internal
 LITELLM_API_BASE = os.environ.get("LITELLM_API_BASE", "http://litellm:4000/v1")
 LITELLM_MASTER_KEY = os.environ.get("LITELLM_MASTER_KEY", "sk-1234-5678-admin")
 EMBEDDING_MODEL = "mxbai-embed-large:latest"
+SEARCH_STRATEGY = os.environ.get("SEARCH_STRATEGY", "super_hybrid")  # Default to best quality
 
 # Vendor API Keys (optional)
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
@@ -141,11 +142,19 @@ def start_watching(path):
     observer.start()
     logger.info(f"Started watching directory: {path}")
     
-    # Initial Scan
-    for root, dirs, files in os.walk(path):
-        for file in files:
-            if file.endswith(".md"):
-                process_file(os.path.join(root, file))
+    # Initial Scan in background thread to avoid blocking lifespan startup
+    def initial_scan():
+        logger.info("Starting initial brain scan...")
+        for root, dirs, files in os.walk(path):
+            for file in files:
+                if file.endswith(".md"):
+                    try:
+                        process_file(os.path.join(root, file))
+                    except Exception as e:
+                        logger.error(f"Error during initial scan of {file}: {e}")
+        logger.info("Initial brain scan completed.")
+
+    threading.Thread(target=initial_scan, daemon=True).start()
     
     return observer
 
@@ -387,15 +396,16 @@ async def chat_completions(request: Request):
         # 2. Semantic Search (only for real user queries)
         context_text = ""
         cost_tracker = getattr(request.app.state, 'cost_tracker', None)
+        cost_tracker = getattr(request.app.state, 'cost_tracker', None)
         query_vector = get_embedding(user_query, cost_tracker=cost_tracker)
         if query_vector:
-            # Use the new Graph-Hybrid search (Wide Sweep + Path Weighting)
-            results = db.graph_hybrid_search(query_vector, limit=5, wide_limit=15, threshold=0.4)
+            # Use the unified search router with the configured strategy
+            # Strategies: 'super_hybrid', 'hybrid', 'graph', 'keyword', 'semantic'
+            results = db.search(user_query, query_vector, strategy=SEARCH_STRATEGY, limit=5)
             if results:
                 context_parts = []
                 for i, row in enumerate(results):
-                    # Unpack based on graph_hybrid_search result structure
-                    # (file_path, title, content, section, similarity)
+                    # Unpack result structure: (file_path, title, content, section, similarity)
                     file_path, title, content, section, similarity = row
                     
                     source_label = f"Source {i+1}"
@@ -405,7 +415,7 @@ async def chat_completions(request: Request):
                     context_parts.append(f"{header}\n{content}")
                     
                 context_text = "\n\n".join(context_parts)
-                logger.info(f"Found {len(results)} relevant documents for context using Graph-Hybrid search.")
+                logger.info(f"Found {len(results)} relevant documents using {SEARCH_STRATEGY} search.")
         else:
             logger.warning("Failed to generate embedding for query, no context will be used.")
 
