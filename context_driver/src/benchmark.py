@@ -5,8 +5,33 @@ Implements retrieval quality metrics and end-to-end RAG evaluation.
 """
 
 import math
-from typing import List, Dict, Tuple, Set, Any
-from dataclasses import dataclass
+from typing import List, Dict, Tuple, Set, Any, Optional
+from dataclasses import dataclass, field
+
+
+@dataclass
+class EvidenceFragment:
+    """Single piece of evidence from the knowledge base."""
+    content: str
+    source_title: str
+    source_path: str
+    section: str
+    similarity: float
+    chunk_index: int = 0
+
+
+@dataclass
+class EvidencePack:
+    """Collection of evidence fragments for a query."""
+    query: str
+    fragments: List[EvidenceFragment]
+    gap_flag: bool  # True if no evidence found
+    debug: Dict[str, Any] = field(default_factory=dict)
+    
+    @property
+    def has_evidence(self) -> bool:
+        """Check if evidence pack contains any fragments."""
+        return len(self.fragments) > 0 and not self.gap_flag
 
 
 @dataclass
@@ -39,6 +64,7 @@ class BenchmarkQuery:
 class EvaluationResult:
     """Results for a single query evaluation."""
     query_id: str
+    evidence_pack: EvidencePack
     precision_at_3: float
     precision_at_5: float
     recall_at_3: float
@@ -161,21 +187,73 @@ class BenchmarkEvaluator:
     def __init__(self):
         self.metrics = RetrievalMetrics()
     
+    def create_evidence_pack(
+        self,
+        query: str,
+        search_results: List[Tuple],
+        strategy: str,
+        kb_state: Dict[str, Any] = None
+    ) -> EvidencePack:
+        """
+        Create evidence pack from search results.
+        
+        Args:
+            query: The search query
+            search_results: List of tuples (file_path, title, content, section, similarity)
+            strategy: Search strategy used
+            kb_state: Optional KB state metadata
+        
+        Returns:
+            EvidencePack with fragments and gap flag
+        """
+        fragments = []
+        
+        for i, result in enumerate(search_results):
+            file_path, title, content, section, similarity = result
+            fragments.append(EvidenceFragment(
+                content=content,
+                source_title=title,
+                source_path=file_path,
+                section=section or "main",
+                similarity=similarity,
+                chunk_index=i
+            ))
+        
+        gap_flag = len(fragments) == 0
+        
+        debug = {
+            "strategy": strategy,
+            "num_results": len(search_results),
+            "kb_state": kb_state or {},
+            "min_similarity": min((f.similarity for f in fragments), default=0.0),
+            "max_similarity": max((f.similarity for f in fragments), default=0.0),
+        }
+        
+        return EvidencePack(
+            query=query,
+            fragments=fragments,
+            gap_flag=gap_flag,
+            debug=debug
+        )
+    
     def evaluate_retrieval(
         self,
         query: BenchmarkQuery,
-        retrieved_docs: List[str]
+        evidence_pack: EvidencePack
     ) -> EvaluationResult:
         """
-        Evaluate retrieval quality for a single query.
+        Evaluate retrieval quality for a single query using evidence pack.
         
         Args:
             query: Benchmark query with ground truth
-            retrieved_docs: List of retrieved document IDs (in rank order)
+            evidence_pack: Evidence pack from search
         
         Returns:
             Evaluation results with all metrics
         """
+        # Extract document titles from evidence fragments
+        retrieved_docs = [f.source_title + ".md" for f in evidence_pack.fragments]
+        
         relevant = set(query.relevant_docs)
         
         # Calculate metrics
@@ -191,6 +269,7 @@ class BenchmarkEvaluator:
         
         return EvaluationResult(
             query_id=query.id,
+            evidence_pack=evidence_pack,
             precision_at_3=p_at_3,
             precision_at_5=p_at_5,
             recall_at_3=r_at_3,

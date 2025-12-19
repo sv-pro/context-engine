@@ -86,17 +86,28 @@ def run_retrieval_benchmark(
         # Perform search
         search_results = db.search(query.query, query_vector, strategy=strategy, limit=5)
         
-        # Extract document titles from results
-        retrieved_docs = [result[1] + ".md" for result in search_results]  # title + .md
+        # Create evidence pack
+        evidence_pack = evaluator.create_evidence_pack(
+            query=query.query,
+            search_results=search_results,
+            strategy=strategy,
+            kb_state={"total_docs": len(search_results)}
+        )
         
         # Evaluate
-        eval_result = evaluator.evaluate_retrieval(query, retrieved_docs)
+        eval_result = evaluator.evaluate_retrieval(query, evidence_pack)
         results.append(eval_result)
         
         # Print results
-        print(f"  Retrieved: {retrieved_docs[:3]}")
+        if evidence_pack.gap_flag:
+            print(f"  ⚠️  GAP: No evidence found!")
+        else:
+            print(f"  Evidence: {len(evidence_pack.fragments)} fragments")
+            print(f"  Top sources: {[f.source_title for f in evidence_pack.fragments[:3]]}")
+        
         print(f"  Relevant: {query.relevant_docs}")
         print(f"  P@3: {eval_result.precision_at_3:.2f} | R@3: {eval_result.recall_at_3:.2f} | MRR: {eval_result.mrr:.2f} | nDCG@5: {eval_result.ndcg_at_5:.2f}")
+        print(f"  Debug: strategy={evidence_pack.debug['strategy']}, sim_range=[{evidence_pack.debug['min_similarity']:.3f}, {evidence_pack.debug['max_similarity']:.3f}]")
         
         if eval_result.precision_at_3 < 0.5:
             print(f"  ⚠️  Low precision!")
