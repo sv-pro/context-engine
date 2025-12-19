@@ -295,3 +295,46 @@ class CostTracker:
                 }
                 for row in cur.fetchall()
             ]
+
+    def get_litellm_stats(self, days: int = 7) -> Dict[str, Any]:
+        """
+        Get actual spend stats from LiteLLM's internal tables.
+        
+        Returns:
+            Dict with total spend and model breakdown from LiteLLM
+        """
+        cutoff = datetime.now() - timedelta(days=days)
+        
+        with self.conn.cursor(cursor_factory=RealDictCursor) as cur:
+            # Total spend (excluding our own proxy model to avoid double counting)
+            cur.execute("""
+                SELECT 
+                    COALESCE(SUM(spend), 0) as total_spend,
+                    COUNT(*) as total_requests,
+                    COALESCE(SUM(total_tokens), 0) as total_tokens
+                FROM public."LiteLLM_SpendLogs"
+                WHERE "startTime" > %s 
+                AND model != 'brain-rag';
+            """, (cutoff,))
+            totals = cur.fetchone()
+            
+            # By model
+            cur.execute("""
+                SELECT model, 
+                       COALESCE(SUM(spend), 0) as cost,
+                       COUNT(*) as requests
+                FROM public."LiteLLM_SpendLogs"
+                WHERE "startTime" > %s
+                AND model != 'brain-rag'
+                GROUP BY model
+                ORDER BY cost DESC;
+            """, (cutoff,))
+            by_model = {row['model']: float(row['cost']) for row in cur.fetchall()}
+            
+            return {
+                "total_spend_usd": float(totals['total_spend']),
+                "total_requests": totals['total_requests'],
+                "total_tokens": totals['total_tokens'],
+                "by_model": by_model
+            }
+

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,6 +12,7 @@
             padding: 0;
             box-sizing: border-box;
         }
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, sans-serif;
             background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
@@ -18,10 +20,12 @@
             min-height: 100vh;
             padding: 20px;
         }
+
         .container {
             max-width: 1400px;
             margin: 0 auto;
         }
+
         h1 {
             text-align: center;
             margin-bottom: 30px;
@@ -29,12 +33,14 @@
             font-size: 2.5rem;
             text-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
         }
+
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 20px;
             margin-bottom: 30px;
         }
+
         .stat-card {
             background: rgba(255, 255, 255, 0.05);
             border: 1px solid rgba(255, 255, 255, 0.1);
@@ -44,33 +50,39 @@
             backdrop-filter: blur(10px);
             transition: transform 0.2s, box-shadow 0.2s;
         }
+
         .stat-card:hover {
             transform: translateY(-5px);
             box-shadow: 0 10px 40px rgba(0, 212, 255, 0.2);
         }
+
         .stat-value {
             font-size: 2.5rem;
             font-weight: 700;
             color: #00d4ff;
             margin-bottom: 8px;
         }
+
         .stat-label {
             font-size: 0.9rem;
             color: #888;
             text-transform: uppercase;
             letter-spacing: 1px;
         }
+
         .charts-row {
             display: grid;
             grid-template-columns: 2fr 1fr;
             gap: 20px;
             margin-bottom: 30px;
         }
+
         @media (max-width: 900px) {
             .charts-row {
                 grid-template-columns: 1fr;
             }
         }
+
         .chart-card {
             background: rgba(255, 255, 255, 0.05);
             border: 1px solid rgba(255, 255, 255, 0.1);
@@ -78,40 +90,49 @@
             padding: 24px;
             backdrop-filter: blur(10px);
         }
+
         .chart-title {
             font-size: 1.2rem;
             margin-bottom: 20px;
             color: #fff;
         }
+
         .breakdown-list {
             list-style: none;
         }
+
         .breakdown-item {
             display: flex;
             justify-content: space-between;
             padding: 12px 0;
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
+
         .breakdown-item:last-child {
             border-bottom: none;
         }
+
         .breakdown-name {
             color: #e0e0e0;
         }
+
         .breakdown-value {
             color: #00d4ff;
             font-weight: 600;
         }
+
         .requests-table {
             width: 100%;
             border-collapse: collapse;
         }
+
         .requests-table th,
         .requests-table td {
             padding: 12px;
             text-align: left;
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
+
         .requests-table th {
             color: #888;
             font-weight: 500;
@@ -119,23 +140,39 @@
             font-size: 0.8rem;
             letter-spacing: 1px;
         }
+
         .requests-table tr:hover {
             background: rgba(255, 255, 255, 0.03);
         }
+
         .badge {
             padding: 4px 10px;
             border-radius: 12px;
             font-size: 0.75rem;
             font-weight: 600;
         }
-        .badge-chat { background: rgba(0, 212, 255, 0.2); color: #00d4ff; }
-        .badge-embedding { background: rgba(255, 170, 0, 0.2); color: #ffaa00; }
-        .badge-meta { background: rgba(170, 0, 255, 0.2); color: #aa00ff; }
+
+        .badge-chat {
+            background: rgba(0, 212, 255, 0.2);
+            color: #00d4ff;
+        }
+
+        .badge-embedding {
+            background: rgba(255, 170, 0, 0.2);
+            color: #ffaa00;
+        }
+
+        .badge-meta {
+            background: rgba(170, 0, 255, 0.2);
+            color: #aa00ff;
+        }
+
         .loading {
             text-align: center;
             padding: 40px;
             color: #888;
         }
+
         .refresh-btn {
             position: fixed;
             bottom: 20px;
@@ -150,47 +187,60 @@
             box-shadow: 0 4px 20px rgba(0, 212, 255, 0.4);
             transition: transform 0.2s;
         }
+
         .refresh-btn:hover {
             transform: scale(1.05);
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <h1>💰 LLM Cost Dashboard</h1>
-        
+
         <div class="stats-grid" id="stats-grid">
             <div class="stat-card">
                 <div class="stat-value" id="total-cost">$0.00</div>
-                <div class="stat-label">Total Cost (7 days)</div>
+                <div class="stat-label">Project Est. (7d)</div>
+            </div>
+            <div class="stat-card" style="border-color: rgba(0, 255, 170, 0.3);">
+                <div class="stat-value" id="total-litellm-spend" style="color: #00ffaa;">$0.00</div>
+                <div class="stat-label">System Actual (7d)</div>
             </div>
             <div class="stat-card">
                 <div class="stat-value" id="total-requests">0</div>
                 <div class="stat-label">Total Requests</div>
             </div>
             <div class="stat-card">
-                <div class="stat-value" id="total-input">0</div>
-                <div class="stat-label">Input Tokens</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-value" id="total-output">0</div>
-                <div class="stat-label">Output Tokens</div>
+                <div class="stat-value" id="total-tokens">0</div>
+                <div class="stat-label">Total Tokens</div>
             </div>
         </div>
-        
+
         <div class="charts-row">
             <div class="chart-card">
-                <h3 class="chart-title">📊 Daily Cost</h3>
+                <h3 class="chart-title">📊 Brain Daily Cost (Projected)</h3>
                 <canvas id="daily-chart" height="200"></canvas>
             </div>
             <div class="chart-card">
-                <h3 class="chart-title">🤖 By Model</h3>
-                <ul class="breakdown-list" id="model-breakdown">
-                    <li class="loading">Loading...</li>
-                </ul>
+                <h3 class="chart-title">🤖 Model Breakdown</h3>
+                <div style="margin-bottom: 20px;">
+                    <h4 style="font-size: 0.8rem; color: #888; text-transform: uppercase; margin-bottom: 10px;">Brain
+                        Projected</h4>
+                    <ul class="breakdown-list" id="model-breakdown">
+                        <li class="loading">Loading...</li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 style="font-size: 0.8rem; color: #00ffaa; text-transform: uppercase; margin-bottom: 10px;">
+                        System Actual (LiteLLM)</h4>
+                    <ul class="breakdown-list" id="litellm-breakdown">
+                        <li class="loading">Loading...</li>
+                    </ul>
+                </div>
             </div>
         </div>
-        
+
         <div class="chart-card">
             <h3 class="chart-title">📝 Recent Requests</h3>
             <table class="requests-table">
@@ -205,29 +255,29 @@
                     </tr>
                 </thead>
                 <tbody id="requests-table">
-                    <tr><td colspan="6" class="loading">Loading...</td></tr>
+                    <tr>
+                        <td colspan="6" class="loading">Loading...</td>
+                    </tr>
                 </tbody>
             </table>
         </div>
     </div>
-    
+
     <button class="refresh-btn" onclick="loadData()">🔄 Refresh</button>
-    
+
     <script>
         let dailyChart = null;
-        
+
         async function loadData() {
             try {
-                // Load summary
+                // Load summary (Brain Projected)
                 const summaryRes = await fetch('/api/costs/summary');
                 const summary = await summaryRes.json();
-                
+
                 document.getElementById('total-cost').textContent = `$${summary.total_cost_usd.toFixed(4)}`;
                 document.getElementById('total-requests').textContent = summary.total_requests.toLocaleString();
-                document.getElementById('total-input').textContent = formatTokens(summary.total_input_tokens);
-                document.getElementById('total-output').textContent = formatTokens(summary.total_output_tokens);
-                
-                // Model breakdown
+
+                // Model breakdown (Brain)
                 const modelList = document.getElementById('model-breakdown');
                 modelList.innerHTML = '';
                 for (const [model, cost] of Object.entries(summary.by_model)) {
@@ -242,38 +292,61 @@
                 if (Object.keys(summary.by_model).length === 0) {
                     modelList.innerHTML = '<li class="breakdown-item"><span class="breakdown-name">No data yet</span></li>';
                 }
-                
+
+                // Load LiteLLM summary (System Actual)
+                const litellmRes = await fetch('/api/costs/litellm');
+                const litellm = await litellmRes.json();
+
+                document.getElementById('total-litellm-spend').textContent = `$${litellm.total_spend_usd.toFixed(4)}`;
+                document.getElementById('total-tokens').textContent = formatTokens(litellm.total_tokens + summary.total_input_tokens + summary.total_output_tokens);
+
+                // Model breakdown (LiteLLM)
+                const litellmList = document.getElementById('litellm-breakdown');
+                litellmList.innerHTML = '';
+                for (const [model, cost] of Object.entries(litellm.by_model)) {
+                    const li = document.createElement('li');
+                    li.className = 'breakdown-item';
+                    li.innerHTML = `
+                        <span class="breakdown-name">${model}</span>
+                        <span class="breakdown-value" style="color: #00ffaa;">$${cost.toFixed(6)}</span>
+                    `;
+                    litellmList.appendChild(li);
+                }
+                if (Object.keys(litellm.by_model).length === 0) {
+                    litellmList.innerHTML = '<li class="breakdown-item"><span class="breakdown-name">No data yet</span></li>';
+                }
+
                 // Load daily data
                 const dailyRes = await fetch('/api/costs/daily');
                 const daily = await dailyRes.json();
                 updateDailyChart(daily);
-                
+
                 // Load recent requests
                 const requestsRes = await fetch('/api/costs/requests');
                 const requests = await requestsRes.json();
                 updateRequestsTable(requests);
-                
+
             } catch (error) {
                 console.error('Failed to load data:', error);
             }
         }
-        
+
         function formatTokens(tokens) {
             if (tokens >= 1000000) return (tokens / 1000000).toFixed(1) + 'M';
             if (tokens >= 1000) return (tokens / 1000).toFixed(1) + 'K';
             return tokens.toString();
         }
-        
+
         function updateDailyChart(data) {
             const ctx = document.getElementById('daily-chart').getContext('2d');
-            
+
             const labels = data.map(d => d.date).reverse();
             const costs = data.map(d => d.cost).reverse();
-            
+
             if (dailyChart) {
                 dailyChart.destroy();
             }
-            
+
             dailyChart = new Chart(ctx, {
                 type: 'bar',
                 data: {
@@ -306,22 +379,22 @@
                 }
             });
         }
-        
+
         function updateRequestsTable(requests) {
             const tbody = document.getElementById('requests-table');
             tbody.innerHTML = '';
-            
+
             if (requests.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="6" class="loading">No requests yet</td></tr>';
                 return;
             }
-            
+
             for (const req of requests.slice(0, 20)) {
                 const tr = document.createElement('tr');
                 const time = new Date(req.timestamp).toLocaleTimeString();
-                const badgeClass = req.operation === 'chat' ? 'badge-chat' : 
-                                   req.operation === 'embedding' ? 'badge-embedding' : 'badge-meta';
-                
+                const badgeClass = req.operation === 'chat' ? 'badge-chat' :
+                    req.operation === 'embedding' ? 'badge-embedding' : 'badge-meta';
+
                 tr.innerHTML = `
                     <td>${time}</td>
                     <td><span class="badge ${badgeClass}">${req.operation}</span></td>
@@ -333,12 +406,13 @@
                 tbody.appendChild(tr);
             }
         }
-        
+
         // Initial load
         loadData();
-        
+
         // Auto-refresh every 30 seconds
         setInterval(loadData, 30000);
     </script>
 </body>
+
 </html>

@@ -178,7 +178,7 @@ CREATE TABLE brain.cost_log (
 
 ## Priority Order
 1. ✅ Chunked Embeddings
-2. ✅ LLM Cost Tracking
+2. ✅ LLM Cost Tracking (Projected + LiteLLM Actuals)
 3. ✅ Open WebUI Notes Import
 4. MCP Knowledge Base Server
 5. Hybrid Search

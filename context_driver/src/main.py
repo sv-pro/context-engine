@@ -251,6 +251,20 @@ async def costs_requests(request: Request, limit: int = 50):
 
 
 
+@app.get("/api/costs/litellm")
+async def costs_litellm(request: Request, days: int = 7):
+    """Get actual spend stats from LiteLLM's internal logs."""
+    if not hasattr(request.app.state, 'cost_tracker') or request.app.state.cost_tracker is None:
+        return JSONResponse({"error": "CostTracker not available"}, status_code=503)
+    
+    try:
+        stats = request.app.state.cost_tracker.get_litellm_stats(days)
+        return JSONResponse(stats)
+    except Exception as e:
+        logger.error(f"Failed to get LiteLLM stats: {e}")
+        return JSONResponse({"error": str(e)}, status_code=500)
+
+
 @app.post("/sync-notes")
 async def sync_notes(request: Request):
     """
