@@ -385,21 +385,31 @@ async def chat_completions(request: Request):
             results = db.semantic_search(query_vector, limit=3)
             if results:
                 context_parts = []
-                for title, content, _, similarity in results:
-                    context_parts.append(f"--- Document: {title} (Similarity: {similarity:.4f}) ---\n{content}")
+                for i, row in enumerate(results):
+                    # Unpack based on semantic_search result structure
+                    # Now: (file_path, title, content, section/metadata, similarity)
+                    file_path, title, content, section_or_meta, similarity = row
+                    
+                    source_label = f"Source {i+1}"
+                    section_info = f" > {section_or_meta}" if isinstance(section_or_meta, str) and section_or_meta else ""
+                    
+                    header = f"--- {source_label}: {title}{section_info} ({file_path}) ---"
+                    context_parts.append(f"{header}\n{content}")
+                    
                 context_text = "\n\n".join(context_parts)
                 logger.info(f"Found {len(results)} relevant documents for context.")
-                # Debug: Log the actual context being used
-                logger.debug(f"Context preview: {context_text[:500]}...")
         else:
             logger.warning("Failed to generate embedding for query, no context will be used.")
 
-        # 3. Augment Prompt
+        # 3. Augment Prompt with strict citation instructions
         system_prompt = (
-            "You are a helpful assistant with access to a local knowledge base. "
-            "Use the following context to answer the user's question. "
-            "If the context doesn't contain the answer, tell the user, but still try to help with your general knowledge. "
-            "Always mention that you are using information from the knowledge base if you do so.\n\n"
+            "You are a helpful assistant with access to a local knowledge base (the 'Brain').\n\n"
+            "INSTRUCTIONS:\n"
+            "1. Use the provided CONTEXT to answer the user's question.\n"
+            "2. You MUST cite your sources using [Source N] notation (e.g., [Source 1]) matching the headers in the context.\n"
+            "3. If the context contains the answer, stick to it and mention the source.\n"
+            "4. If the context does not contain the answer, state that clearly and then provide a general answer if possible.\n"
+            "5. Maintain a professional and helpful tone.\n\n"
             f"CONTEXT:\n{context_text}"
         )
 

@@ -127,7 +127,7 @@ class Database:
         with self.conn.cursor() as cur:
             # First try chunk-based search
             cur.execute("""
-                SELECT n.title, c.content, c.section, 1 - (c.embedding <=> %s::vector) as similarity
+                SELECT n.file_path, n.title, c.content, c.section, 1 - (c.embedding <=> %s::vector) as similarity
                 FROM brain.chunks c
                 JOIN brain.notes n ON c.note_id = n.id
                 WHERE c.embedding IS NOT NULL
@@ -139,7 +139,7 @@ class Database:
             # Fall back to note-based search if no chunks exist
             if not results:
                 cur.execute("""
-                    SELECT title, content, metadata, 1 - (embedding <=> %s::vector) as similarity
+                    SELECT file_path, title, content, metadata, 1 - (embedding <=> %s::vector) as similarity
                     FROM brain.notes
                     WHERE embedding IS NOT NULL
                     ORDER BY similarity DESC
@@ -155,7 +155,7 @@ class Database:
         """
         with self.conn.cursor() as cur:
             cur.execute("""
-                SELECT title, content, metadata, 1 - (embedding <=> %s::vector) as similarity
+                SELECT file_path, title, content, metadata, 1 - (embedding <=> %s::vector) as similarity
                 FROM brain.notes
                 WHERE embedding IS NOT NULL
                 ORDER BY similarity DESC

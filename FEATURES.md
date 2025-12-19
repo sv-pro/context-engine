@@ -180,7 +180,7 @@ CREATE TABLE brain.cost_log (
 1. ✅ Chunked Embeddings
 2. ✅ LLM Cost Tracking (Projected + LiteLLM Actuals)
 3. ✅ Open WebUI Notes Import
-4. MCP Knowledge Base Server
-5. Hybrid Search
-6. Citation & Source Tracking
+4. ✅ Source Attribution & Citations
+5. MCP Knowledge Base Server
+6. Hybrid Search
 7. Query Expansion
