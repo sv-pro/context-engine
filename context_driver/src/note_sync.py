@@ -36,9 +36,13 @@ class NoteSyncer:
         if self.webui_conn is None or self.webui_conn.closed:
             try:
                 self.webui_conn = psycopg2.connect(WEBUI_DATABASE_URL)
+                # Test connection
+                with self.webui_conn.cursor() as cur:
+                    cur.execute("SELECT 1")
                 logger.info("Connected to Open WebUI database")
             except Exception as e:
                 logger.error(f"Failed to connect to WebUI database: {e}")
+                self.webui_conn = None
                 raise
         return self.webui_conn
     
@@ -209,22 +213,73 @@ class NoteSyncer:
         Returns:
             Number of notes synced
         """
-        notes = self.get_updated_notes(self._last_sync_timestamp)
-        synced = 0
+        try:
+            notes = self.get_updated_notes(self._last_sync_timestamp)
+            synced = 0
+            
+            for note in notes:
+                # updated_at is in milliseconds
+                if self.sync_note(note, get_embedding_fn):
+                    synced += 1
+                    # Update timestamp
+                    if note['updated_at'] > self._last_sync_timestamp:
+                        self._last_sync_timestamp = note['updated_at']
+            
+            if synced > 0:
+                logger.info(f"Synced {synced} updated notes from Open WebUI")
+            
+            return synced
+        except Exception as e:
+            logger.error(f"Error during sync_updates: {e}")
+            return 0
+
+    def start_polling(self, get_embedding_fn, interval_seconds: int = 60):
+        """
+        Start background polling for note updates.
         
-        for note in notes:
-            if self.sync_note(note, get_embedding_fn):
-                synced += 1
-                # Update timestamp
-                if note['updated_at'] > self._last_sync_timestamp:
-                    self._last_sync_timestamp = note['updated_at']
+        Args:
+            get_embedding_fn: Function to generate embeddings
+            interval_seconds: Polling interval
+        """
+        import threading
+        import time
         
-        if synced > 0:
-            logger.info(f"Synced {synced} updated notes from Open WebUI")
+        self._stop_polling = False
         
-        return synced
-    
+        def poll():
+            logger.info(f"Started Open WebUI notes watchdog (interval: {interval_seconds}s)")
+            
+            # Initial sync of all notes
+            try:
+                self.sync_all(get_embedding_fn)
+            except Exception as e:
+                logger.error(f"Initial notes sync failed: {e}")
+
+            while not self._stop_polling:
+                try:
+                    self.sync_updates(get_embedding_fn)
+                except Exception as e:
+                    logger.error(f"Error in notes watchdog loop: {e}")
+                
+                # Sleep in small increments to respond to stop signal
+                for _ in range(interval_seconds):
+                    if self._stop_polling:
+                        break
+                    time.sleep(1)
+            
+            logger.info("Stopped Open WebUI notes watchdog")
+
+        self.polling_thread = threading.Thread(target=poll, daemon=True)
+        self.polling_thread.start()
+
+    def stop_polling(self):
+        """Stop background polling."""
+        self._stop_polling = True
+        if hasattr(self, 'polling_thread'):
+            self.polling_thread.join(timeout=5)
+
     def close(self):
         """Close database connections."""
+        self.stop_polling()
         if self.webui_conn and not self.webui_conn.closed:
             self.webui_conn.close()

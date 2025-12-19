@@ -175,7 +175,14 @@ async def lifespan(app: FastAPI):
     try:
         from note_sync import NoteSyncer
         app.state.note_syncer = NoteSyncer(db)
-        logger.info("NoteSyncer initialized for Open WebUI notes")
+        
+        # Start background polling for WebUI notes
+        # We define a simple wrapper for get_embedding that uses the current cost_tracker
+        def embedding_fn(text):
+            return get_embedding(text, cost_tracker=getattr(app.state, 'cost_tracker', None))
+            
+        app.state.note_syncer.start_polling(embedding_fn, interval_seconds=60)
+        logger.info("NoteSyncer watchdog started for Open WebUI notes")
     except Exception as e:
         logger.warning(f"NoteSyncer not available: {e}")
         app.state.note_syncer = None
@@ -382,22 +389,23 @@ async def chat_completions(request: Request):
         cost_tracker = getattr(request.app.state, 'cost_tracker', None)
         query_vector = get_embedding(user_query, cost_tracker=cost_tracker)
         if query_vector:
-            results = db.semantic_search(query_vector, limit=3)
+            # Use the new Graph-Hybrid search (Wide Sweep + Path Weighting)
+            results = db.graph_hybrid_search(query_vector, limit=5, wide_limit=15, threshold=0.4)
             if results:
                 context_parts = []
                 for i, row in enumerate(results):
-                    # Unpack based on semantic_search result structure
-                    # Now: (file_path, title, content, section/metadata, similarity)
-                    file_path, title, content, section_or_meta, similarity = row
+                    # Unpack based on graph_hybrid_search result structure
+                    # (file_path, title, content, section, similarity)
+                    file_path, title, content, section, similarity = row
                     
                     source_label = f"Source {i+1}"
-                    section_info = f" > {section_or_meta}" if isinstance(section_or_meta, str) and section_or_meta else ""
+                    section_info = f" > {section}" if section else ""
                     
                     header = f"--- {source_label}: {title}{section_info} ({file_path}) ---"
                     context_parts.append(f"{header}\n{content}")
                     
                 context_text = "\n\n".join(context_parts)
-                logger.info(f"Found {len(results)} relevant documents for context.")
+                logger.info(f"Found {len(results)} relevant documents for context using Graph-Hybrid search.")
         else:
             logger.warning("Failed to generate embedding for query, no context will be used.")
 

@@ -149,6 +149,54 @@ class Database:
             
             return results
 
+    def graph_hybrid_search(self, query_vector, limit=5, wide_limit=15, threshold=0.4):
+        """
+        Implements Graph-Hybrid search:
+        1. Wide semantic sweep (low threshold) to find candidates.
+        2. Path-weighting to find "Hub" documents linked by candidates.
+        3. Returns a mix of direct semantic hits and highly-linked hubs.
+        """
+        with self.conn.cursor() as cur:
+            # Stage 1 & 2: Wide sweep and neighbor voting in one query
+            # We use CTEs to find candidates and then count their outgoing links to other notes.
+            cur.execute("""
+                WITH wide_pool AS (
+                    SELECT n.id as note_id, n.file_path, n.title, c.content, c.section,
+                           1 - (c.embedding <=> %s::vector) as similarity
+                    FROM brain.chunks c
+                    JOIN brain.notes n ON c.note_id = n.id
+                    WHERE c.embedding IS NOT NULL AND 1 - (c.embedding <=> %s::vector) > %s
+                    ORDER BY similarity DESC
+                    LIMIT %s
+                ),
+                hub_votes AS (
+                    SELECT e.target_title, COUNT(*) as path_count
+                    FROM brain.edges e
+                    JOIN wide_pool w ON e.source_id = w.note_id
+                    GROUP BY e.target_title
+                ),
+                hubs AS (
+                    SELECT n.file_path, n.title, SUBSTRING(n.content FROM 1 FOR 1000) as content, 
+                           'Structural Hub' as section, 0.4 as similarity, h.path_count
+                    FROM brain.notes n
+                    JOIN hub_votes h ON n.title = h.target_title
+                    WHERE n.title NOT IN (SELECT title FROM wide_pool)
+                    ORDER BY h.path_count DESC
+                    LIMIT 2
+                )
+                -- Combine top semantic results and top structural hubs
+                SELECT file_path, title, content, section, similarity FROM (
+                    (SELECT file_path, title, content, section, similarity, 0 as path_count FROM wide_pool LIMIT 3)
+                    UNION ALL
+                    (SELECT file_path, title, content, section, similarity, path_count FROM hubs)
+                ) combined
+                ORDER BY path_count DESC, similarity DESC
+                LIMIT %s;
+            """, (query_vector, query_vector, threshold, wide_limit, limit))
+            
+            results = cur.fetchall()
+            return results
+
     def semantic_search_notes(self, query_vector, limit=3):
         """
         Legacy: Performs vector similarity search on whole notes.
