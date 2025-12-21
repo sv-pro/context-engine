@@ -9,6 +9,8 @@ help:
 	@echo "  start       Start services (detached mode)"
 	@echo "  stop        Stop services"
 	@echo "  status      Show status of services"
+	@echo "  check-db    Check presence of indexed content in DB"
+	@echo "  db-reindex  Clear index and re-ingest (required when changing model)"
 	@echo "  rebuild     Rebuild all images from scratch"
 	@echo "  rebuild-driver Rebuild only the context-driver"
 	@echo "  flush       Stop system and delete all volumes (factory reset)"
@@ -30,7 +32,7 @@ endpoints:
 	@echo ""
 	@echo "Available Endpoints:"
 	@echo "--------------------"
-	@RUNNING=$$(docker-compose ps --services --filter "status=running"); \
+	@RUNNING=$$(docker compose ps --services --filter "status=running"); \
 	if echo "$$RUNNING" | grep -q "open-webui"; then \
 		echo "  Open WebUI: http://localhost:3000"; \
 	fi; \
@@ -46,17 +48,17 @@ endpoints:
 quickstart: check_env
 	@echo "Restarting system..."
 	@if [ -z "$(PROFILE)" ]; then \
-		docker-compose up -d --build; \
+		docker compose up -d --build; \
 	else \
-		OLLAMA_API_BASE=http://ollama:11434 docker-compose --profile $(PROFILE) up -d --build; \
+		OLLAMA_API_BASE=http://ollama:11434 docker compose --profile $(PROFILE) up -d --build; \
 		echo "Checking for Ollama models..."; \
-		if ! docker-compose exec ollama ollama list | grep -q "llama3.2"; then \
+		if ! docker compose exec ollama ollama list | grep -q "llama3.2"; then \
 			echo "Pulling llama3.2 model (this may take a while)..."; \
-			docker-compose exec ollama ollama pull llama3.2; \
+			docker compose exec ollama ollama pull llama3.2; \
 		fi; \
-		if ! docker-compose exec ollama ollama list | grep -q "nomic-embed-text"; then \
+		if ! docker compose exec ollama ollama list | grep -q "nomic-embed-text"; then \
 			echo "Pulling nomic-embed-text model..."; \
-			docker-compose exec ollama ollama pull nomic-embed-text; \
+			docker compose exec ollama ollama pull nomic-embed-text; \
 		fi; \
 	fi
 	@echo "Waiting for Open WebUI (port 3000)..."
@@ -77,32 +79,53 @@ quickstart: check_env
 
 # Start services
 start: check_env
-	docker-compose up -d
+	docker compose up -d
 	@$(MAKE) endpoints
 
 # Stop services
 stop:
-	docker-compose stop
+	docker compose stop
 
 # Show status
 status:
-	docker-compose ps
+	docker compose ps
 	@$(MAKE) endpoints
+
+# Check DB index
+check-db:
+	@echo "Active Configuration:"
+	@docker compose exec context-driver python -c "import sys; sys.path.append('src'); from config import current_config; print(f'  Provider: {current_config.provider}\n  Model:    {current_config.model}\n  Dim:      {current_config.dimensions}')" 2>/dev/null || echo "  (context-driver not running)"
+	@echo ""
+	@echo "Checking indexed content in database..."
+	@docker compose exec db psql -U postgres -d litellm -c "SELECT (SELECT count(*) FROM brain.notes) as notes, (SELECT count(*) FROM brain.chunks) as chunks, (SELECT count(*) FROM brain.chunks WHERE embedding IS NOT NULL) as embedded_chunks;"
+
+
+# Reindex DB (Clear and Restart)
+db-reindex:
+	@echo "Stopping context-driver..."
+	@docker compose stop context-driver
+	@echo "Clearing database tables..."
+	@docker compose exec db psql -U postgres -d litellm -c "DROP SCHEMA IF EXISTS brain CASCADE;"
+	@echo "Starting context-driver to trigger re-ingestion..."
+	@docker compose up -d --force-recreate context-driver
+	@echo "Re-indexing started. Watch progress with 'make check-db'."
+
+
 
 # Rebuild all
 rebuild: stop
-	docker-compose build --no-cache
-	docker-compose up -d --force-recreate
+	docker compose build --no-cache
+	docker compose up -d --force-recreate
 	@$(MAKE) quickstart
 
 # Rebuild only driver
 rebuild-driver:
-	docker-compose build --no-cache context-driver
-	docker-compose up -d --force-recreate context-driver
+	docker compose build --no-cache context-driver
+	docker compose up -d --force-recreate context-driver
 
 # Factory Reset
 flush:
-	docker-compose down -v
+	docker compose down -v
 	@echo "All volumes deleted. System is clean."
 
 # Show presentation path

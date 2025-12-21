@@ -6,9 +6,12 @@ from psycopg2.extras import Json
 
 logger = logging.getLogger(__name__)
 
+from config import current_config
+
 class Database:
     def __init__(self):
         self.url = os.environ.get("DATABASE_URL")
+        self.embedding_dim = current_config.dimensions
         self.conn = None
         self._connect()
 
@@ -38,11 +41,11 @@ class Database:
                     title TEXT,
                     content TEXT,
                     metadata JSONB,
-                    embedding vector(1024),
+                    embedding vector({dim}),
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 );
-            """)
+            """.format(dim=self.embedding_dim))
 
             # Create edges table in brain schema
             cur.execute("""
@@ -62,12 +65,12 @@ class Database:
                     chunk_index INT NOT NULL,
                     content TEXT NOT NULL,
                     section TEXT,
-                    embedding vector(1024),
-                    metadata JSONB DEFAULT '{}'::jsonb,
+                    embedding vector({dim}),
+                    metadata JSONB DEFAULT '{{}}'::jsonb,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     UNIQUE(note_id, chunk_index)
                 );
-            """)
+            """.format(dim=self.embedding_dim))
             
             # Create index for chunk embeddings if not exists
             cur.execute("""
@@ -151,6 +154,7 @@ class Database:
                 cur.execute("""
                     INSERT INTO brain.edges (source_id, target_title, type)
                     VALUES (%s, %s, 'wikilink')
+                    ON CONFLICT DO NOTHING
                 """, (note_id, link))
 
     def semantic_search(self, query_vector, limit=3):

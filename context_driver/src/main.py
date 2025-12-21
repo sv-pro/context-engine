@@ -19,12 +19,13 @@ from mcp.server.fastmcp import FastMCP
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger("context-driver")
 
+from config import current_config
+
 # Configuration
 BRAIN_DIR = os.environ.get("BRAIN_DIR", "/app/brain")
 OLLAMA_API_BASE = os.environ.get("OLLAMA_API_BASE", "http://host.docker.internal:11434")
 LITELLM_API_BASE = os.environ.get("LITELLM_API_BASE", "http://litellm:4000/v1")
 LITELLM_MASTER_KEY = os.environ.get("LITELLM_MASTER_KEY", "sk-1234-5678-admin")
-EMBEDDING_MODEL = "mxbai-embed-large:latest"
 SEARCH_STRATEGY = os.environ.get("SEARCH_STRATEGY", "super_hybrid")  # Default to best quality
 
 # Vendor API Keys (optional)
@@ -53,12 +54,28 @@ def get_embedding(text, cost_tracker=None):
     import time
     start_time = time.time()
     try:
-        url = f"{OLLAMA_API_BASE}/api/embeddings"
-        response = requests.post(url, json={
-            "model": EMBEDDING_MODEL,
-            "prompt": text
-        })
-        response.raise_for_status()
+        if current_config.provider == "ollama":
+            url = f"{OLLAMA_API_BASE}/api/embeddings"
+            response = requests.post(url, json={
+                "model": current_config.model,
+                "prompt": text
+            })
+            response.raise_for_status()
+            vector = response.json()["embedding"]
+
+        elif current_config.provider in ["openai", "litellm"]:
+            # Use LiteLLM Proxy or direct OpenAI
+            url = f"{LITELLM_API_BASE}/embeddings"
+            response = requests.post(url, json={
+                "model": current_config.model,
+                "input": text
+            }, headers={"Authorization": f"Bearer {LITELLM_MASTER_KEY}"})
+            response.raise_for_status()
+            vector = response.json()["data"][0]["embedding"]
+            
+        else:
+            logger.error(f"Unknown embedding provider: {current_config.provider}")
+            return None
         
         latency_ms = int((time.time() - start_time) * 1000)
         
@@ -68,13 +85,13 @@ def get_embedding(text, cost_tracker=None):
             input_tokens = estimate_tokens(text)
             cost_tracker.log_request(
                 operation="embedding",
-                model=EMBEDDING_MODEL,
+                model=current_config.model,
                 input_tokens=input_tokens,
                 output_tokens=0,
                 latency_ms=latency_ms
             )
         
-        return response.json()["embedding"]
+        return vector
     except Exception as e:
         logger.error(f"Failed to get embedding: {e}")
         return None
