@@ -2,6 +2,7 @@ import time
 import os
 import logging
 import requests
+import re
 import threading
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
@@ -497,7 +498,7 @@ async def chat_completions(request: Request):
 
         # 2. Semantic Search (only for real user queries)
         context_text = ""
-        cost_tracker = getattr(request.app.state, 'cost_tracker', None)
+        source_mapping = {}  # Track source numbers to file info for link generation
         cost_tracker = getattr(request.app.state, 'cost_tracker', None)
         query_vector = get_embedding(user_query, cost_tracker=cost_tracker)
         if query_vector:
@@ -510,8 +511,16 @@ async def chat_completions(request: Request):
                     # Unpack result structure: (file_path, title, content, section, similarity)
                     file_path, title, content, section, similarity = row
                     
-                    source_label = f"Source {i+1}"
+                    source_num = i + 1
+                    source_label = f"Source {source_num}"
                     section_info = f" > {section}" if section else ""
+                    
+                    # Store mapping for post-processing
+                    source_mapping[source_num] = {
+                        'title': title,
+                        'file_path': file_path,
+                        'section': section
+                    }
                     
                     header = f"--- {source_label}: {title}{section_info} ({file_path}) ---"
                     context_parts.append(f"{header}\n{content}")
@@ -593,7 +602,7 @@ async def chat_completions(request: Request):
                     logger.error(f"LiteLLM Error Body: {response.text}")
                     return JSONResponse(status_code=response.status_code, content=response.json())
                 
-                # Log cost
+                # Log cost and post-process response
                 try:
                     resp_json = response.json()
                     usage = resp_json.get("usage", {})
@@ -608,8 +617,28 @@ async def chat_completions(request: Request):
                             output_tokens=output_tokens,
                             latency_ms=latency_ms
                         )
+                    
+                    # Post-process: Replace [Source N] with clickable links
+                    if source_mapping and 'choices' in resp_json:
+                        for choice in resp_json['choices']:
+                            if 'message' in choice and 'content' in choice['message']:
+                                original_content = choice['message']['content']
+                                processed_content = original_content
+                                
+                                # Replace [Source N] with [filename.md](file_path)
+                                for source_num, info in source_mapping.items():
+                                    pattern = f"\\[Source {source_num}\\]"
+                                    file_path = info['file_path']
+                                    # Extract filename from path
+                                    filename = file_path.split('/')[-1] if '/' in file_path else file_path
+                                    # Create clickable markdown link with filename
+                                    replacement = f"[{filename}]({file_path})"
+                                    processed_content = re.sub(pattern, replacement, processed_content)
+                                
+                                choice['message']['content'] = processed_content
+                                
                 except Exception as log_e:
-                    logger.warning(f"Failed to log cost: {log_e}")
+                    logger.warning(f"Failed to log cost or post-process: {log_e}")
                 
                 return JSONResponse(status_code=response.status_code, content=resp_json)
             except requests.exceptions.Timeout:

@@ -25,35 +25,21 @@ def generate_frontmatter(metadata):
     yaml_str = yaml.dump(safe_metadata, default_flow_style=False, sort_keys=False)
     return f"---\n{yaml_str}---"
 
-def generate_footer(links):
-    """
-    Generates a 'Related' footer with wikilinks.
-    """
-    if not links:
-        return ""
-    
-    # De-duplicate links
-    unique_links = sorted(list(set(links)))
-    
-    footer_parts = ["\n\n---", "## Related"]
-    for link in unique_links:
-        footer_parts.append(f"- [[{link}]]")
-    
-    return "\n".join(footer_parts)
+
 
 def enrich_markdown(content, metadata, links):
     """
-    Combines frontmatter, content, and footer.
+    Combines frontmatter and content.
+    Links are now added to frontmatter as 'related' field instead of footer.
     """
-    # 1. Clean existing frontmatter if present (handled by caller or parser usually)
-    # But we want to preserve the core content.
+    # Add links to metadata
+    if links:
+        # De-duplicate and sort links
+        metadata['related'] = sorted(list(set(links)))
     
     header = generate_frontmatter(metadata)
-    footer = generate_footer(links)
     
-    # Combine
+    # Combine - no footer anymore
     enriched = f"{header}\n\n{content.strip()}"
-    if footer:
-        enriched += f"\n{footer}"
-        
+    
     return enriched

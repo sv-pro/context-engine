@@ -30,6 +30,15 @@ def parse_markdown(content):
     link_pattern = r'\[\[(.*?)(?:\|.*?)?\]\]'
     links = re.findall(link_pattern, clean_content)
 
+    # 3. Strip existing footer sections to prevent duplication
+    # Remove any "---\n## Related" footer blocks (including variations)
+    # Handle cases where --- appears without newline (e.g., "text.---")
+    footer_pattern = r'\.?---+\s*\n##\s+Related\s*\n(?:- \[\[.*?\]\]\s*\n*)*'
+    clean_content = re.sub(footer_pattern, '.', clean_content, flags=re.MULTILINE)
+    
+    # Remove trailing periods and whitespace
+    clean_content = re.sub(r'\.\s*$', '', clean_content)
+
     return {
         "metadata": metadata,
         "content": clean_content.strip(),

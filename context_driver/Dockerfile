@@ -12,8 +12,9 @@ RUN apt-get update && apt-get install -y \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy source code
+# Copy source code and test data
 COPY src/ ./src/
+COPY test_queries.json .
 
 # Set python path
 ENV PYTHONPATH=/app

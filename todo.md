@@ -1,0 +1,7 @@
+- [ ] check benchmark results
+- [ ] try out mcp+reasoning approach
+- [ ] try out the Triad architecture
+- [ ] fix result reference links
+- [ ] Open Web UI knowledge integration (?)
+- [ ] Jira/Confluence/Bitbucket integration
+- [ ] pseudo-model per model+strategy+KB selection
