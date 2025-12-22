@@ -19,6 +19,35 @@ from mcp.server.fastmcp import FastMCP
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger("context-driver")
 
+# Separate logger for prompt logging (can be toggled independently)
+prompt_logger = logging.getLogger("context-driver.prompts")
+LOG_PROMPTS = os.environ.get("LOG_PROMPTS", "false").lower() in ("true", "1", "yes")
+
+def log_prompt_to_litellm(operation: str, model: str, messages: list, extra_info: dict = None):
+    """Log the actual prompt being sent to LiteLLM for debugging/auditing."""
+    if not LOG_PROMPTS:
+        return
+    
+    try:
+        prompt_logger.info(f"=== PROMPT TO LITELLM [{operation}] ===")
+        prompt_logger.info(f"Model: {model}")
+        if extra_info:
+            prompt_logger.info(f"Extra: {extra_info}")
+        
+        for i, msg in enumerate(messages):
+            role = msg.get('role', 'unknown')
+            content = msg.get('content', '')
+            # Truncate very long content for readability
+            if len(content) > 2000:
+                content_preview = content[:1000] + f"\n... [TRUNCATED {len(content) - 2000} chars] ...\n" + content[-1000:]
+            else:
+                content_preview = content
+            prompt_logger.info(f"Message {i+1} [{role}]:\n{content_preview}")
+        
+        prompt_logger.info("=== END PROMPT ===")
+    except Exception as e:
+        logger.warning(f"Failed to log prompt: {e}")
+
 from config import current_config
 
 # Configuration
@@ -110,11 +139,14 @@ def extract_semantic_keywords(content, title):
             "Return ONLY a comma-separated list of keywords. No prose, no intro."
         )
         
+        messages = [{"role": "user", "content": prompt}]
+        log_prompt_to_litellm("extract_keywords", REAL_MODEL, messages, {"title": title})
+        
         response = requests.post(
             f"{LITELLM_API_BASE}/chat/completions",
             json={
                 "model": REAL_MODEL,
-                "messages": [{"role": "user", "content": prompt}],
+                "messages": messages,
                 "temperature": 0.3
             },
             headers={"Authorization": f"Bearer {LITELLM_MASTER_KEY}"},
@@ -463,6 +495,9 @@ async def chat_completions(request: Request):
             proxy_body = body.copy()
             proxy_body["model"] = REAL_MODEL
             
+            # Log the meta-prompt
+            log_prompt_to_litellm("meta-prompt", REAL_MODEL, messages, {"stream": body.get("stream", False)})
+            
             is_stream = body.get("stream", False)
             if is_stream:
                 from fastapi.responses import StreamingResponse
@@ -573,6 +608,14 @@ async def chat_completions(request: Request):
         proxy_body["model"] = REAL_MODEL
         
         is_stream = body.get("stream", False)
+        
+        # Log the RAG-augmented prompt
+        log_prompt_to_litellm("rag-chat", REAL_MODEL, new_messages, {
+            "stream": is_stream,
+            "context_sources": len(source_mapping),
+            "search_strategy": SEARCH_STRATEGY
+        })
+        
         logger.info(f"Forwarding RAG request to LiteLLM for model: {REAL_MODEL} (Stream: {is_stream})")
         
         if is_stream:
