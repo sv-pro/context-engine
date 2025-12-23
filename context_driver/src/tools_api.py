@@ -295,7 +295,7 @@ async def get_related_articles(title_or_path: str) -> RelatedArticlesResponse:
 
 # ==================== OpenAPI Customization ====================
 
-def get_tools_openapi_schema():
+def get_tools_openapi_schema(server_url: str = None):
     """Generate a standalone OpenAPI schema for just the tools endpoints."""
     from fastapi.openapi.utils import get_openapi
     from fastapi import FastAPI
@@ -319,9 +319,28 @@ knowledge base of markdown documents.
     )
     tools_app.include_router(router)
     
-    return get_openapi(
+    schema = get_openapi(
         title=tools_app.title,
         version=tools_app.version,
         description=tools_app.description,
         routes=tools_app.routes
     )
+    
+    # Add servers if URL provided
+    if server_url:
+        schema["servers"] = [{"url": server_url}]
+    
+    return schema
+
+
+@router.get(
+    "/openapi.json",
+    summary="Tools OpenAPI Spec",
+    description="Get OpenAPI specification for just the knowledge base tools.",
+    include_in_schema=False  # Don't include this endpoint in the spec itself
+)
+async def tools_openapi():
+    """Return OpenAPI spec for just the tools endpoints."""
+    import os
+    external_url = os.environ.get("EXTERNAL_URL", "")
+    return get_tools_openapi_schema(server_url=external_url if external_url else None)

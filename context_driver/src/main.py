@@ -367,16 +367,50 @@ async def lifespan(app: FastAPI):
     if app.state.note_syncer:
         app.state.note_syncer.close()
 
+# Get the external URL for OpenAPI servers spec (needed for Open WebUI)
+EXTERNAL_URL = os.environ.get("EXTERNAL_URL", "")
+
 app = FastAPI(
     lifespan=lifespan,
     title="Context Driver - Brain RAG API",
     description="RAG-enhanced chat and knowledge base tools for AI assistants",
-    version="1.0.0"
+    version="1.0.0",
+    servers=[{"url": EXTERNAL_URL}] if EXTERNAL_URL else None
+)
+
+# Enable CORS for Open WebUI integration
+from fastapi.middleware.cors import CORSMiddleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # In production, restrict to your Open WebUI domain
+    # Important: browsers will block responses if credentials are allowed with wildcard origin.
+    # Open WebUI tool-server discovery doesn't need cookies, so keep this disabled.
+    allow_credentials=False,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # Include the tools API router for Open WebUI integration
 from tools_api import router as tools_router
 app.include_router(tools_router)
+
+@app.get("/")
+async def root():
+    """API root - provides basic info and links to OpenAPI spec."""
+    return {
+        "name": "Context Driver - Brain RAG API",
+        "version": "1.0.0",
+        "description": "RAG-enhanced knowledge base tools for AI assistants",
+        "openapi_spec": "/openapi.json",
+        "docs": "/docs",
+        "health": "/health",
+        "tools": {
+            "search": "/tools/search",
+            "articles": "/tools/articles",
+            "article": "/tools/article/{title}",
+            "related": "/tools/related/{title}"
+        }
+    }
 
 @app.get("/health")
 async def health():
