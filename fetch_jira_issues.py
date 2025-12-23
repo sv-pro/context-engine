@@ -103,6 +103,7 @@ def fetch_issues(base_url, headers, jql, limit, page_size):
                 "issuetype",
                 "project",
                 "priority",
+                "description",
             ],
         }
         if next_page_token:
@@ -131,32 +132,76 @@ def format_issues(issues, fmt):
         return json.dumps({"count": len(issues), "issues": issues}, indent=2)
     lines = []
 
+    def adf_to_text(node):
+        if not node:
+            return ""
+        if isinstance(node, list):
+            parts = [adf_to_text(n) for n in node]
+            return "\n".join(p for p in parts if p)
+        if not isinstance(node, dict):
+            return ""
+        node_type = node.get("type")
+        content = node.get("content", [])
+        if node_type == "text":
+            return node.get("text", "")
+        if node_type in {"paragraph", "heading"}:
+            return "".join(adf_to_text(c) for c in content)
+        if node_type == "hardBreak":
+            return "\n"
+        if node_type in {"bulletList", "orderedList"}:
+            parts = []
+            for item in content or []:
+                item_text = adf_to_text(item)
+                if item_text:
+                    for idx, line in enumerate(item_text.splitlines()):
+                        prefix = "- " if idx == 0 else "  "
+                        parts.append(prefix + line)
+            return "\n".join(parts)
+        if node_type == "listItem":
+            return "\n".join(adf_to_text(c) for c in content)
+        if node_type == "codeBlock":
+            inner = "".join(adf_to_text(c) for c in content)
+            return inner
+        return "\n".join(adf_to_text(c) for c in content)
+
     def fmt_assignee(fields):
         assignee = fields.get("assignee")
         if not assignee:
             return "Unassigned"
         return assignee.get("displayName") or "Unassigned"
 
+    def fmt_description(fields):
+        desc = fields.get("description")
+        text = adf_to_text(desc)
+        return text.strip()
+
     if fmt == "markdown":
         lines.append(f"# Jira issues ({len(issues)})")
         lines.append("")
         for issue in issues:
             fields = issue.get("fields", {})
+            desc = fmt_description(fields)
             lines.append(
                 f"- **{issue.get('key')}**: {fields.get('summary','')}"
                 f" | {fields.get('status',{}).get('name','')}"
                 f" | {fmt_assignee(fields)}"
                 f" | {fields.get('updated','')}"
             )
+            if desc:
+                for dline in desc.splitlines():
+                    lines.append(f"  {dline}")
+                lines.append("")
     else:
         for issue in issues:
             fields = issue.get("fields", {})
+            desc = fmt_description(fields)
             lines.append(
                 f"{issue.get('key')}\t"
                 f"{fields.get('summary','')}\t"
                 f"{fields.get('status',{}).get('name','')}\t"
                 f"{fmt_assignee(fields)}\t"
-                f"{fields.get('updated','')}"
+                f"{fields.get('updated','')}\t"
+                f"{desc}"
             )
     return "\n".join(lines).rstrip() + "\n"
 

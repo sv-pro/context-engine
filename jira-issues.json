@@ -1,0 +1,3609 @@
+{
+  "count": 50,
+  "issues": [
+    {
+      "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+      "id": "615934",
+      "self": "https://rwrnd.atlassian.net/rest/api/3/issue/615934",
+      "key": "CDDOS-1876",
+      "fields": {
+        "summary": "Remove Priority handling for DPX",
+        "issuetype": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/issuetype/11057",
+          "id": "11057",
+          "description": "cloud rnd user story",
+          "iconUrl": "https://rwrnd.atlassian.net/rest/api/2/universal_avatar/view/type/issuetype/avatar/11591?size=medium",
+          "name": "Cloud Story",
+          "subtask": false,
+          "avatarId": 11591,
+          "hierarchyLevel": 0
+        },
+        "project": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/project/11064",
+          "id": "11064",
+          "key": "CDDOS",
+          "name": "Cloud DDoS",
+          "projectTypeKey": "software",
+          "simplified": false,
+          "avatarUrls": {
+            "48x48": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407",
+            "24x24": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=small",
+            "16x16": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=xsmall",
+            "32x32": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=medium"
+          },
+          "projectCategory": {
+            "self": "https://rwrnd.atlassian.net/rest/api/3/projectCategory/10001",
+            "id": "10001",
+            "description": "work towards features",
+            "name": "FeatureDevelopmentProject"
+          }
+        },
+        "assignee": null,
+        "priority": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/priority/4",
+          "iconUrl": "https://rwrnd.atlassian.net/images/icons/priorities/low_new.svg",
+          "name": "Low",
+          "id": "4"
+        },
+        "updated": "2025-12-23T16:00:02.168+0300",
+        "status": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/status/10002",
+          "description": "Initial status",
+          "iconUrl": "https://rwrnd.atlassian.net/",
+          "name": "None",
+          "id": "10002",
+          "statusCategory": {
+            "self": "https://rwrnd.atlassian.net/rest/api/3/statuscategory/2",
+            "id": 2,
+            "key": "new",
+            "colorName": "blue-gray",
+            "name": "To Do"
+          }
+        }
+      }
+    },
+    {
+      "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+      "id": "548527",
+      "self": "https://rwrnd.atlassian.net/rest/api/3/issue/548527",
+      "key": "CDDOS-906",
+      "fields": {
+        "summary": "PO Onboarding - CHARTER (non cloud)",
+        "issuetype": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/issuetype/11059",
+          "id": "11059",
+          "description": "",
+          "iconUrl": "https://rwrnd.atlassian.net/rest/api/2/universal_avatar/view/type/issuetype/avatar/11592?size=medium",
+          "name": "Cloud Epic",
+          "subtask": false,
+          "avatarId": 11592,
+          "hierarchyLevel": 1
+        },
+        "project": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/project/11064",
+          "id": "11064",
+          "key": "CDDOS",
+          "name": "Cloud DDoS",
+          "projectTypeKey": "software",
+          "simplified": false,
+          "avatarUrls": {
+            "48x48": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407",
+            "24x24": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=small",
+            "16x16": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=xsmall",
+            "32x32": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=medium"
+          },
+          "projectCategory": {
+            "self": "https://rwrnd.atlassian.net/rest/api/3/projectCategory/10001",
+            "id": "10001",
+            "description": "work towards features",
+            "name": "FeatureDevelopmentProject"
+          }
+        },
+        "assignee": null,
+        "priority": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/priority/4",
+          "iconUrl": "https://rwrnd.atlassian.net/images/icons/priorities/low_new.svg",
+          "name": "Low",
+          "id": "4"
+        },
+        "updated": "2025-12-23T15:19:16.678+0300",
+        "status": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/status/10002",
+          "description": "Initial status",
+          "iconUrl": "https://rwrnd.atlassian.net/",
+          "name": "None",
+          "id": "10002",
+          "statusCategory": {
+            "self": "https://rwrnd.atlassian.net/rest/api/3/statuscategory/2",
+            "id": 2,
+            "key": "new",
+            "colorName": "blue-gray",
+            "name": "To Do"
+          }
+        }
+      }
+    },
+    {
+      "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+      "id": "615873",
+      "self": "https://rwrnd.atlassian.net/rest/api/3/issue/615873",
+      "key": "CDDOS-1875",
+      "fields": {
+        "summary": "AI DOC Xpert - disclaimer",
+        "issuetype": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/issuetype/12063",
+          "id": "12063",
+          "description": "UI/UX work item for use by Liora's team",
+          "iconUrl": "https://rwrnd.atlassian.net/rest/api/2/universal_avatar/view/type/issuetype/avatar/11709?size=medium",
+          "name": "Product Design",
+          "subtask": false,
+          "avatarId": 11709,
+          "hierarchyLevel": 0
+        },
+        "project": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/project/11064",
+          "id": "11064",
+          "key": "CDDOS",
+          "name": "Cloud DDoS",
+          "projectTypeKey": "software",
+          "simplified": false,
+          "avatarUrls": {
+            "48x48": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407",
+            "24x24": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=small",
+            "16x16": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=xsmall",
+            "32x32": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=medium"
+          },
+          "projectCategory": {
+            "self": "https://rwrnd.atlassian.net/rest/api/3/projectCategory/10001",
+            "id": "10001",
+            "description": "work towards features",
+            "name": "FeatureDevelopmentProject"
+          }
+        },
+        "assignee": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/user?accountId=712020%3A4c0f6783-e04d-447f-b39e-6327ad479d06",
+          "accountId": "712020:4c0f6783-e04d-447f-b39e-6327ad479d06",
+          "emailAddress": "inbalre@radware.com",
+          "avatarUrls": {
+            "48x48": "https://secure.gravatar.com/avatar/2fdc138036f3d35f91b401b5ba1df65d?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FIR-2.png",
+            "24x24": "https://secure.gravatar.com/avatar/2fdc138036f3d35f91b401b5ba1df65d?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FIR-2.png",
+            "16x16": "https://secure.gravatar.com/avatar/2fdc138036f3d35f91b401b5ba1df65d?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FIR-2.png",
+            "32x32": "https://secure.gravatar.com/avatar/2fdc138036f3d35f91b401b5ba1df65d?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FIR-2.png"
+          },
+          "displayName": "Inbal Reuven",
+          "active": true,
+          "timeZone": "Etc/GMT-3",
+          "accountType": "atlassian"
+        },
+        "priority": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/priority/4",
+          "iconUrl": "https://rwrnd.atlassian.net/images/icons/priorities/low_new.svg",
+          "name": "Low",
+          "id": "4"
+        },
+        "updated": "2025-12-23T14:51:42.179+0300",
+        "status": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/status/10013",
+          "description": "Radware PM status.\r\nPost Maturation, before Dev pick it up",
+          "iconUrl": "https://rwrnd.atlassian.net/",
+          "name": "Ready for development",
+          "id": "10013",
+          "statusCategory": {
+            "self": "https://rwrnd.atlassian.net/rest/api/3/statuscategory/4",
+            "id": 4,
+            "key": "indeterminate",
+            "colorName": "yellow",
+            "name": "In Progress"
+          }
+        }
+      }
+    },
+    {
+      "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+      "id": "567364",
+      "self": "https://rwrnd.atlassian.net/rest/api/3/issue/567364",
+      "key": "CDDOS-1355",
+      "fields": {
+        "summary": "Add to \"Updates\" link to survey monkey survey - add snack bar when new survey added",
+        "issuetype": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/issuetype/12063",
+          "id": "12063",
+          "description": "UI/UX work item for use by Liora's team",
+          "iconUrl": "https://rwrnd.atlassian.net/rest/api/2/universal_avatar/view/type/issuetype/avatar/11709?size=medium",
+          "name": "Product Design",
+          "subtask": false,
+          "avatarId": 11709,
+          "hierarchyLevel": 0
+        },
+        "project": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/project/11064",
+          "id": "11064",
+          "key": "CDDOS",
+          "name": "Cloud DDoS",
+          "projectTypeKey": "software",
+          "simplified": false,
+          "avatarUrls": {
+            "48x48": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407",
+            "24x24": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=small",
+            "16x16": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=xsmall",
+            "32x32": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=medium"
+          },
+          "projectCategory": {
+            "self": "https://rwrnd.atlassian.net/rest/api/3/projectCategory/10001",
+            "id": "10001",
+            "description": "work towards features",
+            "name": "FeatureDevelopmentProject"
+          }
+        },
+        "assignee": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/user?accountId=712020%3A4c0f6783-e04d-447f-b39e-6327ad479d06",
+          "accountId": "712020:4c0f6783-e04d-447f-b39e-6327ad479d06",
+          "emailAddress": "inbalre@radware.com",
+          "avatarUrls": {
+            "48x48": "https://secure.gravatar.com/avatar/2fdc138036f3d35f91b401b5ba1df65d?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FIR-2.png",
+            "24x24": "https://secure.gravatar.com/avatar/2fdc138036f3d35f91b401b5ba1df65d?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FIR-2.png",
+            "16x16": "https://secure.gravatar.com/avatar/2fdc138036f3d35f91b401b5ba1df65d?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FIR-2.png",
+            "32x32": "https://secure.gravatar.com/avatar/2fdc138036f3d35f91b401b5ba1df65d?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FIR-2.png"
+          },
+          "displayName": "Inbal Reuven",
+          "active": true,
+          "timeZone": "Etc/GMT-3",
+          "accountType": "atlassian"
+        },
+        "priority": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/priority/4",
+          "iconUrl": "https://rwrnd.atlassian.net/images/icons/priorities/low_new.svg",
+          "name": "Low",
+          "id": "4"
+        },
+        "updated": "2025-12-23T14:43:23.164+0300",
+        "status": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/status/12094",
+          "description": "",
+          "iconUrl": "https://rwrnd.atlassian.net/images/icons/statuses/generic.png",
+          "name": "Pending UX Review",
+          "id": "12094",
+          "statusCategory": {
+            "self": "https://rwrnd.atlassian.net/rest/api/3/statuscategory/4",
+            "id": 4,
+            "key": "indeterminate",
+            "colorName": "yellow",
+            "name": "In Progress"
+          }
+        }
+      }
+    },
+    {
+      "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+      "id": "581904",
+      "self": "https://rwrnd.atlassian.net/rest/api/3/issue/581904",
+      "key": "CDDOS-1567",
+      "fields": {
+        "summary": "sdcc-status-aggregator",
+        "issuetype": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/issuetype/11057",
+          "id": "11057",
+          "description": "cloud rnd user story",
+          "iconUrl": "https://rwrnd.atlassian.net/rest/api/2/universal_avatar/view/type/issuetype/avatar/11591?size=medium",
+          "name": "Cloud Story",
+          "subtask": false,
+          "avatarId": 11591,
+          "hierarchyLevel": 0
+        },
+        "project": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/project/11064",
+          "id": "11064",
+          "key": "CDDOS",
+          "name": "Cloud DDoS",
+          "projectTypeKey": "software",
+          "simplified": false,
+          "avatarUrls": {
+            "48x48": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407",
+            "24x24": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=small",
+            "16x16": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=xsmall",
+            "32x32": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=medium"
+          },
+          "projectCategory": {
+            "self": "https://rwrnd.atlassian.net/rest/api/3/projectCategory/10001",
+            "id": "10001",
+            "description": "work towards features",
+            "name": "FeatureDevelopmentProject"
+          }
+        },
+        "assignee": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/user?accountId=630dca2d9796033b256bc734",
+          "accountId": "630dca2d9796033b256bc734",
+          "emailAddress": "sergeyv@radware.com",
+          "avatarUrls": {
+            "48x48": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/630dca2d9796033b256bc734/5fa40025-22a5-4f1e-8e92-81f96c84fd9e/48",
+            "24x24": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/630dca2d9796033b256bc734/5fa40025-22a5-4f1e-8e92-81f96c84fd9e/24",
+            "16x16": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/630dca2d9796033b256bc734/5fa40025-22a5-4f1e-8e92-81f96c84fd9e/16",
+            "32x32": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/630dca2d9796033b256bc734/5fa40025-22a5-4f1e-8e92-81f96c84fd9e/32"
+          },
+          "displayName": "Sergey Vlasov",
+          "active": true,
+          "timeZone": "Etc/GMT-3",
+          "accountType": "atlassian"
+        },
+        "priority": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/priority/4",
+          "iconUrl": "https://rwrnd.atlassian.net/images/icons/priorities/low_new.svg",
+          "name": "Low",
+          "id": "4"
+        },
+        "updated": "2025-12-23T13:11:41.858+0300",
+        "status": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/status/3",
+          "description": "This work item is being actively worked on at the moment by the assignee.",
+          "iconUrl": "https://rwrnd.atlassian.net/images/icons/statuses/inprogress.png",
+          "name": "In Progress",
+          "id": "3",
+          "statusCategory": {
+            "self": "https://rwrnd.atlassian.net/rest/api/3/statuscategory/4",
+            "id": 4,
+            "key": "indeterminate",
+            "colorName": "yellow",
+            "name": "In Progress"
+          }
+        }
+      }
+    },
+    {
+      "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+      "id": "546511",
+      "self": "https://rwrnd.atlassian.net/rest/api/3/issue/546511",
+      "key": "CDDOS-850",
+      "fields": {
+        "summary": "Categorization of AI Crawlers/Bots and Analytics and Config Options for Customers",
+        "issuetype": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/issuetype/12063",
+          "id": "12063",
+          "description": "UI/UX work item for use by Liora's team",
+          "iconUrl": "https://rwrnd.atlassian.net/rest/api/2/universal_avatar/view/type/issuetype/avatar/11709?size=medium",
+          "name": "Product Design",
+          "subtask": false,
+          "avatarId": 11709,
+          "hierarchyLevel": 0
+        },
+        "project": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/project/11064",
+          "id": "11064",
+          "key": "CDDOS",
+          "name": "Cloud DDoS",
+          "projectTypeKey": "software",
+          "simplified": false,
+          "avatarUrls": {
+            "48x48": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407",
+            "24x24": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=small",
+            "16x16": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=xsmall",
+            "32x32": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=medium"
+          },
+          "projectCategory": {
+            "self": "https://rwrnd.atlassian.net/rest/api/3/projectCategory/10001",
+            "id": "10001",
+            "description": "work towards features",
+            "name": "FeatureDevelopmentProject"
+          }
+        },
+        "assignee": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/user?accountId=712020%3A9139f468-d671-4ddb-835c-7a98f133ab74",
+          "accountId": "712020:9139f468-d671-4ddb-835c-7a98f133ab74",
+          "emailAddress": "zohara@radware.com",
+          "avatarUrls": {
+            "48x48": "https://secure.gravatar.com/avatar/69da84034e6b4fd96db775d99545abc8?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FZA-3.png",
+            "24x24": "https://secure.gravatar.com/avatar/69da84034e6b4fd96db775d99545abc8?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FZA-3.png",
+            "16x16": "https://secure.gravatar.com/avatar/69da84034e6b4fd96db775d99545abc8?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FZA-3.png",
+            "32x32": "https://secure.gravatar.com/avatar/69da84034e6b4fd96db775d99545abc8?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FZA-3.png"
+          },
+          "displayName": "Zohar Adir",
+          "active": true,
+          "timeZone": "Etc/GMT-3",
+          "accountType": "atlassian"
+        },
+        "priority": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/priority/4",
+          "iconUrl": "https://rwrnd.atlassian.net/images/icons/priorities/low_new.svg",
+          "name": "Low",
+          "id": "4"
+        },
+        "updated": "2025-12-22T16:13:23.703+0300",
+        "status": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/status/10001",
+          "description": "",
+          "iconUrl": "https://rwrnd.atlassian.net/",
+          "name": "Done",
+          "id": "10001",
+          "statusCategory": {
+            "self": "https://rwrnd.atlassian.net/rest/api/3/statuscategory/3",
+            "id": 3,
+            "key": "done",
+            "colorName": "green",
+            "name": "Done"
+          }
+        }
+      }
+    },
+    {
+      "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+      "id": "612480",
+      "self": "https://rwrnd.atlassian.net/rest/api/3/issue/612480",
+      "key": "CDDOS-1855",
+      "fields": {
+        "summary": "TLS Baselines widget",
+        "issuetype": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/issuetype/12063",
+          "id": "12063",
+          "description": "UI/UX work item for use by Liora's team",
+          "iconUrl": "https://rwrnd.atlassian.net/rest/api/2/universal_avatar/view/type/issuetype/avatar/11709?size=medium",
+          "name": "Product Design",
+          "subtask": false,
+          "avatarId": 11709,
+          "hierarchyLevel": 0
+        },
+        "project": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/project/11064",
+          "id": "11064",
+          "key": "CDDOS",
+          "name": "Cloud DDoS",
+          "projectTypeKey": "software",
+          "simplified": false,
+          "avatarUrls": {
+            "48x48": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407",
+            "24x24": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=small",
+            "16x16": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=xsmall",
+            "32x32": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=medium"
+          },
+          "projectCategory": {
+            "self": "https://rwrnd.atlassian.net/rest/api/3/projectCategory/10001",
+            "id": "10001",
+            "description": "work towards features",
+            "name": "FeatureDevelopmentProject"
+          }
+        },
+        "assignee": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/user?accountId=712020%3A4b4e0889-7b0f-4d03-827e-2732fc0cce9c",
+          "accountId": "712020:4b4e0889-7b0f-4d03-827e-2732fc0cce9c",
+          "emailAddress": "maromd@radware.com",
+          "avatarUrls": {
+            "48x48": "https://secure.gravatar.com/avatar/ca6dda4119902a2dd8627772f58e1339?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FMP-4.png",
+            "24x24": "https://secure.gravatar.com/avatar/ca6dda4119902a2dd8627772f58e1339?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FMP-4.png",
+            "16x16": "https://secure.gravatar.com/avatar/ca6dda4119902a2dd8627772f58e1339?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FMP-4.png",
+            "32x32": "https://secure.gravatar.com/avatar/ca6dda4119902a2dd8627772f58e1339?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FMP-4.png"
+          },
+          "displayName": "Marom Duani Pe\u2019er",
+          "active": true,
+          "timeZone": "Etc/GMT-3",
+          "accountType": "atlassian"
+        },
+        "priority": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/priority/4",
+          "iconUrl": "https://rwrnd.atlassian.net/images/icons/priorities/low_new.svg",
+          "name": "Low",
+          "id": "4"
+        },
+        "updated": "2025-12-22T14:33:22.164+0300",
+        "status": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/status/12160",
+          "description": "",
+          "iconUrl": "https://rwrnd.atlassian.net/images/icons/statuses/generic.png",
+          "name": "On Hold",
+          "id": "12160",
+          "statusCategory": {
+            "self": "https://rwrnd.atlassian.net/rest/api/3/statuscategory/4",
+            "id": 4,
+            "key": "indeterminate",
+            "colorName": "yellow",
+            "name": "In Progress"
+          }
+        }
+      }
+    },
+    {
+      "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+      "id": "608370",
+      "self": "https://rwrnd.atlassian.net/rest/api/3/issue/608370",
+      "key": "CDDOS-1788",
+      "fields": {
+        "summary": "Add acceptance for lets encrypt",
+        "issuetype": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/issuetype/12063",
+          "id": "12063",
+          "description": "UI/UX work item for use by Liora's team",
+          "iconUrl": "https://rwrnd.atlassian.net/rest/api/2/universal_avatar/view/type/issuetype/avatar/11709?size=medium",
+          "name": "Product Design",
+          "subtask": false,
+          "avatarId": 11709,
+          "hierarchyLevel": 0
+        },
+        "project": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/project/11064",
+          "id": "11064",
+          "key": "CDDOS",
+          "name": "Cloud DDoS",
+          "projectTypeKey": "software",
+          "simplified": false,
+          "avatarUrls": {
+            "48x48": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407",
+            "24x24": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=small",
+            "16x16": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=xsmall",
+            "32x32": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=medium"
+          },
+          "projectCategory": {
+            "self": "https://rwrnd.atlassian.net/rest/api/3/projectCategory/10001",
+            "id": "10001",
+            "description": "work towards features",
+            "name": "FeatureDevelopmentProject"
+          }
+        },
+        "assignee": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/user?accountId=712020%3A4b4e0889-7b0f-4d03-827e-2732fc0cce9c",
+          "accountId": "712020:4b4e0889-7b0f-4d03-827e-2732fc0cce9c",
+          "emailAddress": "maromd@radware.com",
+          "avatarUrls": {
+            "48x48": "https://secure.gravatar.com/avatar/ca6dda4119902a2dd8627772f58e1339?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FMP-4.png",
+            "24x24": "https://secure.gravatar.com/avatar/ca6dda4119902a2dd8627772f58e1339?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FMP-4.png",
+            "16x16": "https://secure.gravatar.com/avatar/ca6dda4119902a2dd8627772f58e1339?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FMP-4.png",
+            "32x32": "https://secure.gravatar.com/avatar/ca6dda4119902a2dd8627772f58e1339?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FMP-4.png"
+          },
+          "displayName": "Marom Duani Pe\u2019er",
+          "active": true,
+          "timeZone": "Etc/GMT-3",
+          "accountType": "atlassian"
+        },
+        "priority": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/priority/4",
+          "iconUrl": "https://rwrnd.atlassian.net/images/icons/priorities/low_new.svg",
+          "name": "Low",
+          "id": "4"
+        },
+        "updated": "2025-12-22T00:29:25.163+0300",
+        "status": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/status/12160",
+          "description": "",
+          "iconUrl": "https://rwrnd.atlassian.net/images/icons/statuses/generic.png",
+          "name": "On Hold",
+          "id": "12160",
+          "statusCategory": {
+            "self": "https://rwrnd.atlassian.net/rest/api/3/statuscategory/4",
+            "id": 4,
+            "key": "indeterminate",
+            "colorName": "yellow",
+            "name": "In Progress"
+          }
+        }
+      }
+    },
+    {
+      "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+      "id": "608109",
+      "self": "https://rwrnd.atlassian.net/rest/api/3/issue/608109",
+      "key": "CDDOS-1781",
+      "fields": {
+        "summary": "Bypass mTLS and Multi CA",
+        "issuetype": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/issuetype/12063",
+          "id": "12063",
+          "description": "UI/UX work item for use by Liora's team",
+          "iconUrl": "https://rwrnd.atlassian.net/rest/api/2/universal_avatar/view/type/issuetype/avatar/11709?size=medium",
+          "name": "Product Design",
+          "subtask": false,
+          "avatarId": 11709,
+          "hierarchyLevel": 0
+        },
+        "project": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/project/11064",
+          "id": "11064",
+          "key": "CDDOS",
+          "name": "Cloud DDoS",
+          "projectTypeKey": "software",
+          "simplified": false,
+          "avatarUrls": {
+            "48x48": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407",
+            "24x24": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=small",
+            "16x16": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=xsmall",
+            "32x32": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=medium"
+          },
+          "projectCategory": {
+            "self": "https://rwrnd.atlassian.net/rest/api/3/projectCategory/10001",
+            "id": "10001",
+            "description": "work towards features",
+            "name": "FeatureDevelopmentProject"
+          }
+        },
+        "assignee": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/user?accountId=712020%3A4b4e0889-7b0f-4d03-827e-2732fc0cce9c",
+          "accountId": "712020:4b4e0889-7b0f-4d03-827e-2732fc0cce9c",
+          "emailAddress": "maromd@radware.com",
+          "avatarUrls": {
+            "48x48": "https://secure.gravatar.com/avatar/ca6dda4119902a2dd8627772f58e1339?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FMP-4.png",
+            "24x24": "https://secure.gravatar.com/avatar/ca6dda4119902a2dd8627772f58e1339?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FMP-4.png",
+            "16x16": "https://secure.gravatar.com/avatar/ca6dda4119902a2dd8627772f58e1339?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FMP-4.png",
+            "32x32": "https://secure.gravatar.com/avatar/ca6dda4119902a2dd8627772f58e1339?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FMP-4.png"
+          },
+          "displayName": "Marom Duani Pe\u2019er",
+          "active": true,
+          "timeZone": "Etc/GMT-3",
+          "accountType": "atlassian"
+        },
+        "priority": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/priority/4",
+          "iconUrl": "https://rwrnd.atlassian.net/images/icons/priorities/low_new.svg",
+          "name": "Low",
+          "id": "4"
+        },
+        "updated": "2025-12-22T00:28:52.550+0300",
+        "status": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/status/12091",
+          "description": "",
+          "iconUrl": "https://rwrnd.atlassian.net/images/icons/statuses/generic.png",
+          "name": "Ready for QBR",
+          "id": "12091",
+          "statusCategory": {
+            "self": "https://rwrnd.atlassian.net/rest/api/3/statuscategory/4",
+            "id": 4,
+            "key": "indeterminate",
+            "colorName": "yellow",
+            "name": "In Progress"
+          }
+        }
+      }
+    },
+    {
+      "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+      "id": "614476",
+      "self": "https://rwrnd.atlassian.net/rest/api/3/issue/614476",
+      "key": "CDDOS-1874",
+      "fields": {
+        "summary": "Filtering out Customer's device security events with the action of Forward not working correctly",
+        "issuetype": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/issuetype/11056",
+          "id": "11056",
+          "description": "cloud rnd bug",
+          "iconUrl": "https://rwrnd.atlassian.net/rest/api/2/universal_avatar/view/type/issuetype/avatar/11590?size=medium",
+          "name": "Cloud Bug",
+          "subtask": false,
+          "avatarId": 11590,
+          "hierarchyLevel": 0
+        },
+        "project": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/project/11064",
+          "id": "11064",
+          "key": "CDDOS",
+          "name": "Cloud DDoS",
+          "projectTypeKey": "software",
+          "simplified": false,
+          "avatarUrls": {
+            "48x48": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407",
+            "24x24": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=small",
+            "16x16": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=xsmall",
+            "32x32": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=medium"
+          },
+          "projectCategory": {
+            "self": "https://rwrnd.atlassian.net/rest/api/3/projectCategory/10001",
+            "id": "10001",
+            "description": "work towards features",
+            "name": "FeatureDevelopmentProject"
+          }
+        },
+        "assignee": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/user?accountId=60c0b41218e9f60071f9aa7b",
+          "accountId": "60c0b41218e9f60071f9aa7b",
+          "emailAddress": "danig@radware.com",
+          "avatarUrls": {
+            "48x48": "https://secure.gravatar.com/avatar/67410421b51a2066ddbd0131ff07ba21?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FDG-1.png",
+            "24x24": "https://secure.gravatar.com/avatar/67410421b51a2066ddbd0131ff07ba21?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FDG-1.png",
+            "16x16": "https://secure.gravatar.com/avatar/67410421b51a2066ddbd0131ff07ba21?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FDG-1.png",
+            "32x32": "https://secure.gravatar.com/avatar/67410421b51a2066ddbd0131ff07ba21?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FDG-1.png"
+          },
+          "displayName": "Dani Gilboa",
+          "active": true,
+          "timeZone": "Etc/GMT-3",
+          "accountType": "atlassian"
+        },
+        "priority": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/priority/4",
+          "iconUrl": "https://rwrnd.atlassian.net/images/icons/priorities/low_new.svg",
+          "name": "Low",
+          "id": "4"
+        },
+        "updated": "2025-12-21T18:56:16.254+0300",
+        "status": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/status/10005",
+          "description": "like Completed in Rally",
+          "iconUrl": "https://rwrnd.atlassian.net/images/icons/statuses/generic.png",
+          "name": "Completed",
+          "id": "10005",
+          "statusCategory": {
+            "self": "https://rwrnd.atlassian.net/rest/api/3/statuscategory/4",
+            "id": 4,
+            "key": "indeterminate",
+            "colorName": "yellow",
+            "name": "In Progress"
+          }
+        }
+      }
+    },
+    {
+      "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+      "id": "582528",
+      "self": "https://rwrnd.atlassian.net/rest/api/3/issue/582528",
+      "key": "CDDOS-1582",
+      "fields": {
+        "summary": "New marketplace agenda",
+        "issuetype": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/issuetype/12063",
+          "id": "12063",
+          "description": "UI/UX work item for use by Liora's team",
+          "iconUrl": "https://rwrnd.atlassian.net/rest/api/2/universal_avatar/view/type/issuetype/avatar/11709?size=medium",
+          "name": "Product Design",
+          "subtask": false,
+          "avatarId": 11709,
+          "hierarchyLevel": 0
+        },
+        "project": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/project/11064",
+          "id": "11064",
+          "key": "CDDOS",
+          "name": "Cloud DDoS",
+          "projectTypeKey": "software",
+          "simplified": false,
+          "avatarUrls": {
+            "48x48": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407",
+            "24x24": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=small",
+            "16x16": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=xsmall",
+            "32x32": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=medium"
+          },
+          "projectCategory": {
+            "self": "https://rwrnd.atlassian.net/rest/api/3/projectCategory/10001",
+            "id": "10001",
+            "description": "work towards features",
+            "name": "FeatureDevelopmentProject"
+          }
+        },
+        "assignee": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/user?accountId=712020%3A4c0f6783-e04d-447f-b39e-6327ad479d06",
+          "accountId": "712020:4c0f6783-e04d-447f-b39e-6327ad479d06",
+          "emailAddress": "inbalre@radware.com",
+          "avatarUrls": {
+            "48x48": "https://secure.gravatar.com/avatar/2fdc138036f3d35f91b401b5ba1df65d?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FIR-2.png",
+            "24x24": "https://secure.gravatar.com/avatar/2fdc138036f3d35f91b401b5ba1df65d?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FIR-2.png",
+            "16x16": "https://secure.gravatar.com/avatar/2fdc138036f3d35f91b401b5ba1df65d?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FIR-2.png",
+            "32x32": "https://secure.gravatar.com/avatar/2fdc138036f3d35f91b401b5ba1df65d?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FIR-2.png"
+          },
+          "displayName": "Inbal Reuven",
+          "active": true,
+          "timeZone": "Etc/GMT-3",
+          "accountType": "atlassian"
+        },
+        "priority": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/priority/4",
+          "iconUrl": "https://rwrnd.atlassian.net/images/icons/priorities/low_new.svg",
+          "name": "Low",
+          "id": "4"
+        },
+        "updated": "2025-12-21T11:40:28.595+0300",
+        "status": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/status/3",
+          "description": "This work item is being actively worked on at the moment by the assignee.",
+          "iconUrl": "https://rwrnd.atlassian.net/images/icons/statuses/inprogress.png",
+          "name": "In Progress",
+          "id": "3",
+          "statusCategory": {
+            "self": "https://rwrnd.atlassian.net/rest/api/3/statuscategory/4",
+            "id": 4,
+            "key": "indeterminate",
+            "colorName": "yellow",
+            "name": "In Progress"
+          }
+        }
+      }
+    },
+    {
+      "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+      "id": "608122",
+      "self": "https://rwrnd.atlassian.net/rest/api/3/issue/608122",
+      "key": "CDDOS-1783",
+      "fields": {
+        "summary": "CC+ - Sync allowlists/Block list on the fly ",
+        "issuetype": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/issuetype/12063",
+          "id": "12063",
+          "description": "UI/UX work item for use by Liora's team",
+          "iconUrl": "https://rwrnd.atlassian.net/rest/api/2/universal_avatar/view/type/issuetype/avatar/11709?size=medium",
+          "name": "Product Design",
+          "subtask": false,
+          "avatarId": 11709,
+          "hierarchyLevel": 0
+        },
+        "project": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/project/11064",
+          "id": "11064",
+          "key": "CDDOS",
+          "name": "Cloud DDoS",
+          "projectTypeKey": "software",
+          "simplified": false,
+          "avatarUrls": {
+            "48x48": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407",
+            "24x24": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=small",
+            "16x16": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=xsmall",
+            "32x32": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=medium"
+          },
+          "projectCategory": {
+            "self": "https://rwrnd.atlassian.net/rest/api/3/projectCategory/10001",
+            "id": "10001",
+            "description": "work towards features",
+            "name": "FeatureDevelopmentProject"
+          }
+        },
+        "assignee": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/user?accountId=712020%3A4b4e0889-7b0f-4d03-827e-2732fc0cce9c",
+          "accountId": "712020:4b4e0889-7b0f-4d03-827e-2732fc0cce9c",
+          "emailAddress": "maromd@radware.com",
+          "avatarUrls": {
+            "48x48": "https://secure.gravatar.com/avatar/ca6dda4119902a2dd8627772f58e1339?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FMP-4.png",
+            "24x24": "https://secure.gravatar.com/avatar/ca6dda4119902a2dd8627772f58e1339?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FMP-4.png",
+            "16x16": "https://secure.gravatar.com/avatar/ca6dda4119902a2dd8627772f58e1339?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FMP-4.png",
+            "32x32": "https://secure.gravatar.com/avatar/ca6dda4119902a2dd8627772f58e1339?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FMP-4.png"
+          },
+          "displayName": "Marom Duani Pe\u2019er",
+          "active": true,
+          "timeZone": "Etc/GMT-3",
+          "accountType": "atlassian"
+        },
+        "priority": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/priority/4",
+          "iconUrl": "https://rwrnd.atlassian.net/images/icons/priorities/low_new.svg",
+          "name": "Low",
+          "id": "4"
+        },
+        "updated": "2025-12-21T10:31:51.428+0300",
+        "status": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/status/10013",
+          "description": "Radware PM status.\r\nPost Maturation, before Dev pick it up",
+          "iconUrl": "https://rwrnd.atlassian.net/",
+          "name": "Ready for development",
+          "id": "10013",
+          "statusCategory": {
+            "self": "https://rwrnd.atlassian.net/rest/api/3/statuscategory/4",
+            "id": 4,
+            "key": "indeterminate",
+            "colorName": "yellow",
+            "name": "In Progress"
+          }
+        }
+      }
+    },
+    {
+      "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+      "id": "614155",
+      "self": "https://rwrnd.atlassian.net/rest/api/3/issue/614155",
+      "key": "CDDOS-1873",
+      "fields": {
+        "summary": "QA E2E Testing",
+        "issuetype": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/issuetype/11057",
+          "id": "11057",
+          "description": "cloud rnd user story",
+          "iconUrl": "https://rwrnd.atlassian.net/rest/api/2/universal_avatar/view/type/issuetype/avatar/11591?size=medium",
+          "name": "Cloud Story",
+          "subtask": false,
+          "avatarId": 11591,
+          "hierarchyLevel": 0
+        },
+        "project": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/project/11064",
+          "id": "11064",
+          "key": "CDDOS",
+          "name": "Cloud DDoS",
+          "projectTypeKey": "software",
+          "simplified": false,
+          "avatarUrls": {
+            "48x48": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407",
+            "24x24": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=small",
+            "16x16": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=xsmall",
+            "32x32": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=medium"
+          },
+          "projectCategory": {
+            "self": "https://rwrnd.atlassian.net/rest/api/3/projectCategory/10001",
+            "id": "10001",
+            "description": "work towards features",
+            "name": "FeatureDevelopmentProject"
+          }
+        },
+        "assignee": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/user?accountId=712020%3Af9dd25da-eeea-400a-92fa-1e6b6fc837d0",
+          "accountId": "712020:f9dd25da-eeea-400a-92fa-1e6b6fc837d0",
+          "emailAddress": "karthikadhityap@radware.com",
+          "avatarUrls": {
+            "48x48": "https://secure.gravatar.com/avatar/e29a2f16e721c0d679f169eff8ed2d4d?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FKP-3.png",
+            "24x24": "https://secure.gravatar.com/avatar/e29a2f16e721c0d679f169eff8ed2d4d?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FKP-3.png",
+            "16x16": "https://secure.gravatar.com/avatar/e29a2f16e721c0d679f169eff8ed2d4d?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FKP-3.png",
+            "32x32": "https://secure.gravatar.com/avatar/e29a2f16e721c0d679f169eff8ed2d4d?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FKP-3.png"
+          },
+          "displayName": "Karthik P",
+          "active": true,
+          "timeZone": "Etc/GMT-3",
+          "accountType": "atlassian"
+        },
+        "priority": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/priority/4",
+          "iconUrl": "https://rwrnd.atlassian.net/images/icons/priorities/low_new.svg",
+          "name": "Low",
+          "id": "4"
+        },
+        "updated": "2025-12-19T09:49:46.498+0300",
+        "status": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/status/3",
+          "description": "This work item is being actively worked on at the moment by the assignee.",
+          "iconUrl": "https://rwrnd.atlassian.net/images/icons/statuses/inprogress.png",
+          "name": "In Progress",
+          "id": "3",
+          "statusCategory": {
+            "self": "https://rwrnd.atlassian.net/rest/api/3/statuscategory/4",
+            "id": 4,
+            "key": "indeterminate",
+            "colorName": "yellow",
+            "name": "In Progress"
+          }
+        }
+      }
+    },
+    {
+      "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+      "id": "612821",
+      "self": "https://rwrnd.atlassian.net/rest/api/3/issue/612821",
+      "key": "CDDOS-1863",
+      "fields": {
+        "summary": "QA: E2E Testing",
+        "issuetype": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/issuetype/11057",
+          "id": "11057",
+          "description": "cloud rnd user story",
+          "iconUrl": "https://rwrnd.atlassian.net/rest/api/2/universal_avatar/view/type/issuetype/avatar/11591?size=medium",
+          "name": "Cloud Story",
+          "subtask": false,
+          "avatarId": 11591,
+          "hierarchyLevel": 0
+        },
+        "project": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/project/11064",
+          "id": "11064",
+          "key": "CDDOS",
+          "name": "Cloud DDoS",
+          "projectTypeKey": "software",
+          "simplified": false,
+          "avatarUrls": {
+            "48x48": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407",
+            "24x24": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=small",
+            "16x16": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=xsmall",
+            "32x32": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=medium"
+          },
+          "projectCategory": {
+            "self": "https://rwrnd.atlassian.net/rest/api/3/projectCategory/10001",
+            "id": "10001",
+            "description": "work towards features",
+            "name": "FeatureDevelopmentProject"
+          }
+        },
+        "assignee": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/user?accountId=712020%3Af9dd25da-eeea-400a-92fa-1e6b6fc837d0",
+          "accountId": "712020:f9dd25da-eeea-400a-92fa-1e6b6fc837d0",
+          "emailAddress": "karthikadhityap@radware.com",
+          "avatarUrls": {
+            "48x48": "https://secure.gravatar.com/avatar/e29a2f16e721c0d679f169eff8ed2d4d?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FKP-3.png",
+            "24x24": "https://secure.gravatar.com/avatar/e29a2f16e721c0d679f169eff8ed2d4d?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FKP-3.png",
+            "16x16": "https://secure.gravatar.com/avatar/e29a2f16e721c0d679f169eff8ed2d4d?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FKP-3.png",
+            "32x32": "https://secure.gravatar.com/avatar/e29a2f16e721c0d679f169eff8ed2d4d?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FKP-3.png"
+          },
+          "displayName": "Karthik P",
+          "active": true,
+          "timeZone": "Etc/GMT-3",
+          "accountType": "atlassian"
+        },
+        "priority": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/priority/4",
+          "iconUrl": "https://rwrnd.atlassian.net/images/icons/priorities/low_new.svg",
+          "name": "Low",
+          "id": "4"
+        },
+        "updated": "2025-12-19T09:49:36.744+0300",
+        "status": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/status/3",
+          "description": "This work item is being actively worked on at the moment by the assignee.",
+          "iconUrl": "https://rwrnd.atlassian.net/images/icons/statuses/inprogress.png",
+          "name": "In Progress",
+          "id": "3",
+          "statusCategory": {
+            "self": "https://rwrnd.atlassian.net/rest/api/3/statuscategory/4",
+            "id": 4,
+            "key": "indeterminate",
+            "colorName": "yellow",
+            "name": "In Progress"
+          }
+        }
+      }
+    },
+    {
+      "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+      "id": "610217",
+      "self": "https://rwrnd.atlassian.net/rest/api/3/issue/610217",
+      "key": "CDDOS-1801",
+      "fields": {
+        "summary": "Policy editor - DNS Subdomains WL",
+        "issuetype": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/issuetype/12063",
+          "id": "12063",
+          "description": "UI/UX work item for use by Liora's team",
+          "iconUrl": "https://rwrnd.atlassian.net/rest/api/2/universal_avatar/view/type/issuetype/avatar/11709?size=medium",
+          "name": "Product Design",
+          "subtask": false,
+          "avatarId": 11709,
+          "hierarchyLevel": 0
+        },
+        "project": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/project/11064",
+          "id": "11064",
+          "key": "CDDOS",
+          "name": "Cloud DDoS",
+          "projectTypeKey": "software",
+          "simplified": false,
+          "avatarUrls": {
+            "48x48": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407",
+            "24x24": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=small",
+            "16x16": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=xsmall",
+            "32x32": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=medium"
+          },
+          "projectCategory": {
+            "self": "https://rwrnd.atlassian.net/rest/api/3/projectCategory/10001",
+            "id": "10001",
+            "description": "work towards features",
+            "name": "FeatureDevelopmentProject"
+          }
+        },
+        "assignee": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/user?accountId=712020%3A4c0f6783-e04d-447f-b39e-6327ad479d06",
+          "accountId": "712020:4c0f6783-e04d-447f-b39e-6327ad479d06",
+          "emailAddress": "inbalre@radware.com",
+          "avatarUrls": {
+            "48x48": "https://secure.gravatar.com/avatar/2fdc138036f3d35f91b401b5ba1df65d?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FIR-2.png",
+            "24x24": "https://secure.gravatar.com/avatar/2fdc138036f3d35f91b401b5ba1df65d?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FIR-2.png",
+            "16x16": "https://secure.gravatar.com/avatar/2fdc138036f3d35f91b401b5ba1df65d?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FIR-2.png",
+            "32x32": "https://secure.gravatar.com/avatar/2fdc138036f3d35f91b401b5ba1df65d?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FIR-2.png"
+          },
+          "displayName": "Inbal Reuven",
+          "active": true,
+          "timeZone": "Etc/GMT-3",
+          "accountType": "atlassian"
+        },
+        "priority": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/priority/4",
+          "iconUrl": "https://rwrnd.atlassian.net/images/icons/priorities/low_new.svg",
+          "name": "Low",
+          "id": "4"
+        },
+        "updated": "2025-12-18T20:11:18.054+0300",
+        "status": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/status/12160",
+          "description": "",
+          "iconUrl": "https://rwrnd.atlassian.net/images/icons/statuses/generic.png",
+          "name": "On Hold",
+          "id": "12160",
+          "statusCategory": {
+            "self": "https://rwrnd.atlassian.net/rest/api/3/statuscategory/4",
+            "id": 4,
+            "key": "indeterminate",
+            "colorName": "yellow",
+            "name": "In Progress"
+          }
+        }
+      }
+    },
+    {
+      "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+      "id": "610636",
+      "self": "https://rwrnd.atlassian.net/rest/api/3/issue/610636",
+      "key": "CDDOS-1814",
+      "fields": {
+        "summary": "SOCX duplicated badges",
+        "issuetype": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/issuetype/11056",
+          "id": "11056",
+          "description": "cloud rnd bug",
+          "iconUrl": "https://rwrnd.atlassian.net/rest/api/2/universal_avatar/view/type/issuetype/avatar/11590?size=medium",
+          "name": "Cloud Bug",
+          "subtask": false,
+          "avatarId": 11590,
+          "hierarchyLevel": 0
+        },
+        "project": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/project/11064",
+          "id": "11064",
+          "key": "CDDOS",
+          "name": "Cloud DDoS",
+          "projectTypeKey": "software",
+          "simplified": false,
+          "avatarUrls": {
+            "48x48": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407",
+            "24x24": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=small",
+            "16x16": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=xsmall",
+            "32x32": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=medium"
+          },
+          "projectCategory": {
+            "self": "https://rwrnd.atlassian.net/rest/api/3/projectCategory/10001",
+            "id": "10001",
+            "description": "work towards features",
+            "name": "FeatureDevelopmentProject"
+          }
+        },
+        "assignee": null,
+        "priority": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/priority/2",
+          "iconUrl": "https://rwrnd.atlassian.net/images/icons/priorities/high_new.svg",
+          "name": "High",
+          "id": "2"
+        },
+        "updated": "2025-12-18T19:15:22.556+0300",
+        "status": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/status/3",
+          "description": "This work item is being actively worked on at the moment by the assignee.",
+          "iconUrl": "https://rwrnd.atlassian.net/images/icons/statuses/inprogress.png",
+          "name": "In Progress",
+          "id": "3",
+          "statusCategory": {
+            "self": "https://rwrnd.atlassian.net/rest/api/3/statuscategory/4",
+            "id": 4,
+            "key": "indeterminate",
+            "colorName": "yellow",
+            "name": "In Progress"
+          }
+        }
+      }
+    },
+    {
+      "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+      "id": "613867",
+      "self": "https://rwrnd.atlassian.net/rest/api/3/issue/613867",
+      "key": "CDDOS-1872",
+      "fields": {
+        "summary": "Status of protections and assigned asset are not visible for custom templates when upgrading account to the version 8.35",
+        "issuetype": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/issuetype/11056",
+          "id": "11056",
+          "description": "cloud rnd bug",
+          "iconUrl": "https://rwrnd.atlassian.net/rest/api/2/universal_avatar/view/type/issuetype/avatar/11590?size=medium",
+          "name": "Cloud Bug",
+          "subtask": false,
+          "avatarId": 11590,
+          "hierarchyLevel": 0
+        },
+        "project": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/project/11064",
+          "id": "11064",
+          "key": "CDDOS",
+          "name": "Cloud DDoS",
+          "projectTypeKey": "software",
+          "simplified": false,
+          "avatarUrls": {
+            "48x48": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407",
+            "24x24": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=small",
+            "16x16": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=xsmall",
+            "32x32": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=medium"
+          },
+          "projectCategory": {
+            "self": "https://rwrnd.atlassian.net/rest/api/3/projectCategory/10001",
+            "id": "10001",
+            "description": "work towards features",
+            "name": "FeatureDevelopmentProject"
+          }
+        },
+        "assignee": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/user?accountId=6254101d4f1d57006a23cfed",
+          "accountId": "6254101d4f1d57006a23cfed",
+          "emailAddress": "michaelbl@radware.com",
+          "avatarUrls": {
+            "48x48": "https://secure.gravatar.com/avatar/4b8fc3d5a6609d33169b897f65f73057?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FMB-6.png",
+            "24x24": "https://secure.gravatar.com/avatar/4b8fc3d5a6609d33169b897f65f73057?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FMB-6.png",
+            "16x16": "https://secure.gravatar.com/avatar/4b8fc3d5a6609d33169b897f65f73057?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FMB-6.png",
+            "32x32": "https://secure.gravatar.com/avatar/4b8fc3d5a6609d33169b897f65f73057?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FMB-6.png"
+          },
+          "displayName": "Michael Blum",
+          "active": true,
+          "timeZone": "Etc/GMT-3",
+          "accountType": "atlassian"
+        },
+        "priority": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/priority/2",
+          "iconUrl": "https://rwrnd.atlassian.net/images/icons/priorities/high_new.svg",
+          "name": "High",
+          "id": "2"
+        },
+        "updated": "2025-12-18T19:06:33.422+0300",
+        "status": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/status/11061",
+          "description": "",
+          "iconUrl": "https://rwrnd.atlassian.net/images/icons/status_generic.gif",
+          "name": "To Do",
+          "id": "11061",
+          "statusCategory": {
+            "self": "https://rwrnd.atlassian.net/rest/api/3/statuscategory/2",
+            "id": 2,
+            "key": "new",
+            "colorName": "blue-gray",
+            "name": "To Do"
+          }
+        }
+      }
+    },
+    {
+      "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+      "id": "549615",
+      "self": "https://rwrnd.atlassian.net/rest/api/3/issue/549615",
+      "key": "CDDOS-922",
+      "fields": {
+        "summary": "Self Service Activate/Deactivate PO (Charter) + TCP option 28",
+        "issuetype": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/issuetype/12063",
+          "id": "12063",
+          "description": "UI/UX work item for use by Liora's team",
+          "iconUrl": "https://rwrnd.atlassian.net/rest/api/2/universal_avatar/view/type/issuetype/avatar/11709?size=medium",
+          "name": "Product Design",
+          "subtask": false,
+          "avatarId": 11709,
+          "hierarchyLevel": 0
+        },
+        "project": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/project/11064",
+          "id": "11064",
+          "key": "CDDOS",
+          "name": "Cloud DDoS",
+          "projectTypeKey": "software",
+          "simplified": false,
+          "avatarUrls": {
+            "48x48": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407",
+            "24x24": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=small",
+            "16x16": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=xsmall",
+            "32x32": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=medium"
+          },
+          "projectCategory": {
+            "self": "https://rwrnd.atlassian.net/rest/api/3/projectCategory/10001",
+            "id": "10001",
+            "description": "work towards features",
+            "name": "FeatureDevelopmentProject"
+          }
+        },
+        "assignee": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/user?accountId=712020%3A9139f468-d671-4ddb-835c-7a98f133ab74",
+          "accountId": "712020:9139f468-d671-4ddb-835c-7a98f133ab74",
+          "emailAddress": "zohara@radware.com",
+          "avatarUrls": {
+            "48x48": "https://secure.gravatar.com/avatar/69da84034e6b4fd96db775d99545abc8?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FZA-3.png",
+            "24x24": "https://secure.gravatar.com/avatar/69da84034e6b4fd96db775d99545abc8?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FZA-3.png",
+            "16x16": "https://secure.gravatar.com/avatar/69da84034e6b4fd96db775d99545abc8?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FZA-3.png",
+            "32x32": "https://secure.gravatar.com/avatar/69da84034e6b4fd96db775d99545abc8?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FZA-3.png"
+          },
+          "displayName": "Zohar Adir",
+          "active": true,
+          "timeZone": "Etc/GMT-3",
+          "accountType": "atlassian"
+        },
+        "priority": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/priority/4",
+          "iconUrl": "https://rwrnd.atlassian.net/images/icons/priorities/low_new.svg",
+          "name": "Low",
+          "id": "4"
+        },
+        "updated": "2025-12-18T16:39:44.710+0300",
+        "status": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/status/10001",
+          "description": "",
+          "iconUrl": "https://rwrnd.atlassian.net/",
+          "name": "Done",
+          "id": "10001",
+          "statusCategory": {
+            "self": "https://rwrnd.atlassian.net/rest/api/3/statuscategory/3",
+            "id": 3,
+            "key": "done",
+            "colorName": "green",
+            "name": "Done"
+          }
+        }
+      }
+    },
+    {
+      "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+      "id": "612813",
+      "self": "https://rwrnd.atlassian.net/rest/api/3/issue/612813",
+      "key": "CDDOS-1861",
+      "fields": {
+        "summary": "FE: Support new field for Granular IP address",
+        "issuetype": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/issuetype/11055",
+          "id": "11055",
+          "description": "for the Cloud division because they have a different set of fields",
+          "iconUrl": "https://rwrnd.atlassian.net/rest/api/2/universal_avatar/view/type/issuetype/avatar/10316?size=medium",
+          "name": "Cloud Sub-task",
+          "subtask": true,
+          "avatarId": 10316,
+          "hierarchyLevel": -1
+        },
+        "project": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/project/11064",
+          "id": "11064",
+          "key": "CDDOS",
+          "name": "Cloud DDoS",
+          "projectTypeKey": "software",
+          "simplified": false,
+          "avatarUrls": {
+            "48x48": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407",
+            "24x24": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=small",
+            "16x16": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=xsmall",
+            "32x32": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=medium"
+          },
+          "projectCategory": {
+            "self": "https://rwrnd.atlassian.net/rest/api/3/projectCategory/10001",
+            "id": "10001",
+            "description": "work towards features",
+            "name": "FeatureDevelopmentProject"
+          }
+        },
+        "assignee": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/user?accountId=712020%3A984e05ef-6902-4bd8-8dc8-95fa1a982fc3",
+          "accountId": "712020:984e05ef-6902-4bd8-8dc8-95fa1a982fc3",
+          "emailAddress": "lakshayj@radware.com",
+          "avatarUrls": {
+            "48x48": "https://secure.gravatar.com/avatar/8567aab84fb6e8b196f9e8b897f06858?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FLJ-6.png",
+            "24x24": "https://secure.gravatar.com/avatar/8567aab84fb6e8b196f9e8b897f06858?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FLJ-6.png",
+            "16x16": "https://secure.gravatar.com/avatar/8567aab84fb6e8b196f9e8b897f06858?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FLJ-6.png",
+            "32x32": "https://secure.gravatar.com/avatar/8567aab84fb6e8b196f9e8b897f06858?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FLJ-6.png"
+          },
+          "displayName": "Lakshay J",
+          "active": true,
+          "timeZone": "Etc/GMT-3",
+          "accountType": "atlassian"
+        },
+        "priority": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/priority/4",
+          "iconUrl": "https://rwrnd.atlassian.net/images/icons/priorities/low_new.svg",
+          "name": "Low",
+          "id": "4"
+        },
+        "updated": "2025-12-18T13:42:09.567+0300",
+        "status": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/status/10001",
+          "description": "",
+          "iconUrl": "https://rwrnd.atlassian.net/",
+          "name": "Done",
+          "id": "10001",
+          "statusCategory": {
+            "self": "https://rwrnd.atlassian.net/rest/api/3/statuscategory/3",
+            "id": 3,
+            "key": "done",
+            "colorName": "green",
+            "name": "Done"
+          }
+        }
+      }
+    },
+    {
+      "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+      "id": "613542",
+      "self": "https://rwrnd.atlassian.net/rest/api/3/issue/613542",
+      "key": "CDDOS-1869",
+      "fields": {
+        "summary": "BE: Update Activate/Deactivate Logic - Blocker Service",
+        "issuetype": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/issuetype/11055",
+          "id": "11055",
+          "description": "for the Cloud division because they have a different set of fields",
+          "iconUrl": "https://rwrnd.atlassian.net/rest/api/2/universal_avatar/view/type/issuetype/avatar/10316?size=medium",
+          "name": "Cloud Sub-task",
+          "subtask": true,
+          "avatarId": 10316,
+          "hierarchyLevel": -1
+        },
+        "project": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/project/11064",
+          "id": "11064",
+          "key": "CDDOS",
+          "name": "Cloud DDoS",
+          "projectTypeKey": "software",
+          "simplified": false,
+          "avatarUrls": {
+            "48x48": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407",
+            "24x24": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=small",
+            "16x16": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=xsmall",
+            "32x32": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=medium"
+          },
+          "projectCategory": {
+            "self": "https://rwrnd.atlassian.net/rest/api/3/projectCategory/10001",
+            "id": "10001",
+            "description": "work towards features",
+            "name": "FeatureDevelopmentProject"
+          }
+        },
+        "assignee": null,
+        "priority": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/priority/4",
+          "iconUrl": "https://rwrnd.atlassian.net/images/icons/priorities/low_new.svg",
+          "name": "Low",
+          "id": "4"
+        },
+        "updated": "2025-12-18T13:41:43.665+0300",
+        "status": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/status/10021",
+          "description": "Place here issues you want to delete. All real deletes are immediate and final in Jira, so we disable them.\nUse this status instead.",
+          "iconUrl": "https://rwrnd.atlassian.net/images/icons/statuses/generic.png",
+          "name": "Trash",
+          "id": "10021",
+          "statusCategory": {
+            "self": "https://rwrnd.atlassian.net/rest/api/3/statuscategory/3",
+            "id": 3,
+            "key": "done",
+            "colorName": "green",
+            "name": "Done"
+          }
+        }
+      }
+    },
+    {
+      "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+      "id": "613539",
+      "self": "https://rwrnd.atlassian.net/rest/api/3/issue/613539",
+      "key": "CDDOS-1868",
+      "fields": {
+        "summary": "FE: Persist the changes in configuration",
+        "issuetype": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/issuetype/11055",
+          "id": "11055",
+          "description": "for the Cloud division because they have a different set of fields",
+          "iconUrl": "https://rwrnd.atlassian.net/rest/api/2/universal_avatar/view/type/issuetype/avatar/10316?size=medium",
+          "name": "Cloud Sub-task",
+          "subtask": true,
+          "avatarId": 10316,
+          "hierarchyLevel": -1
+        },
+        "project": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/project/11064",
+          "id": "11064",
+          "key": "CDDOS",
+          "name": "Cloud DDoS",
+          "projectTypeKey": "software",
+          "simplified": false,
+          "avatarUrls": {
+            "48x48": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407",
+            "24x24": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=small",
+            "16x16": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=xsmall",
+            "32x32": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=medium"
+          },
+          "projectCategory": {
+            "self": "https://rwrnd.atlassian.net/rest/api/3/projectCategory/10001",
+            "id": "10001",
+            "description": "work towards features",
+            "name": "FeatureDevelopmentProject"
+          }
+        },
+        "assignee": null,
+        "priority": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/priority/4",
+          "iconUrl": "https://rwrnd.atlassian.net/images/icons/priorities/low_new.svg",
+          "name": "Low",
+          "id": "4"
+        },
+        "updated": "2025-12-18T13:41:28.345+0300",
+        "status": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/status/10000",
+          "description": "edited by innas@radware.com on 2022/7/24",
+          "iconUrl": "https://rwrnd.atlassian.net/",
+          "name": "To-Do",
+          "id": "10000",
+          "statusCategory": {
+            "self": "https://rwrnd.atlassian.net/rest/api/3/statuscategory/2",
+            "id": 2,
+            "key": "new",
+            "colorName": "blue-gray",
+            "name": "To Do"
+          }
+        }
+      }
+    },
+    {
+      "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+      "id": "573828",
+      "self": "https://rwrnd.atlassian.net/rest/api/3/issue/573828",
+      "key": "CDDOS-1457",
+      "fields": {
+        "summary": "Import ACL to replace SSH sercvice",
+        "issuetype": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/issuetype/11059",
+          "id": "11059",
+          "description": "",
+          "iconUrl": "https://rwrnd.atlassian.net/rest/api/2/universal_avatar/view/type/issuetype/avatar/11592?size=medium",
+          "name": "Cloud Epic",
+          "subtask": false,
+          "avatarId": 11592,
+          "hierarchyLevel": 1
+        },
+        "project": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/project/11064",
+          "id": "11064",
+          "key": "CDDOS",
+          "name": "Cloud DDoS",
+          "projectTypeKey": "software",
+          "simplified": false,
+          "avatarUrls": {
+            "48x48": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407",
+            "24x24": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=small",
+            "16x16": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=xsmall",
+            "32x32": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=medium"
+          },
+          "projectCategory": {
+            "self": "https://rwrnd.atlassian.net/rest/api/3/projectCategory/10001",
+            "id": "10001",
+            "description": "work towards features",
+            "name": "FeatureDevelopmentProject"
+          }
+        },
+        "assignee": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/user?accountId=63514428c97f5473af6eca0a",
+          "accountId": "63514428c97f5473af6eca0a",
+          "emailAddress": "venkateshtl@radware.com",
+          "avatarUrls": {
+            "48x48": "https://secure.gravatar.com/avatar/a4dba959a892e60810ea23404dd29e97?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FVT-6.png",
+            "24x24": "https://secure.gravatar.com/avatar/a4dba959a892e60810ea23404dd29e97?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FVT-6.png",
+            "16x16": "https://secure.gravatar.com/avatar/a4dba959a892e60810ea23404dd29e97?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FVT-6.png",
+            "32x32": "https://secure.gravatar.com/avatar/a4dba959a892e60810ea23404dd29e97?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FVT-6.png"
+          },
+          "displayName": "Venkatesh TL",
+          "active": true,
+          "timeZone": "Etc/GMT-3",
+          "accountType": "atlassian"
+        },
+        "priority": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/priority/4",
+          "iconUrl": "https://rwrnd.atlassian.net/images/icons/priorities/low_new.svg",
+          "name": "Low",
+          "id": "4"
+        },
+        "updated": "2025-12-18T11:44:24.459+0300",
+        "status": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/status/10002",
+          "description": "Initial status",
+          "iconUrl": "https://rwrnd.atlassian.net/",
+          "name": "None",
+          "id": "10002",
+          "statusCategory": {
+            "self": "https://rwrnd.atlassian.net/rest/api/3/statuscategory/2",
+            "id": 2,
+            "key": "new",
+            "colorName": "blue-gray",
+            "name": "To Do"
+          }
+        }
+      }
+    },
+    {
+      "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+      "id": "573838",
+      "self": "https://rwrnd.atlassian.net/rest/api/3/issue/573838",
+      "key": "CDDOS-1460",
+      "fields": {
+        "summary": "SOCX Accuracy \u2013 Collecting Packet Size & Fragmentation&TTL Flags from NetFlow",
+        "issuetype": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/issuetype/11059",
+          "id": "11059",
+          "description": "",
+          "iconUrl": "https://rwrnd.atlassian.net/rest/api/2/universal_avatar/view/type/issuetype/avatar/11592?size=medium",
+          "name": "Cloud Epic",
+          "subtask": false,
+          "avatarId": 11592,
+          "hierarchyLevel": 1
+        },
+        "project": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/project/11064",
+          "id": "11064",
+          "key": "CDDOS",
+          "name": "Cloud DDoS",
+          "projectTypeKey": "software",
+          "simplified": false,
+          "avatarUrls": {
+            "48x48": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407",
+            "24x24": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=small",
+            "16x16": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=xsmall",
+            "32x32": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=medium"
+          },
+          "projectCategory": {
+            "self": "https://rwrnd.atlassian.net/rest/api/3/projectCategory/10001",
+            "id": "10001",
+            "description": "work towards features",
+            "name": "FeatureDevelopmentProject"
+          }
+        },
+        "assignee": null,
+        "priority": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/priority/4",
+          "iconUrl": "https://rwrnd.atlassian.net/images/icons/priorities/low_new.svg",
+          "name": "Low",
+          "id": "4"
+        },
+        "updated": "2025-12-18T11:35:13.431+0300",
+        "status": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/status/10002",
+          "description": "Initial status",
+          "iconUrl": "https://rwrnd.atlassian.net/",
+          "name": "None",
+          "id": "10002",
+          "statusCategory": {
+            "self": "https://rwrnd.atlassian.net/rest/api/3/statuscategory/2",
+            "id": 2,
+            "key": "new",
+            "colorName": "blue-gray",
+            "name": "To Do"
+          }
+        }
+      }
+    },
+    {
+      "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+      "id": "610659",
+      "self": "https://rwrnd.atlassian.net/rest/api/3/issue/610659",
+      "key": "CDDOS-1816",
+      "fields": {
+        "summary": "Statistics API returns incorrect comment timestamp when both from and to parameters are missing",
+        "issuetype": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/issuetype/11056",
+          "id": "11056",
+          "description": "cloud rnd bug",
+          "iconUrl": "https://rwrnd.atlassian.net/rest/api/2/universal_avatar/view/type/issuetype/avatar/11590?size=medium",
+          "name": "Cloud Bug",
+          "subtask": false,
+          "avatarId": 11590,
+          "hierarchyLevel": 0
+        },
+        "project": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/project/11064",
+          "id": "11064",
+          "key": "CDDOS",
+          "name": "Cloud DDoS",
+          "projectTypeKey": "software",
+          "simplified": false,
+          "avatarUrls": {
+            "48x48": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407",
+            "24x24": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=small",
+            "16x16": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=xsmall",
+            "32x32": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=medium"
+          },
+          "projectCategory": {
+            "self": "https://rwrnd.atlassian.net/rest/api/3/projectCategory/10001",
+            "id": "10001",
+            "description": "work towards features",
+            "name": "FeatureDevelopmentProject"
+          }
+        },
+        "assignee": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/user?accountId=712020%3A984e05ef-6902-4bd8-8dc8-95fa1a982fc3",
+          "accountId": "712020:984e05ef-6902-4bd8-8dc8-95fa1a982fc3",
+          "emailAddress": "lakshayj@radware.com",
+          "avatarUrls": {
+            "48x48": "https://secure.gravatar.com/avatar/8567aab84fb6e8b196f9e8b897f06858?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FLJ-6.png",
+            "24x24": "https://secure.gravatar.com/avatar/8567aab84fb6e8b196f9e8b897f06858?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FLJ-6.png",
+            "16x16": "https://secure.gravatar.com/avatar/8567aab84fb6e8b196f9e8b897f06858?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FLJ-6.png",
+            "32x32": "https://secure.gravatar.com/avatar/8567aab84fb6e8b196f9e8b897f06858?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FLJ-6.png"
+          },
+          "displayName": "Lakshay J",
+          "active": true,
+          "timeZone": "Etc/GMT-3",
+          "accountType": "atlassian"
+        },
+        "priority": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/priority/3",
+          "iconUrl": "https://rwrnd.atlassian.net/images/icons/priorities/medium_new.svg",
+          "name": "Medium",
+          "id": "3"
+        },
+        "updated": "2025-12-18T10:41:00.472+0300",
+        "status": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/status/10005",
+          "description": "like Completed in Rally",
+          "iconUrl": "https://rwrnd.atlassian.net/images/icons/statuses/generic.png",
+          "name": "Completed",
+          "id": "10005",
+          "statusCategory": {
+            "self": "https://rwrnd.atlassian.net/rest/api/3/statuscategory/4",
+            "id": 4,
+            "key": "indeterminate",
+            "colorName": "yellow",
+            "name": "In Progress"
+          }
+        }
+      }
+    },
+    {
+      "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+      "id": "610658",
+      "self": "https://rwrnd.atlassian.net/rest/api/3/issue/610658",
+      "key": "CDDOS-1815",
+      "fields": {
+        "summary": "Statistics API incorrectly returns Comment for invalid time range (from > to)",
+        "issuetype": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/issuetype/11056",
+          "id": "11056",
+          "description": "cloud rnd bug",
+          "iconUrl": "https://rwrnd.atlassian.net/rest/api/2/universal_avatar/view/type/issuetype/avatar/11590?size=medium",
+          "name": "Cloud Bug",
+          "subtask": false,
+          "avatarId": 11590,
+          "hierarchyLevel": 0
+        },
+        "project": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/project/11064",
+          "id": "11064",
+          "key": "CDDOS",
+          "name": "Cloud DDoS",
+          "projectTypeKey": "software",
+          "simplified": false,
+          "avatarUrls": {
+            "48x48": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407",
+            "24x24": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=small",
+            "16x16": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=xsmall",
+            "32x32": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=medium"
+          },
+          "projectCategory": {
+            "self": "https://rwrnd.atlassian.net/rest/api/3/projectCategory/10001",
+            "id": "10001",
+            "description": "work towards features",
+            "name": "FeatureDevelopmentProject"
+          }
+        },
+        "assignee": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/user?accountId=712020%3A984e05ef-6902-4bd8-8dc8-95fa1a982fc3",
+          "accountId": "712020:984e05ef-6902-4bd8-8dc8-95fa1a982fc3",
+          "emailAddress": "lakshayj@radware.com",
+          "avatarUrls": {
+            "48x48": "https://secure.gravatar.com/avatar/8567aab84fb6e8b196f9e8b897f06858?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FLJ-6.png",
+            "24x24": "https://secure.gravatar.com/avatar/8567aab84fb6e8b196f9e8b897f06858?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FLJ-6.png",
+            "16x16": "https://secure.gravatar.com/avatar/8567aab84fb6e8b196f9e8b897f06858?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FLJ-6.png",
+            "32x32": "https://secure.gravatar.com/avatar/8567aab84fb6e8b196f9e8b897f06858?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FLJ-6.png"
+          },
+          "displayName": "Lakshay J",
+          "active": true,
+          "timeZone": "Etc/GMT-3",
+          "accountType": "atlassian"
+        },
+        "priority": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/priority/3",
+          "iconUrl": "https://rwrnd.atlassian.net/images/icons/priorities/medium_new.svg",
+          "name": "Medium",
+          "id": "3"
+        },
+        "updated": "2025-12-18T10:38:54.198+0300",
+        "status": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/status/10005",
+          "description": "like Completed in Rally",
+          "iconUrl": "https://rwrnd.atlassian.net/images/icons/statuses/generic.png",
+          "name": "Completed",
+          "id": "10005",
+          "statusCategory": {
+            "self": "https://rwrnd.atlassian.net/rest/api/3/statuscategory/4",
+            "id": 4,
+            "key": "indeterminate",
+            "colorName": "yellow",
+            "name": "In Progress"
+          }
+        }
+      }
+    },
+    {
+      "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+      "id": "613311",
+      "self": "https://rwrnd.atlassian.net/rest/api/3/issue/613311",
+      "key": "CDDOS-1866",
+      "fields": {
+        "summary": "Activation/Deactivation changes",
+        "issuetype": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/issuetype/11057",
+          "id": "11057",
+          "description": "cloud rnd user story",
+          "iconUrl": "https://rwrnd.atlassian.net/rest/api/2/universal_avatar/view/type/issuetype/avatar/11591?size=medium",
+          "name": "Cloud Story",
+          "subtask": false,
+          "avatarId": 11591,
+          "hierarchyLevel": 0
+        },
+        "project": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/project/11064",
+          "id": "11064",
+          "key": "CDDOS",
+          "name": "Cloud DDoS",
+          "projectTypeKey": "software",
+          "simplified": false,
+          "avatarUrls": {
+            "48x48": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407",
+            "24x24": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=small",
+            "16x16": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=xsmall",
+            "32x32": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=medium"
+          },
+          "projectCategory": {
+            "self": "https://rwrnd.atlassian.net/rest/api/3/projectCategory/10001",
+            "id": "10001",
+            "description": "work towards features",
+            "name": "FeatureDevelopmentProject"
+          }
+        },
+        "assignee": null,
+        "priority": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/priority/4",
+          "iconUrl": "https://rwrnd.atlassian.net/images/icons/priorities/low_new.svg",
+          "name": "Low",
+          "id": "4"
+        },
+        "updated": "2025-12-18T10:34:25.864+0300",
+        "status": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/status/10002",
+          "description": "Initial status",
+          "iconUrl": "https://rwrnd.atlassian.net/",
+          "name": "None",
+          "id": "10002",
+          "statusCategory": {
+            "self": "https://rwrnd.atlassian.net/rest/api/3/statuscategory/2",
+            "id": 2,
+            "key": "new",
+            "colorName": "blue-gray",
+            "name": "To Do"
+          }
+        }
+      }
+    },
+    {
+      "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+      "id": "613593",
+      "self": "https://rwrnd.atlassian.net/rest/api/3/issue/613593",
+      "key": "CDDOS-1871",
+      "fields": {
+        "summary": "SupportAgent - New chat service (later Operator view with UI in unified)",
+        "issuetype": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/issuetype/11057",
+          "id": "11057",
+          "description": "cloud rnd user story",
+          "iconUrl": "https://rwrnd.atlassian.net/rest/api/2/universal_avatar/view/type/issuetype/avatar/11591?size=medium",
+          "name": "Cloud Story",
+          "subtask": false,
+          "avatarId": 11591,
+          "hierarchyLevel": 0
+        },
+        "project": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/project/11064",
+          "id": "11064",
+          "key": "CDDOS",
+          "name": "Cloud DDoS",
+          "projectTypeKey": "software",
+          "simplified": false,
+          "avatarUrls": {
+            "48x48": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407",
+            "24x24": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=small",
+            "16x16": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=xsmall",
+            "32x32": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=medium"
+          },
+          "projectCategory": {
+            "self": "https://rwrnd.atlassian.net/rest/api/3/projectCategory/10001",
+            "id": "10001",
+            "description": "work towards features",
+            "name": "FeatureDevelopmentProject"
+          }
+        },
+        "assignee": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/user?accountId=6351441d01c2ff842c16c797",
+          "accountId": "6351441d01c2ff842c16c797",
+          "emailAddress": "ore@radware.com",
+          "avatarUrls": {
+            "48x48": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/6351441d01c2ff842c16c797/3b9d2969-8558-4a1b-8be1-b8e6db2175dc/48",
+            "24x24": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/6351441d01c2ff842c16c797/3b9d2969-8558-4a1b-8be1-b8e6db2175dc/24",
+            "16x16": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/6351441d01c2ff842c16c797/3b9d2969-8558-4a1b-8be1-b8e6db2175dc/16",
+            "32x32": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/6351441d01c2ff842c16c797/3b9d2969-8558-4a1b-8be1-b8e6db2175dc/32"
+          },
+          "displayName": "Or Elazar",
+          "active": true,
+          "timeZone": "Etc/GMT-3",
+          "accountType": "atlassian"
+        },
+        "priority": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/priority/4",
+          "iconUrl": "https://rwrnd.atlassian.net/images/icons/priorities/low_new.svg",
+          "name": "Low",
+          "id": "4"
+        },
+        "updated": "2025-12-17T22:42:57.477+0300",
+        "status": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/status/10002",
+          "description": "Initial status",
+          "iconUrl": "https://rwrnd.atlassian.net/",
+          "name": "None",
+          "id": "10002",
+          "statusCategory": {
+            "self": "https://rwrnd.atlassian.net/rest/api/3/statuscategory/2",
+            "id": 2,
+            "key": "new",
+            "colorName": "blue-gray",
+            "name": "To Do"
+          }
+        }
+      }
+    },
+    {
+      "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+      "id": "613549",
+      "self": "https://rwrnd.atlassian.net/rest/api/3/issue/613549",
+      "key": "CDDOS-1870",
+      "fields": {
+        "summary": "Reduce Account Sync - DDOS - use shared MongoDB vis Infrastructure service (rather than 1 account per 1 min API)",
+        "issuetype": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/issuetype/11057",
+          "id": "11057",
+          "description": "cloud rnd user story",
+          "iconUrl": "https://rwrnd.atlassian.net/rest/api/2/universal_avatar/view/type/issuetype/avatar/11591?size=medium",
+          "name": "Cloud Story",
+          "subtask": false,
+          "avatarId": 11591,
+          "hierarchyLevel": 0
+        },
+        "project": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/project/11064",
+          "id": "11064",
+          "key": "CDDOS",
+          "name": "Cloud DDoS",
+          "projectTypeKey": "software",
+          "simplified": false,
+          "avatarUrls": {
+            "48x48": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407",
+            "24x24": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=small",
+            "16x16": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=xsmall",
+            "32x32": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=medium"
+          },
+          "projectCategory": {
+            "self": "https://rwrnd.atlassian.net/rest/api/3/projectCategory/10001",
+            "id": "10001",
+            "description": "work towards features",
+            "name": "FeatureDevelopmentProject"
+          }
+        },
+        "assignee": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/user?accountId=6351441d01c2ff842c16c797",
+          "accountId": "6351441d01c2ff842c16c797",
+          "emailAddress": "ore@radware.com",
+          "avatarUrls": {
+            "48x48": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/6351441d01c2ff842c16c797/3b9d2969-8558-4a1b-8be1-b8e6db2175dc/48",
+            "24x24": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/6351441d01c2ff842c16c797/3b9d2969-8558-4a1b-8be1-b8e6db2175dc/24",
+            "16x16": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/6351441d01c2ff842c16c797/3b9d2969-8558-4a1b-8be1-b8e6db2175dc/16",
+            "32x32": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/6351441d01c2ff842c16c797/3b9d2969-8558-4a1b-8be1-b8e6db2175dc/32"
+          },
+          "displayName": "Or Elazar",
+          "active": true,
+          "timeZone": "Etc/GMT-3",
+          "accountType": "atlassian"
+        },
+        "priority": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/priority/4",
+          "iconUrl": "https://rwrnd.atlassian.net/images/icons/priorities/low_new.svg",
+          "name": "Low",
+          "id": "4"
+        },
+        "updated": "2025-12-17T22:26:58.437+0300",
+        "status": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/status/10002",
+          "description": "Initial status",
+          "iconUrl": "https://rwrnd.atlassian.net/",
+          "name": "None",
+          "id": "10002",
+          "statusCategory": {
+            "self": "https://rwrnd.atlassian.net/rest/api/3/statuscategory/2",
+            "id": 2,
+            "key": "new",
+            "colorName": "blue-gray",
+            "name": "To Do"
+          }
+        }
+      }
+    },
+    {
+      "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+      "id": "592261",
+      "self": "https://rwrnd.atlassian.net/rest/api/3/issue/592261",
+      "key": "CDDOS-1655",
+      "fields": {
+        "summary": "DP 10 + DP8 Policy Editor Testing",
+        "issuetype": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/issuetype/11059",
+          "id": "11059",
+          "description": "",
+          "iconUrl": "https://rwrnd.atlassian.net/rest/api/2/universal_avatar/view/type/issuetype/avatar/11592?size=medium",
+          "name": "Cloud Epic",
+          "subtask": false,
+          "avatarId": 11592,
+          "hierarchyLevel": 1
+        },
+        "project": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/project/11064",
+          "id": "11064",
+          "key": "CDDOS",
+          "name": "Cloud DDoS",
+          "projectTypeKey": "software",
+          "simplified": false,
+          "avatarUrls": {
+            "48x48": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407",
+            "24x24": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=small",
+            "16x16": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=xsmall",
+            "32x32": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=medium"
+          },
+          "projectCategory": {
+            "self": "https://rwrnd.atlassian.net/rest/api/3/projectCategory/10001",
+            "id": "10001",
+            "description": "work towards features",
+            "name": "FeatureDevelopmentProject"
+          }
+        },
+        "assignee": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/user?accountId=62ca993fa94a6f9c0efdcca7",
+          "accountId": "62ca993fa94a6f9c0efdcca7",
+          "emailAddress": "michaelsa@radware.com",
+          "avatarUrls": {
+            "48x48": "https://secure.gravatar.com/avatar/400c0399dffe3c15244bb4fd002a065b?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FM-3.png",
+            "24x24": "https://secure.gravatar.com/avatar/400c0399dffe3c15244bb4fd002a065b?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FM-3.png",
+            "16x16": "https://secure.gravatar.com/avatar/400c0399dffe3c15244bb4fd002a065b?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FM-3.png",
+            "32x32": "https://secure.gravatar.com/avatar/400c0399dffe3c15244bb4fd002a065b?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FM-3.png"
+          },
+          "displayName": "michaelsa",
+          "active": true,
+          "timeZone": "Etc/GMT-3",
+          "accountType": "atlassian"
+        },
+        "priority": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/priority/4",
+          "iconUrl": "https://rwrnd.atlassian.net/images/icons/priorities/low_new.svg",
+          "name": "Low",
+          "id": "4"
+        },
+        "updated": "2025-12-17T20:21:24.558+0300",
+        "status": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/status/3",
+          "description": "This work item is being actively worked on at the moment by the assignee.",
+          "iconUrl": "https://rwrnd.atlassian.net/images/icons/statuses/inprogress.png",
+          "name": "In Progress",
+          "id": "3",
+          "statusCategory": {
+            "self": "https://rwrnd.atlassian.net/rest/api/3/statuscategory/4",
+            "id": 4,
+            "key": "indeterminate",
+            "colorName": "yellow",
+            "name": "In Progress"
+          }
+        }
+      }
+    },
+    {
+      "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+      "id": "581899",
+      "self": "https://rwrnd.atlassian.net/rest/api/3/issue/581899",
+      "key": "CDDOS-1566",
+      "fields": {
+        "summary": "sdcc-asset-advertisement-aggregator",
+        "issuetype": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/issuetype/11057",
+          "id": "11057",
+          "description": "cloud rnd user story",
+          "iconUrl": "https://rwrnd.atlassian.net/rest/api/2/universal_avatar/view/type/issuetype/avatar/11591?size=medium",
+          "name": "Cloud Story",
+          "subtask": false,
+          "avatarId": 11591,
+          "hierarchyLevel": 0
+        },
+        "project": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/project/11064",
+          "id": "11064",
+          "key": "CDDOS",
+          "name": "Cloud DDoS",
+          "projectTypeKey": "software",
+          "simplified": false,
+          "avatarUrls": {
+            "48x48": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407",
+            "24x24": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=small",
+            "16x16": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=xsmall",
+            "32x32": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=medium"
+          },
+          "projectCategory": {
+            "self": "https://rwrnd.atlassian.net/rest/api/3/projectCategory/10001",
+            "id": "10001",
+            "description": "work towards features",
+            "name": "FeatureDevelopmentProject"
+          }
+        },
+        "assignee": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/user?accountId=630dca2d9796033b256bc734",
+          "accountId": "630dca2d9796033b256bc734",
+          "emailAddress": "sergeyv@radware.com",
+          "avatarUrls": {
+            "48x48": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/630dca2d9796033b256bc734/5fa40025-22a5-4f1e-8e92-81f96c84fd9e/48",
+            "24x24": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/630dca2d9796033b256bc734/5fa40025-22a5-4f1e-8e92-81f96c84fd9e/24",
+            "16x16": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/630dca2d9796033b256bc734/5fa40025-22a5-4f1e-8e92-81f96c84fd9e/16",
+            "32x32": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/630dca2d9796033b256bc734/5fa40025-22a5-4f1e-8e92-81f96c84fd9e/32"
+          },
+          "displayName": "Sergey Vlasov",
+          "active": true,
+          "timeZone": "Etc/GMT-3",
+          "accountType": "atlassian"
+        },
+        "priority": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/priority/4",
+          "iconUrl": "https://rwrnd.atlassian.net/images/icons/priorities/low_new.svg",
+          "name": "Low",
+          "id": "4"
+        },
+        "updated": "2025-12-17T20:17:38.565+0300",
+        "status": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/status/10006",
+          "description": "like Rally Accepted",
+          "iconUrl": "https://rwrnd.atlassian.net/images/icons/statuses/closed.png",
+          "name": "Accepted",
+          "id": "10006",
+          "statusCategory": {
+            "self": "https://rwrnd.atlassian.net/rest/api/3/statuscategory/3",
+            "id": 3,
+            "key": "done",
+            "colorName": "green",
+            "name": "Done"
+          }
+        }
+      }
+    },
+    {
+      "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+      "id": "611992",
+      "self": "https://rwrnd.atlassian.net/rest/api/3/issue/611992",
+      "key": "CDDOS-1850",
+      "fields": {
+        "summary": "Consider removing Infrastructure service OR direct requests to it instead of RESTing CurGen",
+        "issuetype": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/issuetype/11057",
+          "id": "11057",
+          "description": "cloud rnd user story",
+          "iconUrl": "https://rwrnd.atlassian.net/rest/api/2/universal_avatar/view/type/issuetype/avatar/11591?size=medium",
+          "name": "Cloud Story",
+          "subtask": false,
+          "avatarId": 11591,
+          "hierarchyLevel": 0
+        },
+        "project": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/project/11064",
+          "id": "11064",
+          "key": "CDDOS",
+          "name": "Cloud DDoS",
+          "projectTypeKey": "software",
+          "simplified": false,
+          "avatarUrls": {
+            "48x48": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407",
+            "24x24": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=small",
+            "16x16": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=xsmall",
+            "32x32": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=medium"
+          },
+          "projectCategory": {
+            "self": "https://rwrnd.atlassian.net/rest/api/3/projectCategory/10001",
+            "id": "10001",
+            "description": "work towards features",
+            "name": "FeatureDevelopmentProject"
+          }
+        },
+        "assignee": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/user?accountId=6351441d01c2ff842c16c797",
+          "accountId": "6351441d01c2ff842c16c797",
+          "emailAddress": "ore@radware.com",
+          "avatarUrls": {
+            "48x48": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/6351441d01c2ff842c16c797/3b9d2969-8558-4a1b-8be1-b8e6db2175dc/48",
+            "24x24": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/6351441d01c2ff842c16c797/3b9d2969-8558-4a1b-8be1-b8e6db2175dc/24",
+            "16x16": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/6351441d01c2ff842c16c797/3b9d2969-8558-4a1b-8be1-b8e6db2175dc/16",
+            "32x32": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/6351441d01c2ff842c16c797/3b9d2969-8558-4a1b-8be1-b8e6db2175dc/32"
+          },
+          "displayName": "Or Elazar",
+          "active": true,
+          "timeZone": "Etc/GMT-3",
+          "accountType": "atlassian"
+        },
+        "priority": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/priority/4",
+          "iconUrl": "https://rwrnd.atlassian.net/images/icons/priorities/low_new.svg",
+          "name": "Low",
+          "id": "4"
+        },
+        "updated": "2025-12-17T17:23:03.266+0300",
+        "status": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/status/10002",
+          "description": "Initial status",
+          "iconUrl": "https://rwrnd.atlassian.net/",
+          "name": "None",
+          "id": "10002",
+          "statusCategory": {
+            "self": "https://rwrnd.atlassian.net/rest/api/3/statuscategory/2",
+            "id": 2,
+            "key": "new",
+            "colorName": "blue-gray",
+            "name": "To Do"
+          }
+        }
+      }
+    },
+    {
+      "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+      "id": "574951",
+      "self": "https://rwrnd.atlassian.net/rest/api/3/issue/574951",
+      "key": "CDDOS-1478",
+      "fields": {
+        "summary": "SOCX Support Suspend action",
+        "issuetype": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/issuetype/12063",
+          "id": "12063",
+          "description": "UI/UX work item for use by Liora's team",
+          "iconUrl": "https://rwrnd.atlassian.net/rest/api/2/universal_avatar/view/type/issuetype/avatar/11709?size=medium",
+          "name": "Product Design",
+          "subtask": false,
+          "avatarId": 11709,
+          "hierarchyLevel": 0
+        },
+        "project": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/project/11064",
+          "id": "11064",
+          "key": "CDDOS",
+          "name": "Cloud DDoS",
+          "projectTypeKey": "software",
+          "simplified": false,
+          "avatarUrls": {
+            "48x48": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407",
+            "24x24": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=small",
+            "16x16": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=xsmall",
+            "32x32": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=medium"
+          },
+          "projectCategory": {
+            "self": "https://rwrnd.atlassian.net/rest/api/3/projectCategory/10001",
+            "id": "10001",
+            "description": "work towards features",
+            "name": "FeatureDevelopmentProject"
+          }
+        },
+        "assignee": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/user?accountId=712020%3Aff70dc12-3a17-47a0-bd42-1427ac7a6e5b",
+          "accountId": "712020:ff70dc12-3a17-47a0-bd42-1427ac7a6e5b",
+          "emailAddress": "noyc@radware.com",
+          "avatarUrls": {
+            "48x48": "https://secure.gravatar.com/avatar/c82029b94ec49a996d5a529f0280c8de?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FNC-4.png",
+            "24x24": "https://secure.gravatar.com/avatar/c82029b94ec49a996d5a529f0280c8de?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FNC-4.png",
+            "16x16": "https://secure.gravatar.com/avatar/c82029b94ec49a996d5a529f0280c8de?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FNC-4.png",
+            "32x32": "https://secure.gravatar.com/avatar/c82029b94ec49a996d5a529f0280c8de?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FNC-4.png"
+          },
+          "displayName": "Noy Cabel",
+          "active": true,
+          "timeZone": "Etc/GMT-3",
+          "accountType": "atlassian"
+        },
+        "priority": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/priority/4",
+          "iconUrl": "https://rwrnd.atlassian.net/images/icons/priorities/low_new.svg",
+          "name": "Low",
+          "id": "4"
+        },
+        "updated": "2025-12-17T16:49:34.950+0300",
+        "status": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/status/10013",
+          "description": "Radware PM status.\r\nPost Maturation, before Dev pick it up",
+          "iconUrl": "https://rwrnd.atlassian.net/",
+          "name": "Ready for development",
+          "id": "10013",
+          "statusCategory": {
+            "self": "https://rwrnd.atlassian.net/rest/api/3/statuscategory/4",
+            "id": 4,
+            "key": "indeterminate",
+            "colorName": "yellow",
+            "name": "In Progress"
+          }
+        }
+      }
+    },
+    {
+      "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+      "id": "611311",
+      "self": "https://rwrnd.atlassian.net/rest/api/3/issue/611311",
+      "key": "CDDOS-1839",
+      "fields": {
+        "summary": "251211-000046 --Santander -- FWaaS does not disable geo blocking profile assigned to a single asset",
+        "issuetype": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/issuetype/11053",
+          "id": "11053",
+          "description": "Cloud support bug",
+          "iconUrl": "https://rwrnd.atlassian.net/rest/api/2/universal_avatar/view/type/issuetype/avatar/11586?size=medium",
+          "name": "Cloud Field Bug",
+          "subtask": false,
+          "avatarId": 11586,
+          "hierarchyLevel": 0
+        },
+        "project": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/project/11064",
+          "id": "11064",
+          "key": "CDDOS",
+          "name": "Cloud DDoS",
+          "projectTypeKey": "software",
+          "simplified": false,
+          "avatarUrls": {
+            "48x48": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407",
+            "24x24": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=small",
+            "16x16": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=xsmall",
+            "32x32": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=medium"
+          },
+          "projectCategory": {
+            "self": "https://rwrnd.atlassian.net/rest/api/3/projectCategory/10001",
+            "id": "10001",
+            "description": "work towards features",
+            "name": "FeatureDevelopmentProject"
+          }
+        },
+        "assignee": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/user?accountId=712020%3A984e05ef-6902-4bd8-8dc8-95fa1a982fc3",
+          "accountId": "712020:984e05ef-6902-4bd8-8dc8-95fa1a982fc3",
+          "emailAddress": "lakshayj@radware.com",
+          "avatarUrls": {
+            "48x48": "https://secure.gravatar.com/avatar/8567aab84fb6e8b196f9e8b897f06858?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FLJ-6.png",
+            "24x24": "https://secure.gravatar.com/avatar/8567aab84fb6e8b196f9e8b897f06858?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FLJ-6.png",
+            "16x16": "https://secure.gravatar.com/avatar/8567aab84fb6e8b196f9e8b897f06858?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FLJ-6.png",
+            "32x32": "https://secure.gravatar.com/avatar/8567aab84fb6e8b196f9e8b897f06858?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FLJ-6.png"
+          },
+          "displayName": "Lakshay J",
+          "active": true,
+          "timeZone": "Etc/GMT-3",
+          "accountType": "atlassian"
+        },
+        "updated": "2025-12-17T16:43:46.945+0300",
+        "status": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/status/11074",
+          "description": "",
+          "iconUrl": "https://rwrnd.atlassian.net/images/icons/statuses/generic.png",
+          "name": "Pending Verification",
+          "id": "11074",
+          "statusCategory": {
+            "self": "https://rwrnd.atlassian.net/rest/api/3/statuscategory/4",
+            "id": 4,
+            "key": "indeterminate",
+            "colorName": "yellow",
+            "name": "In Progress"
+          }
+        }
+      }
+    },
+    {
+      "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+      "id": "609855",
+      "self": "https://rwrnd.atlassian.net/rest/api/3/issue/609855",
+      "key": "CDDOS-1798",
+      "fields": {
+        "summary": "Radware Global Attack Insights (temp name)",
+        "issuetype": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/issuetype/12063",
+          "id": "12063",
+          "description": "UI/UX work item for use by Liora's team",
+          "iconUrl": "https://rwrnd.atlassian.net/rest/api/2/universal_avatar/view/type/issuetype/avatar/11709?size=medium",
+          "name": "Product Design",
+          "subtask": false,
+          "avatarId": 11709,
+          "hierarchyLevel": 0
+        },
+        "project": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/project/11064",
+          "id": "11064",
+          "key": "CDDOS",
+          "name": "Cloud DDoS",
+          "projectTypeKey": "software",
+          "simplified": false,
+          "avatarUrls": {
+            "48x48": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407",
+            "24x24": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=small",
+            "16x16": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=xsmall",
+            "32x32": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=medium"
+          },
+          "projectCategory": {
+            "self": "https://rwrnd.atlassian.net/rest/api/3/projectCategory/10001",
+            "id": "10001",
+            "description": "work towards features",
+            "name": "FeatureDevelopmentProject"
+          }
+        },
+        "assignee": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/user?accountId=712020%3A1a9bd905-1d3d-4926-9d44-972ba7d7d5a0",
+          "accountId": "712020:1a9bd905-1d3d-4926-9d44-972ba7d7d5a0",
+          "emailAddress": "linoym@radware.com",
+          "avatarUrls": {
+            "48x48": "https://secure.gravatar.com/avatar/d5c8dc5101eaa6a7bbe079e8f13d22c3?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FLM-5.png",
+            "24x24": "https://secure.gravatar.com/avatar/d5c8dc5101eaa6a7bbe079e8f13d22c3?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FLM-5.png",
+            "16x16": "https://secure.gravatar.com/avatar/d5c8dc5101eaa6a7bbe079e8f13d22c3?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FLM-5.png",
+            "32x32": "https://secure.gravatar.com/avatar/d5c8dc5101eaa6a7bbe079e8f13d22c3?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FLM-5.png"
+          },
+          "displayName": "Linoy Moallem",
+          "active": true,
+          "timeZone": "Etc/GMT-3",
+          "accountType": "atlassian"
+        },
+        "priority": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/priority/4",
+          "iconUrl": "https://rwrnd.atlassian.net/images/icons/priorities/low_new.svg",
+          "name": "Low",
+          "id": "4"
+        },
+        "updated": "2025-12-17T16:20:33.814+0300",
+        "status": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/status/3",
+          "description": "This work item is being actively worked on at the moment by the assignee.",
+          "iconUrl": "https://rwrnd.atlassian.net/images/icons/statuses/inprogress.png",
+          "name": "In Progress",
+          "id": "3",
+          "statusCategory": {
+            "self": "https://rwrnd.atlassian.net/rest/api/3/statuscategory/4",
+            "id": 4,
+            "key": "indeterminate",
+            "colorName": "yellow",
+            "name": "In Progress"
+          }
+        }
+      }
+    },
+    {
+      "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+      "id": "527044",
+      "self": "https://rwrnd.atlassian.net/rest/api/3/issue/527044",
+      "key": "CDDOS-361",
+      "fields": {
+        "summary": "SAaaS - Add-on service - AI SOCXpert",
+        "issuetype": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/issuetype/12063",
+          "id": "12063",
+          "description": "UI/UX work item for use by Liora's team",
+          "iconUrl": "https://rwrnd.atlassian.net/rest/api/2/universal_avatar/view/type/issuetype/avatar/11709?size=medium",
+          "name": "Product Design",
+          "subtask": false,
+          "avatarId": 11709,
+          "hierarchyLevel": 0
+        },
+        "project": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/project/11064",
+          "id": "11064",
+          "key": "CDDOS",
+          "name": "Cloud DDoS",
+          "projectTypeKey": "software",
+          "simplified": false,
+          "avatarUrls": {
+            "48x48": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407",
+            "24x24": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=small",
+            "16x16": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=xsmall",
+            "32x32": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=medium"
+          },
+          "projectCategory": {
+            "self": "https://rwrnd.atlassian.net/rest/api/3/projectCategory/10001",
+            "id": "10001",
+            "description": "work towards features",
+            "name": "FeatureDevelopmentProject"
+          }
+        },
+        "assignee": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/user?accountId=712020%3Aff70dc12-3a17-47a0-bd42-1427ac7a6e5b",
+          "accountId": "712020:ff70dc12-3a17-47a0-bd42-1427ac7a6e5b",
+          "emailAddress": "noyc@radware.com",
+          "avatarUrls": {
+            "48x48": "https://secure.gravatar.com/avatar/c82029b94ec49a996d5a529f0280c8de?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FNC-4.png",
+            "24x24": "https://secure.gravatar.com/avatar/c82029b94ec49a996d5a529f0280c8de?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FNC-4.png",
+            "16x16": "https://secure.gravatar.com/avatar/c82029b94ec49a996d5a529f0280c8de?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FNC-4.png",
+            "32x32": "https://secure.gravatar.com/avatar/c82029b94ec49a996d5a529f0280c8de?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FNC-4.png"
+          },
+          "displayName": "Noy Cabel",
+          "active": true,
+          "timeZone": "Etc/GMT-3",
+          "accountType": "atlassian"
+        },
+        "priority": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/priority/4",
+          "iconUrl": "https://rwrnd.atlassian.net/images/icons/priorities/low_new.svg",
+          "name": "Low",
+          "id": "4"
+        },
+        "updated": "2025-12-17T16:06:59.130+0300",
+        "status": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/status/10001",
+          "description": "",
+          "iconUrl": "https://rwrnd.atlassian.net/",
+          "name": "Done",
+          "id": "10001",
+          "statusCategory": {
+            "self": "https://rwrnd.atlassian.net/rest/api/3/statuscategory/3",
+            "id": 3,
+            "key": "done",
+            "colorName": "green",
+            "name": "Done"
+          }
+        }
+      }
+    },
+    {
+      "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+      "id": "613314",
+      "self": "https://rwrnd.atlassian.net/rest/api/3/issue/613314",
+      "key": "CDDOS-1867",
+      "fields": {
+        "summary": "FE: Popup change to choose Entire Network or single network",
+        "issuetype": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/issuetype/11055",
+          "id": "11055",
+          "description": "for the Cloud division because they have a different set of fields",
+          "iconUrl": "https://rwrnd.atlassian.net/rest/api/2/universal_avatar/view/type/issuetype/avatar/10316?size=medium",
+          "name": "Cloud Sub-task",
+          "subtask": true,
+          "avatarId": 10316,
+          "hierarchyLevel": -1
+        },
+        "project": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/project/11064",
+          "id": "11064",
+          "key": "CDDOS",
+          "name": "Cloud DDoS",
+          "projectTypeKey": "software",
+          "simplified": false,
+          "avatarUrls": {
+            "48x48": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407",
+            "24x24": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=small",
+            "16x16": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=xsmall",
+            "32x32": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=medium"
+          },
+          "projectCategory": {
+            "self": "https://rwrnd.atlassian.net/rest/api/3/projectCategory/10001",
+            "id": "10001",
+            "description": "work towards features",
+            "name": "FeatureDevelopmentProject"
+          }
+        },
+        "assignee": null,
+        "priority": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/priority/4",
+          "iconUrl": "https://rwrnd.atlassian.net/images/icons/priorities/low_new.svg",
+          "name": "Low",
+          "id": "4"
+        },
+        "updated": "2025-12-17T16:00:56.676+0300",
+        "status": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/status/10000",
+          "description": "edited by innas@radware.com on 2022/7/24",
+          "iconUrl": "https://rwrnd.atlassian.net/",
+          "name": "To-Do",
+          "id": "10000",
+          "statusCategory": {
+            "self": "https://rwrnd.atlassian.net/rest/api/3/statuscategory/2",
+            "id": 2,
+            "key": "new",
+            "colorName": "blue-gray",
+            "name": "To Do"
+          }
+        }
+      }
+    },
+    {
+      "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+      "id": "547754",
+      "self": "https://rwrnd.atlassian.net/rest/api/3/issue/547754",
+      "key": "CDDOS-881",
+      "fields": {
+        "summary": "Telegram Claimed Attack Notification",
+        "issuetype": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/issuetype/12063",
+          "id": "12063",
+          "description": "UI/UX work item for use by Liora's team",
+          "iconUrl": "https://rwrnd.atlassian.net/rest/api/2/universal_avatar/view/type/issuetype/avatar/11709?size=medium",
+          "name": "Product Design",
+          "subtask": false,
+          "avatarId": 11709,
+          "hierarchyLevel": 0
+        },
+        "project": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/project/11064",
+          "id": "11064",
+          "key": "CDDOS",
+          "name": "Cloud DDoS",
+          "projectTypeKey": "software",
+          "simplified": false,
+          "avatarUrls": {
+            "48x48": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407",
+            "24x24": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=small",
+            "16x16": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=xsmall",
+            "32x32": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=medium"
+          },
+          "projectCategory": {
+            "self": "https://rwrnd.atlassian.net/rest/api/3/projectCategory/10001",
+            "id": "10001",
+            "description": "work towards features",
+            "name": "FeatureDevelopmentProject"
+          }
+        },
+        "assignee": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/user?accountId=712020%3Aff70dc12-3a17-47a0-bd42-1427ac7a6e5b",
+          "accountId": "712020:ff70dc12-3a17-47a0-bd42-1427ac7a6e5b",
+          "emailAddress": "noyc@radware.com",
+          "avatarUrls": {
+            "48x48": "https://secure.gravatar.com/avatar/c82029b94ec49a996d5a529f0280c8de?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FNC-4.png",
+            "24x24": "https://secure.gravatar.com/avatar/c82029b94ec49a996d5a529f0280c8de?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FNC-4.png",
+            "16x16": "https://secure.gravatar.com/avatar/c82029b94ec49a996d5a529f0280c8de?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FNC-4.png",
+            "32x32": "https://secure.gravatar.com/avatar/c82029b94ec49a996d5a529f0280c8de?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FNC-4.png"
+          },
+          "displayName": "Noy Cabel",
+          "active": true,
+          "timeZone": "Etc/GMT-3",
+          "accountType": "atlassian"
+        },
+        "priority": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/priority/4",
+          "iconUrl": "https://rwrnd.atlassian.net/images/icons/priorities/low_new.svg",
+          "name": "Low",
+          "id": "4"
+        },
+        "updated": "2025-12-17T16:00:48.399+0300",
+        "status": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/status/10013",
+          "description": "Radware PM status.\r\nPost Maturation, before Dev pick it up",
+          "iconUrl": "https://rwrnd.atlassian.net/",
+          "name": "Ready for development",
+          "id": "10013",
+          "statusCategory": {
+            "self": "https://rwrnd.atlassian.net/rest/api/3/statuscategory/4",
+            "id": 4,
+            "key": "indeterminate",
+            "colorName": "yellow",
+            "name": "In Progress"
+          }
+        }
+      }
+    },
+    {
+      "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+      "id": "612802",
+      "self": "https://rwrnd.atlassian.net/rest/api/3/issue/612802",
+      "key": "CDDOS-1858",
+      "fields": {
+        "summary": "Support Granular Ip Address in Asset Settings",
+        "issuetype": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/issuetype/11057",
+          "id": "11057",
+          "description": "cloud rnd user story",
+          "iconUrl": "https://rwrnd.atlassian.net/rest/api/2/universal_avatar/view/type/issuetype/avatar/11591?size=medium",
+          "name": "Cloud Story",
+          "subtask": false,
+          "avatarId": 11591,
+          "hierarchyLevel": 0
+        },
+        "project": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/project/11064",
+          "id": "11064",
+          "key": "CDDOS",
+          "name": "Cloud DDoS",
+          "projectTypeKey": "software",
+          "simplified": false,
+          "avatarUrls": {
+            "48x48": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407",
+            "24x24": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=small",
+            "16x16": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=xsmall",
+            "32x32": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=medium"
+          },
+          "projectCategory": {
+            "self": "https://rwrnd.atlassian.net/rest/api/3/projectCategory/10001",
+            "id": "10001",
+            "description": "work towards features",
+            "name": "FeatureDevelopmentProject"
+          }
+        },
+        "assignee": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/user?accountId=712020%3A984e05ef-6902-4bd8-8dc8-95fa1a982fc3",
+          "accountId": "712020:984e05ef-6902-4bd8-8dc8-95fa1a982fc3",
+          "emailAddress": "lakshayj@radware.com",
+          "avatarUrls": {
+            "48x48": "https://secure.gravatar.com/avatar/8567aab84fb6e8b196f9e8b897f06858?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FLJ-6.png",
+            "24x24": "https://secure.gravatar.com/avatar/8567aab84fb6e8b196f9e8b897f06858?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FLJ-6.png",
+            "16x16": "https://secure.gravatar.com/avatar/8567aab84fb6e8b196f9e8b897f06858?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FLJ-6.png",
+            "32x32": "https://secure.gravatar.com/avatar/8567aab84fb6e8b196f9e8b897f06858?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FLJ-6.png"
+          },
+          "displayName": "Lakshay J",
+          "active": true,
+          "timeZone": "Etc/GMT-3",
+          "accountType": "atlassian"
+        },
+        "priority": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/priority/4",
+          "iconUrl": "https://rwrnd.atlassian.net/images/icons/priorities/low_new.svg",
+          "name": "Low",
+          "id": "4"
+        },
+        "updated": "2025-12-17T16:00:00.189+0300",
+        "status": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/status/3",
+          "description": "This work item is being actively worked on at the moment by the assignee.",
+          "iconUrl": "https://rwrnd.atlassian.net/images/icons/statuses/inprogress.png",
+          "name": "In Progress",
+          "id": "3",
+          "statusCategory": {
+            "self": "https://rwrnd.atlassian.net/rest/api/3/statuscategory/4",
+            "id": 4,
+            "key": "indeterminate",
+            "colorName": "yellow",
+            "name": "In Progress"
+          }
+        }
+      }
+    },
+    {
+      "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+      "id": "613305",
+      "self": "https://rwrnd.atlassian.net/rest/api/3/issue/613305",
+      "key": "CDDOS-1865",
+      "fields": {
+        "summary": "CL Rule Save button remains disabled when try to adding an additional asset unless Port is specified Existing Rule",
+        "issuetype": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/issuetype/11056",
+          "id": "11056",
+          "description": "cloud rnd bug",
+          "iconUrl": "https://rwrnd.atlassian.net/rest/api/2/universal_avatar/view/type/issuetype/avatar/11590?size=medium",
+          "name": "Cloud Bug",
+          "subtask": false,
+          "avatarId": 11590,
+          "hierarchyLevel": 0
+        },
+        "project": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/project/11064",
+          "id": "11064",
+          "key": "CDDOS",
+          "name": "Cloud DDoS",
+          "projectTypeKey": "software",
+          "simplified": false,
+          "avatarUrls": {
+            "48x48": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407",
+            "24x24": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=small",
+            "16x16": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=xsmall",
+            "32x32": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=medium"
+          },
+          "projectCategory": {
+            "self": "https://rwrnd.atlassian.net/rest/api/3/projectCategory/10001",
+            "id": "10001",
+            "description": "work towards features",
+            "name": "FeatureDevelopmentProject"
+          }
+        },
+        "assignee": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/user?accountId=63514428c97f5473af6eca0a",
+          "accountId": "63514428c97f5473af6eca0a",
+          "emailAddress": "venkateshtl@radware.com",
+          "avatarUrls": {
+            "48x48": "https://secure.gravatar.com/avatar/a4dba959a892e60810ea23404dd29e97?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FVT-6.png",
+            "24x24": "https://secure.gravatar.com/avatar/a4dba959a892e60810ea23404dd29e97?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FVT-6.png",
+            "16x16": "https://secure.gravatar.com/avatar/a4dba959a892e60810ea23404dd29e97?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FVT-6.png",
+            "32x32": "https://secure.gravatar.com/avatar/a4dba959a892e60810ea23404dd29e97?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FVT-6.png"
+          },
+          "displayName": "Venkatesh TL",
+          "active": true,
+          "timeZone": "Etc/GMT-3",
+          "accountType": "atlassian"
+        },
+        "priority": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/priority/3",
+          "iconUrl": "https://rwrnd.atlassian.net/images/icons/priorities/medium_new.svg",
+          "name": "Medium",
+          "id": "3"
+        },
+        "updated": "2025-12-17T15:38:49.697+0300",
+        "status": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/status/11061",
+          "description": "",
+          "iconUrl": "https://rwrnd.atlassian.net/images/icons/status_generic.gif",
+          "name": "To Do",
+          "id": "11061",
+          "statusCategory": {
+            "self": "https://rwrnd.atlassian.net/rest/api/3/statuscategory/2",
+            "id": 2,
+            "key": "new",
+            "colorName": "blue-gray",
+            "name": "To Do"
+          }
+        }
+      }
+    },
+    {
+      "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+      "id": "610774",
+      "self": "https://rwrnd.atlassian.net/rest/api/3/issue/610774",
+      "key": "CDDOS-1819",
+      "fields": {
+        "summary": "MSSP ROI Report ",
+        "issuetype": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/issuetype/11059",
+          "id": "11059",
+          "description": "",
+          "iconUrl": "https://rwrnd.atlassian.net/rest/api/2/universal_avatar/view/type/issuetype/avatar/11592?size=medium",
+          "name": "Cloud Epic",
+          "subtask": false,
+          "avatarId": 11592,
+          "hierarchyLevel": 1
+        },
+        "project": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/project/11064",
+          "id": "11064",
+          "key": "CDDOS",
+          "name": "Cloud DDoS",
+          "projectTypeKey": "software",
+          "simplified": false,
+          "avatarUrls": {
+            "48x48": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407",
+            "24x24": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=small",
+            "16x16": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=xsmall",
+            "32x32": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=medium"
+          },
+          "projectCategory": {
+            "self": "https://rwrnd.atlassian.net/rest/api/3/projectCategory/10001",
+            "id": "10001",
+            "description": "work towards features",
+            "name": "FeatureDevelopmentProject"
+          }
+        },
+        "assignee": null,
+        "priority": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/priority/4",
+          "iconUrl": "https://rwrnd.atlassian.net/images/icons/priorities/low_new.svg",
+          "name": "Low",
+          "id": "4"
+        },
+        "updated": "2025-12-17T12:08:52.353+0300",
+        "status": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/status/10002",
+          "description": "Initial status",
+          "iconUrl": "https://rwrnd.atlassian.net/",
+          "name": "None",
+          "id": "10002",
+          "statusCategory": {
+            "self": "https://rwrnd.atlassian.net/rest/api/3/statuscategory/2",
+            "id": 2,
+            "key": "new",
+            "colorName": "blue-gray",
+            "name": "To Do"
+          }
+        }
+      }
+    },
+    {
+      "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+      "id": "603579",
+      "self": "https://rwrnd.atlassian.net/rest/api/3/issue/603579",
+      "key": "CDDOS-1766",
+      "fields": {
+        "summary": "Reduced LOGS ad support dynamic debug as needed per service via API",
+        "issuetype": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/issuetype/11057",
+          "id": "11057",
+          "description": "cloud rnd user story",
+          "iconUrl": "https://rwrnd.atlassian.net/rest/api/2/universal_avatar/view/type/issuetype/avatar/11591?size=medium",
+          "name": "Cloud Story",
+          "subtask": false,
+          "avatarId": 11591,
+          "hierarchyLevel": 0
+        },
+        "project": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/project/11064",
+          "id": "11064",
+          "key": "CDDOS",
+          "name": "Cloud DDoS",
+          "projectTypeKey": "software",
+          "simplified": false,
+          "avatarUrls": {
+            "48x48": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407",
+            "24x24": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=small",
+            "16x16": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=xsmall",
+            "32x32": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=medium"
+          },
+          "projectCategory": {
+            "self": "https://rwrnd.atlassian.net/rest/api/3/projectCategory/10001",
+            "id": "10001",
+            "description": "work towards features",
+            "name": "FeatureDevelopmentProject"
+          }
+        },
+        "assignee": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/user?accountId=6351441d01c2ff842c16c797",
+          "accountId": "6351441d01c2ff842c16c797",
+          "emailAddress": "ore@radware.com",
+          "avatarUrls": {
+            "48x48": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/6351441d01c2ff842c16c797/3b9d2969-8558-4a1b-8be1-b8e6db2175dc/48",
+            "24x24": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/6351441d01c2ff842c16c797/3b9d2969-8558-4a1b-8be1-b8e6db2175dc/24",
+            "16x16": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/6351441d01c2ff842c16c797/3b9d2969-8558-4a1b-8be1-b8e6db2175dc/16",
+            "32x32": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/6351441d01c2ff842c16c797/3b9d2969-8558-4a1b-8be1-b8e6db2175dc/32"
+          },
+          "displayName": "Or Elazar",
+          "active": true,
+          "timeZone": "Etc/GMT-3",
+          "accountType": "atlassian"
+        },
+        "priority": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/priority/4",
+          "iconUrl": "https://rwrnd.atlassian.net/images/icons/priorities/low_new.svg",
+          "name": "Low",
+          "id": "4"
+        },
+        "updated": "2025-12-17T12:01:00.797+0300",
+        "status": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/status/3",
+          "description": "This work item is being actively worked on at the moment by the assignee.",
+          "iconUrl": "https://rwrnd.atlassian.net/images/icons/statuses/inprogress.png",
+          "name": "In Progress",
+          "id": "3",
+          "statusCategory": {
+            "self": "https://rwrnd.atlassian.net/rest/api/3/statuscategory/4",
+            "id": 4,
+            "key": "indeterminate",
+            "colorName": "yellow",
+            "name": "In Progress"
+          }
+        }
+      }
+    },
+    {
+      "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+      "id": "512250",
+      "self": "https://rwrnd.atlassian.net/rest/api/3/issue/512250",
+      "key": "CDDOS-22",
+      "fields": {
+        "summary": "SOC-X - Auto Mitigation - Mitigation Action by User - Geo Filter",
+        "issuetype": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/issuetype/11059",
+          "id": "11059",
+          "description": "",
+          "iconUrl": "https://rwrnd.atlassian.net/rest/api/2/universal_avatar/view/type/issuetype/avatar/11592?size=medium",
+          "name": "Cloud Epic",
+          "subtask": false,
+          "avatarId": 11592,
+          "hierarchyLevel": 1
+        },
+        "project": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/project/11064",
+          "id": "11064",
+          "key": "CDDOS",
+          "name": "Cloud DDoS",
+          "projectTypeKey": "software",
+          "simplified": false,
+          "avatarUrls": {
+            "48x48": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407",
+            "24x24": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=small",
+            "16x16": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=xsmall",
+            "32x32": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=medium"
+          },
+          "projectCategory": {
+            "self": "https://rwrnd.atlassian.net/rest/api/3/projectCategory/10001",
+            "id": "10001",
+            "description": "work towards features",
+            "name": "FeatureDevelopmentProject"
+          }
+        },
+        "assignee": null,
+        "priority": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/priority/4",
+          "iconUrl": "https://rwrnd.atlassian.net/images/icons/priorities/low_new.svg",
+          "name": "Low",
+          "id": "4"
+        },
+        "updated": "2025-12-17T10:35:31.877+0300",
+        "status": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/status/10002",
+          "description": "Initial status",
+          "iconUrl": "https://rwrnd.atlassian.net/",
+          "name": "None",
+          "id": "10002",
+          "statusCategory": {
+            "self": "https://rwrnd.atlassian.net/rest/api/3/statuscategory/2",
+            "id": 2,
+            "key": "new",
+            "colorName": "blue-gray",
+            "name": "To Do"
+          }
+        }
+      }
+    },
+    {
+      "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+      "id": "590605",
+      "self": "https://rwrnd.atlassian.net/rest/api/3/issue/590605",
+      "key": "CDDOS-1609",
+      "fields": {
+        "summary": "Live Chat Button",
+        "issuetype": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/issuetype/11059",
+          "id": "11059",
+          "description": "",
+          "iconUrl": "https://rwrnd.atlassian.net/rest/api/2/universal_avatar/view/type/issuetype/avatar/11592?size=medium",
+          "name": "Cloud Epic",
+          "subtask": false,
+          "avatarId": 11592,
+          "hierarchyLevel": 1
+        },
+        "project": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/project/11064",
+          "id": "11064",
+          "key": "CDDOS",
+          "name": "Cloud DDoS",
+          "projectTypeKey": "software",
+          "simplified": false,
+          "avatarUrls": {
+            "48x48": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407",
+            "24x24": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=small",
+            "16x16": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=xsmall",
+            "32x32": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=medium"
+          },
+          "projectCategory": {
+            "self": "https://rwrnd.atlassian.net/rest/api/3/projectCategory/10001",
+            "id": "10001",
+            "description": "work towards features",
+            "name": "FeatureDevelopmentProject"
+          }
+        },
+        "assignee": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/user?accountId=712020%3A9139f468-d671-4ddb-835c-7a98f133ab74",
+          "accountId": "712020:9139f468-d671-4ddb-835c-7a98f133ab74",
+          "emailAddress": "zohara@radware.com",
+          "avatarUrls": {
+            "48x48": "https://secure.gravatar.com/avatar/69da84034e6b4fd96db775d99545abc8?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FZA-3.png",
+            "24x24": "https://secure.gravatar.com/avatar/69da84034e6b4fd96db775d99545abc8?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FZA-3.png",
+            "16x16": "https://secure.gravatar.com/avatar/69da84034e6b4fd96db775d99545abc8?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FZA-3.png",
+            "32x32": "https://secure.gravatar.com/avatar/69da84034e6b4fd96db775d99545abc8?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FZA-3.png"
+          },
+          "displayName": "Zohar Adir",
+          "active": true,
+          "timeZone": "Etc/GMT-3",
+          "accountType": "atlassian"
+        },
+        "priority": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/priority/4",
+          "iconUrl": "https://rwrnd.atlassian.net/images/icons/priorities/low_new.svg",
+          "name": "Low",
+          "id": "4"
+        },
+        "updated": "2025-12-16T21:23:09.327+0300",
+        "status": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/status/10002",
+          "description": "Initial status",
+          "iconUrl": "https://rwrnd.atlassian.net/",
+          "name": "None",
+          "id": "10002",
+          "statusCategory": {
+            "self": "https://rwrnd.atlassian.net/rest/api/3/statuscategory/2",
+            "id": 2,
+            "key": "new",
+            "colorName": "blue-gray",
+            "name": "To Do"
+          }
+        }
+      }
+    },
+    {
+      "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+      "id": "601329",
+      "self": "https://rwrnd.atlassian.net/rest/api/3/issue/601329",
+      "key": "CDDOS-1757",
+      "fields": {
+        "summary": "Make all Kafka Processors getTargetStream with try catch infra - change abstract and wrap the existing, TBD how to address errs/null values.",
+        "issuetype": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/issuetype/11057",
+          "id": "11057",
+          "description": "cloud rnd user story",
+          "iconUrl": "https://rwrnd.atlassian.net/rest/api/2/universal_avatar/view/type/issuetype/avatar/11591?size=medium",
+          "name": "Cloud Story",
+          "subtask": false,
+          "avatarId": 11591,
+          "hierarchyLevel": 0
+        },
+        "project": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/project/11064",
+          "id": "11064",
+          "key": "CDDOS",
+          "name": "Cloud DDoS",
+          "projectTypeKey": "software",
+          "simplified": false,
+          "avatarUrls": {
+            "48x48": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407",
+            "24x24": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=small",
+            "16x16": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=xsmall",
+            "32x32": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=medium"
+          },
+          "projectCategory": {
+            "self": "https://rwrnd.atlassian.net/rest/api/3/projectCategory/10001",
+            "id": "10001",
+            "description": "work towards features",
+            "name": "FeatureDevelopmentProject"
+          }
+        },
+        "assignee": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/user?accountId=6351441d01c2ff842c16c797",
+          "accountId": "6351441d01c2ff842c16c797",
+          "emailAddress": "ore@radware.com",
+          "avatarUrls": {
+            "48x48": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/6351441d01c2ff842c16c797/3b9d2969-8558-4a1b-8be1-b8e6db2175dc/48",
+            "24x24": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/6351441d01c2ff842c16c797/3b9d2969-8558-4a1b-8be1-b8e6db2175dc/24",
+            "16x16": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/6351441d01c2ff842c16c797/3b9d2969-8558-4a1b-8be1-b8e6db2175dc/16",
+            "32x32": "https://avatar-management--avatars.us-west-2.prod.public.atl-paas.net/6351441d01c2ff842c16c797/3b9d2969-8558-4a1b-8be1-b8e6db2175dc/32"
+          },
+          "displayName": "Or Elazar",
+          "active": true,
+          "timeZone": "Etc/GMT-3",
+          "accountType": "atlassian"
+        },
+        "priority": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/priority/4",
+          "iconUrl": "https://rwrnd.atlassian.net/images/icons/priorities/low_new.svg",
+          "name": "Low",
+          "id": "4"
+        },
+        "updated": "2025-12-16T18:19:27.209+0300",
+        "status": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/status/10021",
+          "description": "Place here issues you want to delete. All real deletes are immediate and final in Jira, so we disable them.\nUse this status instead.",
+          "iconUrl": "https://rwrnd.atlassian.net/images/icons/statuses/generic.png",
+          "name": "Trash",
+          "id": "10021",
+          "statusCategory": {
+            "self": "https://rwrnd.atlassian.net/rest/api/3/statuscategory/3",
+            "id": 3,
+            "key": "done",
+            "colorName": "green",
+            "name": "Done"
+          }
+        }
+      }
+    },
+    {
+      "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+      "id": "611320",
+      "self": "https://rwrnd.atlassian.net/rest/api/3/issue/611320",
+      "key": "CDDOS-1840",
+      "fields": {
+        "summary": "CC Activate/Deactive Manual /32 diversion",
+        "issuetype": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/issuetype/12063",
+          "id": "12063",
+          "description": "UI/UX work item for use by Liora's team",
+          "iconUrl": "https://rwrnd.atlassian.net/rest/api/2/universal_avatar/view/type/issuetype/avatar/11709?size=medium",
+          "name": "Product Design",
+          "subtask": false,
+          "avatarId": 11709,
+          "hierarchyLevel": 0
+        },
+        "project": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/project/11064",
+          "id": "11064",
+          "key": "CDDOS",
+          "name": "Cloud DDoS",
+          "projectTypeKey": "software",
+          "simplified": false,
+          "avatarUrls": {
+            "48x48": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407",
+            "24x24": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=small",
+            "16x16": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=xsmall",
+            "32x32": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=medium"
+          },
+          "projectCategory": {
+            "self": "https://rwrnd.atlassian.net/rest/api/3/projectCategory/10001",
+            "id": "10001",
+            "description": "work towards features",
+            "name": "FeatureDevelopmentProject"
+          }
+        },
+        "assignee": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/user?accountId=712020%3A1a9bd905-1d3d-4926-9d44-972ba7d7d5a0",
+          "accountId": "712020:1a9bd905-1d3d-4926-9d44-972ba7d7d5a0",
+          "emailAddress": "linoym@radware.com",
+          "avatarUrls": {
+            "48x48": "https://secure.gravatar.com/avatar/d5c8dc5101eaa6a7bbe079e8f13d22c3?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FLM-5.png",
+            "24x24": "https://secure.gravatar.com/avatar/d5c8dc5101eaa6a7bbe079e8f13d22c3?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FLM-5.png",
+            "16x16": "https://secure.gravatar.com/avatar/d5c8dc5101eaa6a7bbe079e8f13d22c3?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FLM-5.png",
+            "32x32": "https://secure.gravatar.com/avatar/d5c8dc5101eaa6a7bbe079e8f13d22c3?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FLM-5.png"
+          },
+          "displayName": "Linoy Moallem",
+          "active": true,
+          "timeZone": "Etc/GMT-3",
+          "accountType": "atlassian"
+        },
+        "priority": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/priority/4",
+          "iconUrl": "https://rwrnd.atlassian.net/images/icons/priorities/low_new.svg",
+          "name": "Low",
+          "id": "4"
+        },
+        "updated": "2025-12-16T17:23:53.031+0300",
+        "status": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/status/3",
+          "description": "This work item is being actively worked on at the moment by the assignee.",
+          "iconUrl": "https://rwrnd.atlassian.net/images/icons/statuses/inprogress.png",
+          "name": "In Progress",
+          "id": "3",
+          "statusCategory": {
+            "self": "https://rwrnd.atlassian.net/rest/api/3/statuscategory/4",
+            "id": 4,
+            "key": "indeterminate",
+            "colorName": "yellow",
+            "name": "In Progress"
+          }
+        }
+      }
+    },
+    {
+      "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+      "id": "612825",
+      "self": "https://rwrnd.atlassian.net/rest/api/3/issue/612825",
+      "key": "CDDOS-1864",
+      "fields": {
+        "summary": "Missing FE and BE validation for DNS Flood protection in DPX account template",
+        "issuetype": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/issuetype/11056",
+          "id": "11056",
+          "description": "cloud rnd bug",
+          "iconUrl": "https://rwrnd.atlassian.net/rest/api/2/universal_avatar/view/type/issuetype/avatar/11590?size=medium",
+          "name": "Cloud Bug",
+          "subtask": false,
+          "avatarId": 11590,
+          "hierarchyLevel": 0
+        },
+        "project": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/project/11064",
+          "id": "11064",
+          "key": "CDDOS",
+          "name": "Cloud DDoS",
+          "projectTypeKey": "software",
+          "simplified": false,
+          "avatarUrls": {
+            "48x48": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407",
+            "24x24": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=small",
+            "16x16": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=xsmall",
+            "32x32": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=medium"
+          },
+          "projectCategory": {
+            "self": "https://rwrnd.atlassian.net/rest/api/3/projectCategory/10001",
+            "id": "10001",
+            "description": "work towards features",
+            "name": "FeatureDevelopmentProject"
+          }
+        },
+        "assignee": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/user?accountId=6254101d4f1d57006a23cfed",
+          "accountId": "6254101d4f1d57006a23cfed",
+          "emailAddress": "michaelbl@radware.com",
+          "avatarUrls": {
+            "48x48": "https://secure.gravatar.com/avatar/4b8fc3d5a6609d33169b897f65f73057?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FMB-6.png",
+            "24x24": "https://secure.gravatar.com/avatar/4b8fc3d5a6609d33169b897f65f73057?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FMB-6.png",
+            "16x16": "https://secure.gravatar.com/avatar/4b8fc3d5a6609d33169b897f65f73057?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FMB-6.png",
+            "32x32": "https://secure.gravatar.com/avatar/4b8fc3d5a6609d33169b897f65f73057?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FMB-6.png"
+          },
+          "displayName": "Michael Blum",
+          "active": true,
+          "timeZone": "Etc/GMT-3",
+          "accountType": "atlassian"
+        },
+        "priority": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/priority/2",
+          "iconUrl": "https://rwrnd.atlassian.net/images/icons/priorities/high_new.svg",
+          "name": "High",
+          "id": "2"
+        },
+        "updated": "2025-12-16T16:50:02.889+0300",
+        "status": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/status/11061",
+          "description": "",
+          "iconUrl": "https://rwrnd.atlassian.net/images/icons/status_generic.gif",
+          "name": "To Do",
+          "id": "11061",
+          "statusCategory": {
+            "self": "https://rwrnd.atlassian.net/rest/api/3/statuscategory/2",
+            "id": 2,
+            "key": "new",
+            "colorName": "blue-gray",
+            "name": "To Do"
+          }
+        }
+      }
+    },
+    {
+      "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+      "id": "605796",
+      "self": "https://rwrnd.atlassian.net/rest/api/3/issue/605796",
+      "key": "CDDOS-1773",
+      "fields": {
+        "summary": "CC Activate/Deactive Manual /32 diversion",
+        "issuetype": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/issuetype/11059",
+          "id": "11059",
+          "description": "",
+          "iconUrl": "https://rwrnd.atlassian.net/rest/api/2/universal_avatar/view/type/issuetype/avatar/11592?size=medium",
+          "name": "Cloud Epic",
+          "subtask": false,
+          "avatarId": 11592,
+          "hierarchyLevel": 1
+        },
+        "project": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/project/11064",
+          "id": "11064",
+          "key": "CDDOS",
+          "name": "Cloud DDoS",
+          "projectTypeKey": "software",
+          "simplified": false,
+          "avatarUrls": {
+            "48x48": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407",
+            "24x24": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=small",
+            "16x16": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=xsmall",
+            "32x32": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=medium"
+          },
+          "projectCategory": {
+            "self": "https://rwrnd.atlassian.net/rest/api/3/projectCategory/10001",
+            "id": "10001",
+            "description": "work towards features",
+            "name": "FeatureDevelopmentProject"
+          }
+        },
+        "assignee": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/user?accountId=63514428c97f5473af6eca0a",
+          "accountId": "63514428c97f5473af6eca0a",
+          "emailAddress": "venkateshtl@radware.com",
+          "avatarUrls": {
+            "48x48": "https://secure.gravatar.com/avatar/a4dba959a892e60810ea23404dd29e97?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FVT-6.png",
+            "24x24": "https://secure.gravatar.com/avatar/a4dba959a892e60810ea23404dd29e97?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FVT-6.png",
+            "16x16": "https://secure.gravatar.com/avatar/a4dba959a892e60810ea23404dd29e97?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FVT-6.png",
+            "32x32": "https://secure.gravatar.com/avatar/a4dba959a892e60810ea23404dd29e97?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FVT-6.png"
+          },
+          "displayName": "Venkatesh TL",
+          "active": true,
+          "timeZone": "Etc/GMT-3",
+          "accountType": "atlassian"
+        },
+        "priority": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/priority/4",
+          "iconUrl": "https://rwrnd.atlassian.net/images/icons/priorities/low_new.svg",
+          "name": "Low",
+          "id": "4"
+        },
+        "updated": "2025-12-16T16:41:23.236+0300",
+        "status": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/status/10002",
+          "description": "Initial status",
+          "iconUrl": "https://rwrnd.atlassian.net/",
+          "name": "None",
+          "id": "10002",
+          "statusCategory": {
+            "self": "https://rwrnd.atlassian.net/rest/api/3/statuscategory/2",
+            "id": 2,
+            "key": "new",
+            "colorName": "blue-gray",
+            "name": "To Do"
+          }
+        }
+      }
+    },
+    {
+      "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+      "id": "612809",
+      "self": "https://rwrnd.atlassian.net/rest/api/3/issue/612809",
+      "key": "CDDOS-1860",
+      "fields": {
+        "summary": "BE: Pass new field as networks to the CC during activation/deactivation.",
+        "issuetype": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/issuetype/11055",
+          "id": "11055",
+          "description": "for the Cloud division because they have a different set of fields",
+          "iconUrl": "https://rwrnd.atlassian.net/rest/api/2/universal_avatar/view/type/issuetype/avatar/10316?size=medium",
+          "name": "Cloud Sub-task",
+          "subtask": true,
+          "avatarId": 10316,
+          "hierarchyLevel": -1
+        },
+        "project": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/project/11064",
+          "id": "11064",
+          "key": "CDDOS",
+          "name": "Cloud DDoS",
+          "projectTypeKey": "software",
+          "simplified": false,
+          "avatarUrls": {
+            "48x48": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407",
+            "24x24": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=small",
+            "16x16": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=xsmall",
+            "32x32": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=medium"
+          },
+          "projectCategory": {
+            "self": "https://rwrnd.atlassian.net/rest/api/3/projectCategory/10001",
+            "id": "10001",
+            "description": "work towards features",
+            "name": "FeatureDevelopmentProject"
+          }
+        },
+        "assignee": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/user?accountId=63514428c97f5473af6eca0a",
+          "accountId": "63514428c97f5473af6eca0a",
+          "emailAddress": "venkateshtl@radware.com",
+          "avatarUrls": {
+            "48x48": "https://secure.gravatar.com/avatar/a4dba959a892e60810ea23404dd29e97?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FVT-6.png",
+            "24x24": "https://secure.gravatar.com/avatar/a4dba959a892e60810ea23404dd29e97?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FVT-6.png",
+            "16x16": "https://secure.gravatar.com/avatar/a4dba959a892e60810ea23404dd29e97?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FVT-6.png",
+            "32x32": "https://secure.gravatar.com/avatar/a4dba959a892e60810ea23404dd29e97?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FVT-6.png"
+          },
+          "displayName": "Venkatesh TL",
+          "active": true,
+          "timeZone": "Etc/GMT-3",
+          "accountType": "atlassian"
+        },
+        "priority": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/priority/4",
+          "iconUrl": "https://rwrnd.atlassian.net/images/icons/priorities/low_new.svg",
+          "name": "Low",
+          "id": "4"
+        },
+        "updated": "2025-12-16T16:38:51.961+0300",
+        "status": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/status/10001",
+          "description": "",
+          "iconUrl": "https://rwrnd.atlassian.net/",
+          "name": "Done",
+          "id": "10001",
+          "statusCategory": {
+            "self": "https://rwrnd.atlassian.net/rest/api/3/statuscategory/3",
+            "id": 3,
+            "key": "done",
+            "colorName": "green",
+            "name": "Done"
+          }
+        }
+      }
+    },
+    {
+      "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+      "id": "612805",
+      "self": "https://rwrnd.atlassian.net/rest/api/3/issue/612805",
+      "key": "CDDOS-1859",
+      "fields": {
+        "summary": "BE: Add new field to CyberControllerAssetSettings entity and Validate",
+        "issuetype": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/issuetype/11055",
+          "id": "11055",
+          "description": "for the Cloud division because they have a different set of fields",
+          "iconUrl": "https://rwrnd.atlassian.net/rest/api/2/universal_avatar/view/type/issuetype/avatar/10316?size=medium",
+          "name": "Cloud Sub-task",
+          "subtask": true,
+          "avatarId": 10316,
+          "hierarchyLevel": -1
+        },
+        "project": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/project/11064",
+          "id": "11064",
+          "key": "CDDOS",
+          "name": "Cloud DDoS",
+          "projectTypeKey": "software",
+          "simplified": false,
+          "avatarUrls": {
+            "48x48": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407",
+            "24x24": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=small",
+            "16x16": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=xsmall",
+            "32x32": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=medium"
+          },
+          "projectCategory": {
+            "self": "https://rwrnd.atlassian.net/rest/api/3/projectCategory/10001",
+            "id": "10001",
+            "description": "work towards features",
+            "name": "FeatureDevelopmentProject"
+          }
+        },
+        "assignee": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/user?accountId=712020%3A984e05ef-6902-4bd8-8dc8-95fa1a982fc3",
+          "accountId": "712020:984e05ef-6902-4bd8-8dc8-95fa1a982fc3",
+          "emailAddress": "lakshayj@radware.com",
+          "avatarUrls": {
+            "48x48": "https://secure.gravatar.com/avatar/8567aab84fb6e8b196f9e8b897f06858?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FLJ-6.png",
+            "24x24": "https://secure.gravatar.com/avatar/8567aab84fb6e8b196f9e8b897f06858?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FLJ-6.png",
+            "16x16": "https://secure.gravatar.com/avatar/8567aab84fb6e8b196f9e8b897f06858?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FLJ-6.png",
+            "32x32": "https://secure.gravatar.com/avatar/8567aab84fb6e8b196f9e8b897f06858?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FLJ-6.png"
+          },
+          "displayName": "Lakshay J",
+          "active": true,
+          "timeZone": "Etc/GMT-3",
+          "accountType": "atlassian"
+        },
+        "priority": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/priority/4",
+          "iconUrl": "https://rwrnd.atlassian.net/images/icons/priorities/low_new.svg",
+          "name": "Low",
+          "id": "4"
+        },
+        "updated": "2025-12-16T16:38:41.088+0300",
+        "status": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/status/10001",
+          "description": "",
+          "iconUrl": "https://rwrnd.atlassian.net/",
+          "name": "Done",
+          "id": "10001",
+          "statusCategory": {
+            "self": "https://rwrnd.atlassian.net/rest/api/3/statuscategory/3",
+            "id": 3,
+            "key": "done",
+            "colorName": "green",
+            "name": "Done"
+          }
+        }
+      }
+    },
+    {
+      "expand": "renderedFields,names,schema,operations,editmeta,changelog,versionedRepresentations",
+      "id": "612816",
+      "self": "https://rwrnd.atlassian.net/rest/api/3/issue/612816",
+      "key": "CDDOS-1862",
+      "fields": {
+        "summary": "Dev Testing: Integration and testing",
+        "issuetype": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/issuetype/11055",
+          "id": "11055",
+          "description": "for the Cloud division because they have a different set of fields",
+          "iconUrl": "https://rwrnd.atlassian.net/rest/api/2/universal_avatar/view/type/issuetype/avatar/10316?size=medium",
+          "name": "Cloud Sub-task",
+          "subtask": true,
+          "avatarId": 10316,
+          "hierarchyLevel": -1
+        },
+        "project": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/project/11064",
+          "id": "11064",
+          "key": "CDDOS",
+          "name": "Cloud DDoS",
+          "projectTypeKey": "software",
+          "simplified": false,
+          "avatarUrls": {
+            "48x48": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407",
+            "24x24": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=small",
+            "16x16": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=xsmall",
+            "32x32": "https://rwrnd.atlassian.net/rest/api/3/universal_avatar/view/type/project/avatar/10407?size=medium"
+          },
+          "projectCategory": {
+            "self": "https://rwrnd.atlassian.net/rest/api/3/projectCategory/10001",
+            "id": "10001",
+            "description": "work towards features",
+            "name": "FeatureDevelopmentProject"
+          }
+        },
+        "assignee": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/user?accountId=712020%3A984e05ef-6902-4bd8-8dc8-95fa1a982fc3",
+          "accountId": "712020:984e05ef-6902-4bd8-8dc8-95fa1a982fc3",
+          "emailAddress": "lakshayj@radware.com",
+          "avatarUrls": {
+            "48x48": "https://secure.gravatar.com/avatar/8567aab84fb6e8b196f9e8b897f06858?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FLJ-6.png",
+            "24x24": "https://secure.gravatar.com/avatar/8567aab84fb6e8b196f9e8b897f06858?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FLJ-6.png",
+            "16x16": "https://secure.gravatar.com/avatar/8567aab84fb6e8b196f9e8b897f06858?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FLJ-6.png",
+            "32x32": "https://secure.gravatar.com/avatar/8567aab84fb6e8b196f9e8b897f06858?d=https%3A%2F%2Favatar-management--avatars.us-west-2.prod.public.atl-paas.net%2Finitials%2FLJ-6.png"
+          },
+          "displayName": "Lakshay J",
+          "active": true,
+          "timeZone": "Etc/GMT-3",
+          "accountType": "atlassian"
+        },
+        "priority": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/priority/4",
+          "iconUrl": "https://rwrnd.atlassian.net/images/icons/priorities/low_new.svg",
+          "name": "Low",
+          "id": "4"
+        },
+        "updated": "2025-12-16T16:38:30.258+0300",
+        "status": {
+          "self": "https://rwrnd.atlassian.net/rest/api/3/status/3",
+          "description": "This work item is being actively worked on at the moment by the assignee.",
+          "iconUrl": "https://rwrnd.atlassian.net/images/icons/statuses/inprogress.png",
+          "name": "In Progress",
+          "id": "3",
+          "statusCategory": {
+            "self": "https://rwrnd.atlassian.net/rest/api/3/statuscategory/4",
+            "id": 4,
+            "key": "indeterminate",
+            "colorName": "yellow",
+            "name": "In Progress"
+          }
+        }
+      }
+    }
+  ]
+}
