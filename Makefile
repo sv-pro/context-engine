@@ -1,4 +1,4 @@
-.PHONY: help quickstart status stop start db-backup db-restore db-backup-webui db-restore-webui
+.PHONY: help quickstart status stop start db-backup db-restore db-backup-webui db-restore-webui fetch-jira
 
 # Default target: show help
 help:
@@ -9,6 +9,7 @@ help:
 	@echo "  start       Start services (detached mode)"
 	@echo "  stop        Stop services"
 	@echo "  status      Show status of services"
+	@echo "  fetch-jira  Fetch Jira issues (project=C DDOS by default) into volumes/brain/jira"
 	@echo "  check-db    Check presence of indexed content in DB"
 	@echo "  db-reindex  Clear index and re-ingest (required when changing model)"
 	@echo "  rebuild     Rebuild all images from scratch"
@@ -230,3 +231,7 @@ benchmark-help:
 	@echo "  make benchmark-all"
 	@echo "  make benchmark-category CATEGORY=multi-hop"
 	@echo "  make benchmark-difficulty DIFFICULTY=hard"
+
+fetch-jira: check_env
+	@mkdir -p volumes/brain/jira
+	PYTHONPATH=context_driver/src python3 context_driver/src/jira_tools/fetch_issues.py --project $(or $(PROJECT),CDDOS) $(if $(JQL),--jql "$(JQL)",) $(if $(LIMIT),--limit $(LIMIT),) --output volumes/brain/jira
