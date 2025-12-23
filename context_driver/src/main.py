@@ -367,7 +367,16 @@ async def lifespan(app: FastAPI):
     if app.state.note_syncer:
         app.state.note_syncer.close()
 
-app = FastAPI(lifespan=lifespan)
+app = FastAPI(
+    lifespan=lifespan,
+    title="Context Driver - Brain RAG API",
+    description="RAG-enhanced chat and knowledge base tools for AI assistants",
+    version="1.0.0"
+)
+
+# Include the tools API router for Open WebUI integration
+from tools_api import router as tools_router
+app.include_router(tools_router)
 
 @app.get("/health")
 async def health():
