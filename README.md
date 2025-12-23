@@ -247,10 +247,10 @@ See [FEATURES.md](FEATURES.md) for the full roadmap.
 - ✅ Chunked embeddings
 - ✅ mxbai-embed-large upgrade
 - ✅ Open WebUI Notes sync
-
-### In Progress
-- ⏳ Source attribution in responses
-- ⏳ LLM cost tracking
+- ✅ Source attribution in responses ([Source N] → clickable links)
+- ✅ LLM cost tracking dashboard (`/cost-dashboard`)
+- ✅ Prompt logging for debugging (`CONTEXT_DRIVER_LOG_PROMPTS=true`)
+- ✅ Database backup/restore (`make db-backup`, `make db-restore-webui`)
 
 ### Planned
 - MCP Knowledge Base server

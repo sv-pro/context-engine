@@ -34,15 +34,15 @@ model_list:
 
 
   # Reasoning Models (OpenAI)
-  - model_name: o1-preview
+  - model_name: o3-mini
     litellm_params:
-      model: openai/o1-preview
+      model: openai/o3-mini
       api_key: os.environ/OPENAI_API_KEY
-      max_completion_tokens: 32768
+      max_completion_tokens: 65536
 
-  - model_name: o1-mini
+  - model_name: o4-mini
     litellm_params:
-      model: openai/o1-mini
+      model: openai/o4-mini
       api_key: os.environ/OPENAI_API_KEY
       max_completion_tokens: 65536
       
