@@ -1,4 +1,4 @@
-.PHONY: help quickstart status stop start
+.PHONY: help quickstart status stop start db-backup db-restore db-backup-webui db-restore-webui
 
 # Default target: show help
 help:
@@ -13,8 +13,14 @@ help:
 	@echo "  db-reindex  Clear index and re-ingest (required when changing model)"
 	@echo "  rebuild     Rebuild all images from scratch"
 	@echo "  rebuild-driver Rebuild only the context-driver"
-	@echo "  flush       Stop system and delete all volumes (factory reset)"
+	@echo "  flush       Stop services and delete all volumes (factory reset)"
 	@echo "  presentation Show the project intro presentation path"
+	@echo ""
+	@echo "Database backup/restore targets:"
+	@echo "  db-backup       Backup entire PostgreSQL database"
+	@echo "  db-restore      Restore entire PostgreSQL database (FILE=<path>)"
+	@echo "  db-backup-webui Backup only Open WebUI database"
+	@echo "  db-restore-webui Restore only Open WebUI database (FILE=<path>)"
 	@echo ""
 	@echo "Benchmark targets:"
 	@echo "  benchmark-help  Show benchmark usage and examples"
@@ -84,11 +90,11 @@ start: check_env
 
 # Stop services
 stop:
-	docker compose stop
+	docker compose --profile ollama stop
 
 # Show status
 status:
-	docker compose ps
+	docker compose --profile ollama ps
 	@$(MAKE) endpoints
 
 # Check DB index
@@ -127,6 +133,64 @@ rebuild-driver:
 flush:
 	docker compose down -v
 	@echo "All volumes deleted. System is clean."
+
+# Database Backup/Restore
+BACKUP_DIR := ./backups
+TIMESTAMP := $(shell date +%Y%m%d_%H%M%S)
+
+# Backup entire PostgreSQL database (all databases)
+db-backup:
+	@mkdir -p $(BACKUP_DIR)
+	@echo "Backing up entire PostgreSQL database..."
+	docker exec db pg_dumpall -U postgres --clean > $(BACKUP_DIR)/full_backup_$(TIMESTAMP).sql
+	@echo "Backup saved to: $(BACKUP_DIR)/full_backup_$(TIMESTAMP).sql"
+
+# Restore entire PostgreSQL database
+db-restore:
+	@if [ -z "$(FILE)" ]; then \
+		echo "Usage: make db-restore FILE=<backup_file>"; \
+		echo "Available backups:"; \
+		ls -la $(BACKUP_DIR)/full_*.sql 2>/dev/null || echo "  No full backups found in $(BACKUP_DIR)/"; \
+		exit 1; \
+	fi
+	@echo "Stopping services that use the database..."
+	docker compose stop open-webui context-driver litellm
+	@echo "Restoring from $(FILE)..."
+	docker exec -i db psql -U postgres --single-transaction -v ON_ERROR_STOP=0 < $(FILE)
+	@echo "Restarting services..."
+	docker compose start open-webui context-driver litellm
+	@echo "Database restored from $(FILE)"
+
+# Backup only Open WebUI database
+db-backup-webui:
+	@mkdir -p $(BACKUP_DIR)
+	@echo "Backing up Open WebUI database..."
+	docker exec db pg_dump -U postgres -d webui > $(BACKUP_DIR)/webui_backup_$(TIMESTAMP).sql
+	@echo "Backup saved to: $(BACKUP_DIR)/webui_backup_$(TIMESTAMP).sql"
+
+# Restore only Open WebUI database
+db-restore-webui:
+	@RESTORE_FILE="$(FILE)"; \
+	if [ -z "$$RESTORE_FILE" ]; then \
+		RESTORE_FILE=$$(ls -t $(BACKUP_DIR)/webui_*.sql 2>/dev/null | head -1); \
+		if [ -z "$$RESTORE_FILE" ]; then \
+			echo "No WebUI backups found in $(BACKUP_DIR)/"; \
+			echo "Usage: make db-restore-webui [FILE=<backup_file>]"; \
+			exit 1; \
+		fi; \
+		echo "No FILE specified, using latest: $$RESTORE_FILE"; \
+	fi; \
+	echo "Stopping Open WebUI..."; \
+	docker compose stop open-webui; \
+	echo "Dropping and recreating webui database..."; \
+	docker exec db psql -U postgres -c "SELECT pg_terminate_backend(pg_stat_activity.pid) FROM pg_stat_activity WHERE pg_stat_activity.datname = 'webui' AND pid <> pg_backend_pid();" > /dev/null 2>&1 || true; \
+	docker exec db psql -U postgres -c "DROP DATABASE IF EXISTS webui;"; \
+	docker exec db psql -U postgres -c "CREATE DATABASE webui;"; \
+	echo "Restoring from $$RESTORE_FILE..."; \
+	docker exec -i db psql -U postgres -d webui < $$RESTORE_FILE; \
+	echo "Restarting Open WebUI..."; \
+	docker compose start open-webui; \
+	echo "Open WebUI database restored from $$RESTORE_FILE"
 
 # Show presentation path
 presentation:

@@ -100,7 +100,7 @@ services:
     container_name: ollama
     profiles: ["ollama"]
     ports:
-      - "11435:11434"
+      - "11434:11434"
     volumes:
       - ./volumes/ollama:/root/.ollama
     restart: always

@@ -68,7 +68,7 @@ def split_markdown(
         
         # Check if adding this line would exceed max
         if current_tokens + (line_chars // 4) > max_tokens and current_chunk_lines:
-            # Save current chunk
+             # Standard case: current chunk full
             chunk_content = '\n'.join(current_chunk_lines)
             chunks.append(Chunk(
                 content=chunk_content,
@@ -79,7 +79,6 @@ def split_markdown(
             ))
             
             # Start new chunk with overlap
-            # Keep last N characters worth of lines for overlap
             overlap_content = chunk_content[-overlap_chars:] if len(chunk_content) > overlap_chars else ""
             overlap_lines = overlap_content.split('\n')
             
@@ -87,8 +86,35 @@ def split_markdown(
             current_tokens = estimate_tokens('\n'.join(current_chunk_lines))
             chunk_start_line = max(0, i - len(overlap_lines))
         else:
-            current_chunk_lines.append(line)
-            current_tokens += line_chars // 4
+            # Check if LINE itself is huge
+            if len(line) // 4 > max_tokens:
+                    # Huge line: force split
+                    while len(line) // 4 > max_tokens:
+                        split_idx = max_tokens * 4
+                        part = line[:split_idx]
+                        line = line[split_idx:]
+                        
+                        current_chunk_lines.append(part)
+                        # Flush current chunk immediately
+                        chunk_content = '\n'.join(current_chunk_lines)
+                        chunks.append(Chunk(
+                            content=chunk_content,
+                            chunk_index=len(chunks),
+                            section=current_section,
+                            line_start=chunk_start_line,
+                            line_end=i 
+                        ))
+                        current_chunk_lines = []
+                        current_tokens = 0
+                        chunk_start_line = i
+                        
+                    # Add remainder
+                    if line:
+                        current_chunk_lines.append(line)
+                        current_tokens += len(line) // 4
+            else:    
+                current_chunk_lines.append(line)
+                current_tokens += line_chars // 4
     
     # Don't forget the last chunk
     if current_chunk_lines:

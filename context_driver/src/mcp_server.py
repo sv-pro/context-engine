@@ -7,7 +7,6 @@ from mcp.server.fastmcp import FastMCP
 from db import Database
 
 # Configure logging
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("mcp-kb-server")
 
 # FastMCP constructor

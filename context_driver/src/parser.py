@@ -16,7 +16,9 @@ def parse_markdown(content):
     clean_content = content
 
     # 1. Extract Frontmatter
-    frontmatter_pattern = r'^---\s*\n(.*?)\n---\s*\n'
+    # Allow optional whitespace at start
+    # Match content between --- delimiters, handling potential lack of trailing newline
+    frontmatter_pattern = r'^\s*---\s*\n(.*?)\n---\s*'
     match = re.search(frontmatter_pattern, content, re.DOTALL)
     if match:
         try:

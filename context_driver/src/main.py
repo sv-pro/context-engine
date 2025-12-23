@@ -9,15 +9,17 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
+
+# Configure logging FIRST
+print("DEBUG: LOADED NEW CODE WITH TRUNCATION AND PARSER FIXES", flush=True)
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logger = logging.getLogger("context-driver")
+
 from db import Database
 from parser import parse_markdown
 from enricher import enrich_markdown
 from mcp_server import mcp as mcp_instance
 from mcp.server.fastmcp import FastMCP
-
-# Configure logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-logger = logging.getLogger("context-driver")
 
 # Separate logger for prompt logging (can be toggled independently)
 prompt_logger = logging.getLogger("context-driver.prompts")
@@ -99,7 +101,11 @@ def get_embedding(text, cost_tracker=None):
                 "model": current_config.model,
                 "input": text
             }, headers={"Authorization": f"Bearer {LITELLM_MASTER_KEY}"})
-            response.raise_for_status()
+            
+            if response.status_code != 200:
+                logger.error(f"Embedding failed: {response.status_code} - {response.text}")
+                response.raise_for_status()
+                
             vector = response.json()["data"][0]["embedding"]
             
         else:
@@ -203,7 +209,35 @@ def process_file(file_path):
                     logger.info(f"Created {len(chunks)} chunks with embeddings for {title}")
                 
                 # Also keep note-level embedding as fallback
-                vector = get_embedding(parsed['content'], cost_tracker=cost_tracker)
+                
+                # 2. Extract keywords (if enabled and not present)
+                # Default to enabled, or check env var
+                enable_keywords = os.environ.get("ENABLE_KEYWORD_EXTRACTION", "true").lower() == "true"
+                if enable_keywords and 'keywords' not in parsed['metadata']:
+                    from prompts import extract_keywords
+                    keywords = extract_keywords(parsed['content'], title)
+                    if keywords:
+                        parsed['metadata']['keywords'] = keywords
+                        db.upsert_note(file_path, title, parsed['content'], parsed['metadata'])
+                        logger.info(f"Extracted and updated keywords for {title}: {keywords}")
+
+                # Truncate content for embedding
+                try:
+                    import tiktoken
+                    encoding = tiktoken.encoding_for_model(current_config.model)
+                    tokens = encoding.encode(parsed['content'])
+
+                    if len(tokens) > 8000:
+                        truncated_tokens = tokens[:8000]
+                        truncated_content = encoding.decode(truncated_tokens)
+                        logger.info(f"Truncated content from {len(tokens)} to 8000 tokens")
+                    else:
+                        truncated_content = parsed['content']
+                except ImportError:
+                    logger.warning("tiktoken not found, falling back to strict character truncation")
+                    truncated_content = parsed['content'][:15000]
+                
+                vector = get_embedding(truncated_content, cost_tracker=cost_tracker)
                 if vector:
                     db.update_embedding(note_id, vector)
                     logger.info(f"Updated note-level embedding for {title}")
@@ -237,7 +271,7 @@ def process_file(file_path):
                 # Compare with original content to avoid redundant writes
                 with open(file_path, 'r', encoding='utf-8') as f:
                     original_content = f.read()
-                
+                # 4. Write back if changed
                 if enriched_content.strip() != original_content.strip():
                     with open(file_path, 'w', encoding='utf-8') as f:
                         f.write(enriched_content)
@@ -473,6 +507,111 @@ async def mcp_messages(request: Request):
         return handler
 
 
+def build_context_for_query(user_query, *, strategy=SEARCH_STRATEGY, limit=5, cost_tracker=None):
+    context_text = ""
+    source_mapping = {}
+    results = []
+
+    query_vector = get_embedding(user_query, cost_tracker=cost_tracker)
+    if query_vector:
+        results = db.search(user_query, query_vector, strategy=strategy, limit=limit)
+        if results:
+            context_parts = []
+            for i, row in enumerate(results):
+                file_path, title, content, section, similarity = row
+
+                source_num = i + 1
+                source_label = f"Source {source_num}"
+                section_info = f" > {section}" if section else ""
+
+                source_mapping[source_num] = {
+                    "title": title,
+                    "file_path": file_path,
+                    "section": section,
+                    "similarity": similarity,
+                }
+
+                header = f"--- {source_label}: {title}{section_info} ({file_path}) ---"
+                context_parts.append(f"{header}\n{content}")
+
+            context_text = "\n\n".join(context_parts)
+            logger.info(f"Found {len(results)} relevant documents using {strategy} search.")
+    else:
+        logger.warning("Failed to generate embedding for query, no context will be used.")
+
+    return context_text, source_mapping, results
+
+
+def build_system_prompt(context_text):
+    return (
+        "You are a knowledge base assistant with access to a local documentation repository (the 'Brain').\n\n"
+        "CRITICAL RULES:\n"
+        "1. You MUST ONLY use information from the provided CONTEXT below.\n"
+        "2. Do NOT generate, infer, or extrapolate information beyond what is explicitly stated in the CONTEXT.\n"
+        "3. If the CONTEXT does not contain the answer, you MUST respond with: 'I cannot find this information in the knowledge base.'\n"
+        "4. You MUST cite your sources using [Source N] notation (e.g., [Source 1]) matching the headers in the context.\n"
+        "5. Construct your answer by quoting or paraphrasing ONLY from the CONTEXT. Do not add your own knowledge.\n"
+        "6. If the question requires information from multiple sources, synthesize them but cite each source used.\n"
+        "7. If the CONTEXT is empty or irrelevant, state: 'No relevant information found in the knowledge base.'\n\n"
+        f"CONTEXT:\n{context_text if context_text else '[No context available]'}"
+    )
+
+
+@app.post("/v1/context")
+async def context_preview(request: Request):
+    try:
+        body = await request.json()
+    except Exception:
+        return JSONResponse({"error": "Invalid JSON body"}, status_code=400)
+
+    query = body.get("query")
+    if not isinstance(query, str) or not query.strip():
+        return JSONResponse({"error": "query must be a non-empty string"}, status_code=400)
+    query = query.strip()
+
+    strategy = body.get("strategy") or SEARCH_STRATEGY
+    include_system_prompt = bool(body.get("include_system_prompt", False))
+
+    try:
+        limit = int(body.get("limit", 5))
+        if limit <= 0:
+            raise ValueError
+    except (TypeError, ValueError):
+        return JSONResponse({"error": "limit must be a positive integer"}, status_code=400)
+
+    cost_tracker = getattr(request.app.state, "cost_tracker", None)
+    context_text, source_mapping, results = build_context_for_query(
+        query,
+        strategy=strategy,
+        limit=limit,
+        cost_tracker=cost_tracker,
+    )
+
+    sources = []
+    for source_num, info in source_mapping.items():
+        sources.append(
+            {
+                "source_num": source_num,
+                "title": info["title"],
+                "file_path": info["file_path"],
+                "section": info["section"],
+                "similarity": info["similarity"],
+            }
+        )
+
+    response = {
+        "query": query,
+        "strategy": strategy,
+        "limit": limit,
+        "context_text": context_text,
+        "sources": sources,
+    }
+    if include_system_prompt:
+        response["system_prompt"] = build_system_prompt(context_text)
+
+    return JSONResponse(response)
+
+
 @app.post("/v1/chat/completions")
 async def chat_completions(request: Request):
     try:
@@ -549,52 +688,16 @@ async def chat_completions(request: Request):
                 return JSONResponse(status_code=response.status_code, content=resp_json)
 
         # 2. Semantic Search (only for real user queries)
-        context_text = ""
-        source_mapping = {}  # Track source numbers to file info for link generation
         cost_tracker = getattr(request.app.state, 'cost_tracker', None)
-        query_vector = get_embedding(user_query, cost_tracker=cost_tracker)
-        if query_vector:
-            # Use the unified search router with the configured strategy
-            # Strategies: 'super_hybrid', 'hybrid', 'graph', 'keyword', 'semantic'
-            results = db.search(user_query, query_vector, strategy=SEARCH_STRATEGY, limit=5)
-            if results:
-                context_parts = []
-                for i, row in enumerate(results):
-                    # Unpack result structure: (file_path, title, content, section, similarity)
-                    file_path, title, content, section, similarity = row
-                    
-                    source_num = i + 1
-                    source_label = f"Source {source_num}"
-                    section_info = f" > {section}" if section else ""
-                    
-                    # Store mapping for post-processing
-                    source_mapping[source_num] = {
-                        'title': title,
-                        'file_path': file_path,
-                        'section': section
-                    }
-                    
-                    header = f"--- {source_label}: {title}{section_info} ({file_path}) ---"
-                    context_parts.append(f"{header}\n{content}")
-                    
-                context_text = "\n\n".join(context_parts)
-                logger.info(f"Found {len(results)} relevant documents using {SEARCH_STRATEGY} search.")
-        else:
-            logger.warning("Failed to generate embedding for query, no context will be used.")
+        context_text, source_mapping, results = build_context_for_query(
+            user_query,
+            strategy=SEARCH_STRATEGY,
+            limit=5,
+            cost_tracker=cost_tracker,
+        )
 
         # 3. Augment Prompt with STRICT grounding instructions
-        system_prompt = (
-            "You are a knowledge base assistant with access to a local documentation repository (the 'Brain').\n\n"
-            "CRITICAL RULES:\n"
-            "1. You MUST ONLY use information from the provided CONTEXT below.\n"
-            "2. Do NOT generate, infer, or extrapolate information beyond what is explicitly stated in the CONTEXT.\n"
-            "3. If the CONTEXT does not contain the answer, you MUST respond with: 'I cannot find this information in the knowledge base.'\n"
-            "4. You MUST cite your sources using [Source N] notation (e.g., [Source 1]) matching the headers in the context.\n"
-            "5. Construct your answer by quoting or paraphrasing ONLY from the CONTEXT. Do not add your own knowledge.\n"
-            "6. If the question requires information from multiple sources, synthesize them but cite each source used.\n"
-            "7. If the CONTEXT is empty or irrelevant, state: 'No relevant information found in the knowledge base.'\n\n"
-            f"CONTEXT:\n{context_text if context_text else '[No context available]'}"
-        )
+        system_prompt = build_system_prompt(context_text)
 
         # Insert or update system message
         new_messages = [{"role": "system", "content": system_prompt}]
@@ -715,4 +818,3 @@ async def chat_completions(request: Request):
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
-

@@ -12,6 +12,18 @@ class Database:
     def __init__(self):
         self.url = os.environ.get("DATABASE_URL")
         self.embedding_dim = current_config.dimensions
+        
+        # Determine vector type and operators based on dimensions
+        # pgvector standard 'vector' type (float32) supports indexing up to 2000 dims.
+        # 'halfvec' (float16) supports indexing up to 4000 dims.
+        if self.embedding_dim <= 2000:
+            self.vector_type = 'vector'
+            self.vector_ops = 'vector_cosine_ops'
+        else:
+            self.vector_type = 'halfvec'
+            self.vector_ops = 'halfvec_cosine_ops'
+            logger.info(f"Using {self.vector_type} for embedding storage (dim={self.embedding_dim})")
+
         self.conn = None
         self._connect()
 
@@ -41,11 +53,11 @@ class Database:
                     title TEXT,
                     content TEXT,
                     metadata JSONB,
-                    embedding vector({dim}),
+                    embedding {type}({dim}),
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 );
-            """.format(dim=self.embedding_dim))
+            """.format(type=self.vector_type, dim=self.embedding_dim))
 
             # Create edges table in brain schema
             cur.execute("""
@@ -65,19 +77,20 @@ class Database:
                     chunk_index INT NOT NULL,
                     content TEXT NOT NULL,
                     section TEXT,
-                    embedding vector({dim}),
+                    embedding {type}({dim}),
                     metadata JSONB DEFAULT '{{}}'::jsonb,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     UNIQUE(note_id, chunk_index)
                 );
-            """.format(dim=self.embedding_dim))
+            """.format(type=self.vector_type, dim=self.embedding_dim))
             
             # Create index for chunk embeddings if not exists
+            # We use correct op class based on type
             cur.execute("""
                 CREATE INDEX IF NOT EXISTS idx_chunks_embedding 
-                ON brain.chunks USING ivfflat (embedding vector_cosine_ops)
+                ON brain.chunks USING ivfflat (embedding {ops})
                 WITH (lists = 100);
-            """)
+            """.format(ops=self.vector_ops))
 
             # Add GIN indices for Full-Text Search
             cur.execute("""
@@ -164,8 +177,8 @@ class Database:
         """
         with self.conn.cursor() as cur:
             # First try chunk-based search
-            cur.execute("""
-                SELECT n.file_path, n.title, c.content, c.section, 1 - (c.embedding <=> %s::vector) as similarity
+            cur.execute(f"""
+                SELECT n.file_path, n.title, c.content, c.section, 1 - (c.embedding <=> %s::{self.vector_type}) as similarity
                 FROM brain.chunks c
                 JOIN brain.notes n ON c.note_id = n.id
                 WHERE c.embedding IS NOT NULL
@@ -176,8 +189,8 @@ class Database:
             
             # Fall back to note-based search if no chunks exist
             if not results:
-                cur.execute("""
-                    SELECT file_path, title, content, metadata, 1 - (embedding <=> %s::vector) as similarity
+                cur.execute(f"""
+                    SELECT file_path, title, content, metadata, 1 - (embedding <=> %s::{self.vector_type}) as similarity
                     FROM brain.notes
                     WHERE embedding IS NOT NULL
                     ORDER BY similarity DESC
@@ -197,13 +210,13 @@ class Database:
         with self.conn.cursor() as cur:
             # Stage 1 & 2: Wide sweep and neighbor voting in one query
             # We use CTEs to find candidates and then count their outgoing links to other notes.
-            cur.execute("""
+            cur.execute(f"""
                 WITH wide_pool AS (
                     SELECT n.id as note_id, n.file_path, n.title, c.content, c.section,
-                           1 - (c.embedding <=> %s::vector) as similarity
+                           1 - (c.embedding <=> %s::{self.vector_type}) as similarity
                     FROM brain.chunks c
                     JOIN brain.notes n ON c.note_id = n.id
-                    WHERE c.embedding IS NOT NULL AND 1 - (c.embedding <=> %s::vector) > %s
+                    WHERE c.embedding IS NOT NULL AND 1 - (c.embedding <=> %s::{self.vector_type}) > %s
                     ORDER BY similarity DESC
                     LIMIT %s
                 ),
@@ -312,8 +325,8 @@ class Database:
         Legacy: Performs vector similarity search on whole notes.
         """
         with self.conn.cursor() as cur:
-            cur.execute("""
-                SELECT file_path, title, content, metadata, 1 - (embedding <=> %s::vector) as similarity
+            cur.execute(f"""
+                SELECT file_path, title, content, metadata, 1 - (embedding <=> %s::{self.vector_type}) as similarity
                 FROM brain.notes
                 WHERE embedding IS NOT NULL
                 ORDER BY similarity DESC

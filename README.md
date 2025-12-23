@@ -158,6 +158,7 @@ The system automatically selects the best available LLM:
 | Endpoint               | Method | Description                  |
 | ---------------------- | ------ | ---------------------------- |
 | `/v1/chat/completions` | POST   | RAG-enhanced chat            |
+| `/v1/context`          | POST   | Context preview (no LLM call) |
 | `/sync-notes`          | POST   | Sync Open WebUI notes to KB  |
 | `/sync-notes/status`   | GET    | Check note sync status       |
 | `/mcp/sse`             | GET    | MCP Server-Sent Events (SSE) |
@@ -174,6 +175,24 @@ curl http://localhost:8000/v1/chat/completions \
     "messages": [{"role": "user", "content": "Where are private keys stored?"}],
     "stream": false
   }'
+```
+
+### Example Context Preview
+
+```bash
+curl http://localhost:8000/v1/context \
+  -H "Content-Type: application/json" \
+  -d '{
+    "query": "Where are private keys stored?",
+    "limit": 5,
+    "strategy": "super_hybrid"
+  }'
+```
+
+### Example CLI (inside context-driver container)
+
+```bash
+python src/cli.py /context "Where are private keys stored?"
 ```
 
 ## 🗄️ Database Schema

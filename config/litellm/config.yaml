@@ -1,4 +1,10 @@
 model_list:
+  - model_name: brain-rag
+    litellm_params:
+      model: custom_openai/context-brain
+      api_base: http://context-driver:8000/v1
+      api_key: sk-optional
+
   - model_name: llama3
     litellm_params:
       model: ollama/llama3.2:latest
@@ -20,6 +26,13 @@ model_list:
       model: anthropic/claude-3-haiku-20240307
       api_key: os.environ/ANTHROPIC_API_KEY
 
+  # Embedding Models (OpenAI)
+  - model_name: text-embedding-3-large
+    litellm_params:
+      model: openai/text-embedding-3-large
+      api_key: os.environ/OPENAI_API_KEY
+
+
   # Reasoning Models (OpenAI)
   - model_name: o1-preview
     litellm_params:
@@ -32,12 +45,6 @@ model_list:
       model: openai/o1-mini
       api_key: os.environ/OPENAI_API_KEY
       max_completion_tokens: 65536
-
-  - model_name: brain-rag
-    litellm_params:
-      model: custom_openai/context-brain
-      api_base: http://context-driver:8000/v1
-      api_key: sk-optional
       
 general_settings:
   master_key: os.environ/LITELLM_MASTER_KEY
