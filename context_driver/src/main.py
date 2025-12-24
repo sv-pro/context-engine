@@ -198,9 +198,10 @@ def process_file(file_path):
         if was_updated:
             logger.info(f"Upserted note: {title} (ID: {note_id})")
 
-            if parsed['links']:
-                db.update_links(note_id, parsed['links'])
-                logger.info(f"Updated {len(parsed['links'])} links for {title}")
+            # Legacy links handling removed/deferred to update_edges below
+            # if parsed['links']:
+            #    db.update_links(note_id, parsed['links'])
+
 
             # Chunk the content and create embeddings for each chunk
             if parsed['content']:
@@ -339,20 +340,48 @@ def ingest_raw_file(file_path):
             safe_name = re.sub(r'[^a-zA-Z0-9_-]', '_', name)
             entity_path = os.path.join(ENTITIES_DIR, f"{safe_name}.md")
             
-            # Create minimal entity node
-            entity_content = f"""---
-type: {entity.get('type', 'Concept')}
-generated_from: "{title}"
----
-# {name}
+            # Find relationships involving this entity
+            entity_rels = []
+            for r in graph_data.get('relationships', []):
+                if r.get('source') == name:
+                    entity_rels.append(f"- **{r.get('type')}** -> [[{r.get('target')}]]")
+                elif r.get('target') == name:
+                    entity_rels.append(f"- **{r.get('type')}** (from [[{r.get('source')}]])")
+            
+            rels_text = "\n".join(entity_rels) if entity_rels else "No specific relationships extracted."
 
-{entity.get('description', 'No description available.')}
-
+            # Merge with existing if exists
+            existing_rels = set()
+            existing_content_top = f"---\ntype: {entity.get('type', 'Concept')}\ngenerated_from: \"{title}\"\n---\n# {name}\n\n{entity.get('description', 'No description available.')}\n"
+            
+            if os.path.exists(entity_path):
+                with open(entity_path, 'r', encoding='utf-8') as f:
+                    old_content = f.read()
+                
+                # Simple parsing of existing relationships
+                if "## Relationships" in old_content:
+                    parts = old_content.split("## Relationships")
+                    # Use the old description/header if preferred? 
+                    # For now, let's keep the NEW description as it might be fresher or from a focused doc?
+                    # actually, let's keep the Longest description? Or just append?
+                    # Let's simple merge relationships.
+                    
+                    rel_lines = parts[1].strip().split('\n')
+                    for line in rel_lines:
+                        if line.strip().startswith('-'):
+                            existing_rels.add(line.strip())
+            
+            # Add new rels
+            for r in entity_rels:
+                existing_rels.add(r)
+            
+            # Sort for stability
+            final_rels_text = "\n".join(sorted(list(existing_rels)))
+            
+            entity_content = f"""{existing_content_top}
 ## Relationships
+{final_rels_text}
 """
-            # We don't want to overwrite if it exists and has manual edits? 
-            # For now, we assume derived graph is ephemeral and overwrite.
-            # Ideally we'd merge, but that's complex.
             with open(entity_path, 'w', encoding='utf-8') as f:
                 f.write(entity_content)
                 
@@ -699,38 +728,99 @@ async def mcp_messages(request: Request):
 
 
 def build_context_for_query(user_query, *, strategy=SEARCH_STRATEGY, limit=5, cost_tracker=None):
+    MAX_ROUNDS = 5
     context_text = ""
     source_mapping = {}
-    results = []
-
+    seen_files = set()
+    all_results = []
+    
+    # Round 1: Vector/Hybrid Search
     query_vector = get_embedding(user_query, cost_tracker=cost_tracker)
     if query_vector:
-        results = db.search(user_query, query_vector, strategy=strategy, limit=limit)
-        if results:
-            context_parts = []
-            for i, row in enumerate(results):
-                file_path, title, content, section, similarity = row
+        current_results = db.search(user_query, query_vector, strategy=strategy, limit=limit)
+        
+        round_idx = 1
+        while round_idx <= MAX_ROUNDS and current_results:
+            new_results = []
+            links_to_fetch = set()
+            
+            # Process current results
+            for r in current_results:
+                fpath = r[0]
+                if fpath not in seen_files:
+                    seen_files.add(fpath)
+                    all_results.append(r)
+                    
+                    # Extract links for Next Round
+                    # Regex to find [[WikiLink]] inside content
+                    # This works because we now put [[Target]] in Entity Node content
+                    found_links = re.findall(r'\[\[(.*?)\]\]', r[2])
+                    if found_links:
+                         logger.info(f"Doc {r[1]} has links: {found_links}")
+                    else:
+                         logger.debug(f"Doc {r[1]} has NO links. Content snippet: {r[2][:100]}")
 
-                source_num = i + 1
-                source_label = f"Source {source_num}"
-                section_info = f" > {section}" if section else ""
+                    for link in found_links:
+                        links_to_fetch.add(link)
+            
+            # Prepare next round results
+            current_results = [] # Clear for next iteration
+            
+            if links_to_fetch:
+                logger.info(f"Round {round_idx}: Found {len(links_to_fetch)} links to follow: {list(links_to_fetch)[:10]}...")
+                
+                for link_title in links_to_fetch:
+                    # Resolve links to notes
+                    # Fix: Handle Space vs Underscore mismatch
+                    # LLM generates "Project Chimera", DB has "Project_Chimera"
+                    sanitized_title = re.sub(r'[^a-zA-Z0-9_-]', '_', link_title)
+                    logger.info(f"Looking up link: '{link_title}' (Sanitized: '{sanitized_title}')")
+                    
+                    with db.conn.cursor() as cur:
+                        # Try exact match or sanitized match
+                        cur.execute(
+                            "SELECT file_path, title, content, metadata FROM brain.notes WHERE title ILIKE %s OR title ILIKE %s", 
+                            (link_title, sanitized_title)
+                        )
+                        rows = cur.fetchall()
+                        if rows:
+                            logger.info(f"Found {len(rows)} matches for '{link_title}'")
+                        else:
+                            logger.warning(f"No matches for '{link_title}'")
+                            
+                        for row in rows:
+                            fpath, t, c, m = row
+                            if fpath not in seen_files:
+                                # Add to next round queue
+                                current_results.append((fpath, t, c, "Linked Entity", 1.0))
+            
+            round_idx += 1
+            
+        # Compile Final Context
+        context_parts = []
+        for i, row in enumerate(all_results):
+             file_path, title, content, section, similarity = row
+             source_num = i + 1
+             
+             # Populate source mapping
+             source_mapping[source_num] = {
+                "title": title,
+                "file_path": file_path,
+                "section": section,
+                "similarity": similarity,
+             }
 
-                source_mapping[source_num] = {
-                    "title": title,
-                    "file_path": file_path,
-                    "section": section,
-                    "similarity": similarity,
-                }
+             header = f"--- Source {source_num}: {title} ({section or 'Doc'}) ({file_path}) ---"
+             context_parts.append(f"{header}\n{content}")
 
-                header = f"--- {source_label}: {title}{section_info} ({file_path}) ---"
-                context_parts.append(f"{header}\n{content}")
+        context_text = "\n\n".join(context_parts)
+        logger.info(f"Context built with {len(all_results)} documents after {round_idx-1} rounds.")
 
-            context_text = "\n\n".join(context_parts)
-            logger.info(f"Found {len(results)} relevant documents using {strategy} search.")
+
     else:
         logger.warning("Failed to generate embedding for query, no context will be used.")
 
-    return context_text, source_mapping, results
+    return context_text, source_mapping, all_results
 
 
 def build_system_prompt(context_text):
