@@ -74,6 +74,7 @@ services:
     container_name: context-driver
     volumes:
       - ${BRAIN_DIR:-./volumes/brain}:/app/brain
+      - ${RAW_DIR:-./volumes/raw}:/app/raw
     ports:
       - "8000:8000"
     environment:

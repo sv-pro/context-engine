@@ -5,9 +5,12 @@ from config import current_config
 
 logger = logging.getLogger(__name__)
 
-def extract_keywords(content, title):
+import json
+
+def extract_graph_elements(content, title):
     """
-    Extracts 5-8 descriptive keywords from the document content using an LLM.
+    Extracts structured graph elements (Entities and Relationships) from the document.
+    Returns a dictionary with 'entities' and 'relationships' lists.
     """
     try:
         # Construct prompt
@@ -15,25 +18,55 @@ def extract_keywords(content, title):
 Document Title: {title}
 
 Content Fragment:
-{content[:2000]}
+{content[:2500]}
 
 INSTRUCTIONS:
-Summarize this document into a set of 5-8 highly descriptive keywords or short tags.
-These keywords should act as a 'human-readable embedding' - they should capture the unique identity and context of the document.
-Return ONLY a comma-separated list of keywords. No prose, no intro.
-"""
-        logger.info(f"=== PROMPT TO LITELLM [extract_keywords] ===\nModel: {current_config.model}\nMessage 1 [user]:\n{prompt}\n=== END PROMPT ===")
+You are an expert Knowledge Graph builder. Your task is to extract structured knowledge from the text above.
+1. Identify key **Entities** (nodes) that are central to the document.
+   - Types: Person, Organization, Location, Event, Concept, Technology, etc.
+   - Provide a brief description for each.
+2. Identify **Relationships** (edges) between these entities or between the document and entities.
+   - Format: Source -> Relation -> Target
+   - Relation examples: "founded_by", "located_in", "uses", "developed", "relates_to".
 
+OUTPUT FORMAT:
+Return ONLY a valid JSON object with detailed keys. Do not include markdown naming like ```json ... ```.
+{{
+  "entities": [
+    {{ "name": "Exact Name", "type": "Type", "description": "Brief description..." }}
+  ],
+  "relationships": [
+    {{ "source": "Entity Name", "target": "Entity Name", "type": "relation_type", "description": "Context..." }}
+  ]
+}}
+
+Ensure "Source" and "Target" names exactly match the "name" field in the entities list.
+"""
+        logger.info(f"=== PROMPT TO LITELLM [extract_graph] ===\nModel: {current_config.model}\n... (truncated) ...")
+
+        # Use a capable model for structured extraction
+        # If current_config.model is embedding model, we must force a chat model.
+        # Ideally, main.py should pass the chat model name. Assuming we have a global default or env.
+        chat_model = "gpt-4o-mini" # or REAL_MODEL from main.py if passed, but this module doesn't see main's scope easily.
+        
+        # We'll rely on the default chat model logic.
+        # Note: In the future, pass 'model' as arg or import central config.
+        
         response = completion(
-            model="gpt-4o-mini", # Explicitly use a cheap/fast model for keywords? Or current_config.model? Logs showed gpt-4o-mini
-            messages=[{"role": "user", "content": prompt}]
+            model=chat_model,
+            messages=[{"role": "user", "content": prompt}],
+            response_format={ "type": "json_object" } # Force JSON if supported
         )
         
-        keywords_text = response.choices[0].message.content.strip()
-        # Clean up
-        keywords = [k.strip() for k in keywords_text.split(',') if k.strip()]
-        return keywords
+        result_text = response.choices[0].message.content.strip()
+        # Clean potential markdown fences if model ignores instruction
+        if result_text.startswith("```"):
+            result_text = result_text.strip("`").replace("json\n", "", 1)
+            
+        data = json.loads(result_text)
+        return data
         
     except Exception as e:
-        logger.error(f"Failed to extract keywords: {e}")
-        return []
+        logger.error(f"Failed to extract graph elements: {e}")
+        # Return empty structure on failure
+        return {"entities": [], "relationships": []}

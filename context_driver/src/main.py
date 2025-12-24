@@ -53,7 +53,18 @@ def log_prompt_to_litellm(operation: str, model: str, messages: list, extra_info
 from config import current_config
 
 # Configuration
+# Configuration
+RAW_DIR = os.environ.get("RAW_DIR", "/app/raw")
 BRAIN_DIR = os.environ.get("BRAIN_DIR", "/app/brain")
+# Subdirectories for the Graph
+DOCS_DIR = os.path.join(BRAIN_DIR, "documents")
+ENTITIES_DIR = os.path.join(BRAIN_DIR, "entities")
+
+# Ensure directories exist
+os.makedirs(DOCS_DIR, exist_ok=True)
+os.makedirs(ENTITIES_DIR, exist_ok=True)
+os.makedirs(RAW_DIR, exist_ok=True)
+
 OLLAMA_API_BASE = os.environ.get("OLLAMA_API_BASE", "http://host.docker.internal:11434")
 LITELLM_API_BASE = os.environ.get("LITELLM_API_BASE", "http://litellm:4000/v1")
 LITELLM_MASTER_KEY = os.environ.get("LITELLM_MASTER_KEY", "sk-1234-5678-admin")
@@ -221,7 +232,8 @@ def process_file(file_path):
                         db.upsert_note(file_path, title, parsed['content'], parsed['metadata'])
                         logger.info(f"Extracted and updated keywords for {title}: {keywords}")
 
-                # Truncate content for embedding
+                
+                # 3. Truncate and Embed
                 try:
                     import tiktoken
                     encoding = tiktoken.encoding_for_model(current_config.model)
@@ -242,7 +254,21 @@ def process_file(file_path):
                     db.update_embedding(note_id, vector)
                     logger.info(f"Updated note-level embedding for {title}")
         else:
-            logger.debug(f"Note {title} unchanged, skipping re-embedding.")
+            logger.debug(f"Db Note {title} unchanged, skipping re-embedding.")
+
+        # 4. Handle Edges (Graph Data)
+        # If 'graph_data' is in metadata (from Raw Ingestion), strictly use it to build edges
+        if 'graph_data' in parsed['metadata']:
+            graph_data = parsed['metadata']['graph_data']
+            if 'relationships' in graph_data:
+                db.update_edges(note_id, graph_data['relationships'])
+                logger.info(f"Updated structured edges for {title}")
+        
+        # Fallback: if no graph_data but 'links' exist (WebUI or legacy), use those as basic wikilinks
+        elif parsed['links']:
+             # Convert simple links to edges format
+             edges = [{'target': link, 'type': 'wikilink'} for link in parsed['links']]
+             db.update_edges(note_id, edges)
 
         # 4. Enrich and Write-back (only for real files, not virtual webui://)
         if not file_path.startswith("webui://"):
@@ -282,40 +308,160 @@ def process_file(file_path):
     except Exception as e:
         logger.error(f"Error processing {file_path}: {e}")
 
+# ==================== PIPELINE STAGE 1: RAW INGESTION (Source -> Graph) ====================
+
+def ingest_raw_file(file_path):
+    """
+    Reads a RAW file, extracts Graph Elements, and writes Enriched artifacts to BRAIN_DIR.
+    """
+    try:
+        if not os.path.exists(file_path):
+            return
+            
+        logger.info(f"Ingesting RAW file: {file_path}")
+        with open(file_path, 'r', encoding='utf-8') as f:
+            content = f.read()
+            
+        filename = os.path.basename(file_path)
+        title = filename.replace('.md', '')
+        
+        # 1. Extract Graph Elements
+        from prompts import extract_graph_elements
+        graph_data = extract_graph_elements(content, title)
+        
+        # 2. Generate/Update Entity Nodes
+        entities = graph_data.get('entities', [])
+        for entity in entities:
+            name = entity.get('name')
+            if not name: continue
+            
+            # Sanitized filename for entity
+            safe_name = re.sub(r'[^a-zA-Z0-9_-]', '_', name)
+            entity_path = os.path.join(ENTITIES_DIR, f"{safe_name}.md")
+            
+            # Create minimal entity node
+            entity_content = f"""---
+type: {entity.get('type', 'Concept')}
+generated_from: "{title}"
+---
+# {name}
+
+{entity.get('description', 'No description available.')}
+
+## Relationships
+"""
+            # We don't want to overwrite if it exists and has manual edits? 
+            # For now, we assume derived graph is ephemeral and overwrite.
+            # Ideally we'd merge, but that's complex.
+            with open(entity_path, 'w', encoding='utf-8') as f:
+                f.write(entity_content)
+                
+        # 3. Generate Enriched Document Node
+        # Inject wikilinks? For now, we just attach the metadata.
+        # Future: Regex replace entity names with [[Name]]
+        
+        # Prepare Metadata
+        from enricher import generate_frontmatter
+        
+        # We need to parse existing frontmatter to preserve user metadata from raw!
+        parsed_raw = parse_markdown(content)
+        metadata = parsed_raw['metadata']
+        
+        # Inject graph data
+        metadata['graph_data'] = graph_data
+        metadata['source_path'] = file_path
+        
+        # Reconstruct content with new frontmatter
+        # We strip original frontmatter and prepend new
+        new_frontmatter = generate_frontmatter(metadata)
+        
+        final_content = f"{new_frontmatter}\n\n{parsed_raw['content']}"
+        
+        doc_path = os.path.join(DOCS_DIR, filename)
+        with open(doc_path, 'w', encoding='utf-8') as f:
+            f.write(final_content)
+            
+        logger.info(f"Generated Graph artifacts for {title}: {len(entities)} entities.")
+
+    except Exception as e:
+        logger.error(f"Error ingesting raw file {file_path}: {e}")
+
+
+# ==================== PIPELINE STAGE 2: INDEXING (Graph -> DB) ====================
+
+def index_processed_file(file_path):
+    """
+    Reads a file from BRAIN_DIR (Document or Entity) and indexes it to the DB.
+    Refactored from old process_file.
+    """
+    # This is effectively the old process_file, but logic is slightly adjusted 
+    # to handle the pre-enriched files.
+    # We rename 'process_file' to this name in the watcher.
+    process_file(file_path) # Call the existing function for now (it works on files with frontmatter)
+
+
+class RawEventHandler(FileSystemEventHandler):
+    def on_created(self, event):
+        if not event.is_directory and event.src_path.endswith('.md'):
+            ingest_raw_file(event.src_path)
+    def on_modified(self, event):
+        if not event.is_directory and event.src_path.endswith('.md'):
+            ingest_raw_file(event.src_path)
 
 class BrainEventHandler(FileSystemEventHandler):
     def on_created(self, event):
         if not event.is_directory and event.src_path.endswith('.md'):
-            logger.info(f"Detected creation: {event.src_path}")
-            process_file(event.src_path)
-
+            logger.info(f"Indexing new graph node: {event.src_path}")
+            index_processed_file(event.src_path)
     def on_modified(self, event):
         if not event.is_directory and event.src_path.endswith('.md'):
-            logger.info(f"Detected modification: {event.src_path}")
-            process_file(event.src_path)
+            logger.info(f"Re-indexing graph node: {event.src_path}")
+            index_processed_file(event.src_path)
 
-def start_watching(path):
-    event_handler = BrainEventHandler()
-    observer = Observer()
-    observer.schedule(event_handler, path, recursive=True)
-    observer.start()
-    logger.info(f"Started watching directory: {path}")
+def start_watchers():
+    # 1. Watch RAW (Ingestion)
+    raw_handler = RawEventHandler()
+    raw_observer = Observer()
+    raw_observer.schedule(raw_handler, RAW_DIR, recursive=True)
+    raw_observer.start()
+    logger.info(f"Started watching RAW Source: {RAW_DIR}")
     
-    # Initial Scan in background thread to avoid blocking lifespan startup
-    def initial_scan():
-        logger.info("Starting initial brain scan...")
-        for root, dirs, files in os.walk(path):
+    # 2. Watch BRAIN (Indexing)
+    brain_handler = BrainEventHandler()
+    brain_observer = Observer()
+    brain_observer.schedule(brain_handler, BRAIN_DIR, recursive=True)
+    brain_observer.start()
+    logger.info(f"Started watching GRAPH (Brain): {BRAIN_DIR}")
+    
+    # Initial Scan RAW
+    def initial_scan_raw():
+        logger.info("Scanning RAW source...")
+        for root, dirs, files in os.walk(RAW_DIR):
+            for file in files:
+                if file.endswith(".md"):
+                    ingest_raw_file(os.path.join(root, file))
+        logger.info("Raw scan complete.")
+
+    # Initial Scan BRAIN (Indexing) - in case we restarted and graph persists
+    def initial_scan_brain():
+        logger.info("Scanning GRAPH for index...")
+        for root, dirs, files in os.walk(BRAIN_DIR):
             for file in files:
                 if file.endswith(".md"):
                     try:
-                        process_file(os.path.join(root, file))
+                        index_processed_file(os.path.join(root, file))
                     except Exception as e:
-                        logger.error(f"Error during initial scan of {file}: {e}")
-        logger.info("Initial brain scan completed.")
+                        logger.error(f"Error indexing {file}: {e}")
+        logger.info("Graph index scan complete.")
 
-    threading.Thread(target=initial_scan, daemon=True).start()
+    threading.Thread(target=initial_scan_raw, daemon=True).start()
+    # We delay brain scan slightly to avoid race if raw scan is rewriting? 
+    # Actually, raw scan writes files, which triggers brain watcher. 
+    # So we strictly only need to scan BRAIN if we assume raw is static but we lost DB.
+    # Let's run both.
+    threading.Thread(target=initial_scan_brain, daemon=True).start()
     
-    return observer
+    return [raw_observer, brain_observer]
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -336,8 +482,8 @@ async def lifespan(app: FastAPI):
         logger.warning(f"CostTracker not available: {e}")
         app.state.cost_tracker = None
 
-    # Startup: Start watcher in background thread
-    observer = start_watching(BRAIN_DIR)
+    # Startup: Start watchers
+    observers = start_watchers()
     
     # Initialize NoteSyncer
     try:
@@ -362,8 +508,10 @@ async def lifespan(app: FastAPI):
 
     
     # Shutdown: Stop watcher and close connections
-    observer.stop()
-    observer.join()
+    # Shutdown: Stop watchers
+    for o in observers:
+        o.stop()
+        o.join()
     if app.state.note_syncer:
         app.state.note_syncer.close()
 

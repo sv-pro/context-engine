@@ -39,3 +39,8 @@ def get_current_config():
 
 # Global instance to be imported
 current_config = get_current_config()
+
+# Directory Configuration
+RAW_DIR = os.environ.get("RAW_DIR", "/app/raw")
+BRAIN_DIR = os.environ.get("BRAIN_DIR", "/app/brain")
+

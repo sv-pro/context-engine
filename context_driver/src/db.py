@@ -157,18 +157,32 @@ class Database:
         with self.conn.cursor() as cur:
             cur.execute("UPDATE brain.notes SET embedding = %s WHERE id = %s", (vector, note_id))
 
-    def update_links(self, note_id, links):
+    def update_edges(self, note_id, edges):
+        """
+        Update edges for a note.
+        Args:
+            note_id: Source note ID
+            edges: List of dicts {'target': str, 'type': str, 'description': str}
+        """
         with self.conn.cursor() as cur:
-            # Clear existing links for this note
+            # Clear existing edges for this note
             cur.execute("DELETE FROM brain.edges WHERE source_id = %s", (note_id,))
             
-            # Insert new links
-            for link in links:
+            # Insert new edges
+            for edge in edges:
+                target_title = edge.get('target')
+                relation_type = edge.get('type', 'related_to')
+                # 'description' could be stored if we add a column, for now we stick to type.
+                # If target_title is missing, skip
+                if not target_title:
+                    continue
+                    
                 cur.execute("""
                     INSERT INTO brain.edges (source_id, target_title, type)
-                    VALUES (%s, %s, 'wikilink')
-                    ON CONFLICT DO NOTHING
-                """, (note_id, link))
+                    VALUES (%s, %s, %s)
+                    ON CONFLICT (source_id, target_title) 
+                    DO UPDATE SET type = EXCLUDED.type
+                """, (note_id, target_title, relation_type))
 
     def semantic_search(self, query_vector, limit=3):
         """
