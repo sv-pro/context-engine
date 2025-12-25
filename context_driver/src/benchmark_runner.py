@@ -84,7 +84,14 @@ def run_retrieval_benchmark(
             continue
         
         # Perform search
-        search_results = db.search(query.query, query_vector, strategy=strategy, limit=5)
+        if strategy in ["graph", "super_hybrid"]:
+            from main import retrieve_context_docs
+            # retrieve context docs returns (fpath, title, content, type, score)
+            # db.search returns (fpath, title, content, score)
+            # Adapter needed? No, retrieve_context_docs returns 5 items which matches db.search return signature.
+            search_results = retrieve_context_docs(query.query, strategy=strategy, limit=5)
+        else:
+            search_results = db.search(query.query, query_vector, strategy=strategy, limit=5)
         
         # Create evidence pack
         evidence_pack = evaluator.create_evidence_pack(

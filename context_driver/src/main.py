@@ -226,12 +226,18 @@ def process_file(file_path):
                 # Default to enabled, or check env var
                 enable_keywords = os.environ.get("ENABLE_KEYWORD_EXTRACTION", "true").lower() == "true"
                 if enable_keywords and 'keywords' not in parsed['metadata']:
-                    from prompts import extract_keywords
-                    keywords = extract_keywords(parsed['content'], title)
+                    if title.startswith("CDDOS-"):
+                         logger.info(f"Skipping keyword extraction for Jira: {title}")
+                         keywords = ["Jira", "Issue", title]
+                    else:
+                        from prompts import extract_keywords
+                        keywords = extract_keywords(parsed['content'], title)
+
                     if keywords:
                         parsed['metadata']['keywords'] = keywords
                         db.upsert_note(file_path, title, parsed['content'], parsed['metadata'])
                         logger.info(f"Extracted and updated keywords for {title}: {keywords}")
+
 
                 
                 # 3. Truncate and Embed
@@ -327,8 +333,13 @@ def ingest_raw_file(file_path):
         title = filename.replace('.md', '')
         
         # 1. Extract Graph Elements
-        from prompts import extract_graph_elements
-        graph_data = extract_graph_elements(content, title)
+        # Optimization: Skip expensive LLM graph extraction for Jira tickets (CDDOS-*)
+        if title.startswith("CDDOS-"):
+            graph_data = {"entities": [], "relationships": []}
+            logger.info(f"Skipping graph extraction for Jira ticket: {title}")
+        else:
+            from prompts import extract_graph_elements
+            graph_data = extract_graph_elements(content, title)
         
         # 2. Generate/Update Entity Nodes
         entities = graph_data.get('entities', [])
@@ -727,9 +738,12 @@ async def mcp_messages(request: Request):
         return handler
 
 
-def build_context_for_query(user_query, *, strategy=SEARCH_STRATEGY, limit=5, cost_tracker=None):
+def retrieve_context_docs(user_query, *, strategy=SEARCH_STRATEGY, limit=5, cost_tracker=None):
+    """
+    Retrieves relevant documents using iterative graph traversal.
+    Returns a list of tuples: (file_path, title, content, type, score)
+    """
     MAX_ROUNDS = 5
-    context_text = ""
     source_mapping = {}
     seen_files = set()
     all_results = []
@@ -796,29 +810,32 @@ def build_context_for_query(user_query, *, strategy=SEARCH_STRATEGY, limit=5, co
             
             round_idx += 1
             
-        # Compile Final Context
-        context_parts = []
-        for i, row in enumerate(all_results):
-             file_path, title, content, section, similarity = row
-             source_num = i + 1
-             
-             # Populate source mapping
-             source_mapping[source_num] = {
-                "title": title,
-                "file_path": file_path,
-                "section": section,
-                "similarity": similarity,
-             }
+    return all_results
 
-             header = f"--- Source {source_num}: {title} ({section or 'Doc'}) ({file_path}) ---"
-             context_parts.append(f"{header}\n{content}")
+def build_context_for_query(user_query, *, strategy=SEARCH_STRATEGY, limit=5, cost_tracker=None):
+    all_results = retrieve_context_docs(user_query, strategy=strategy, limit=limit, cost_tracker=cost_tracker)
+    
+    context_text = ""
+    source_mapping = {}
+    context_parts = []
+    
+    for i, row in enumerate(all_results):
+        file_path, title, content, section, similarity = row
+        source_num = i + 1
+        
+        # Populate source mapping
+        source_mapping[source_num] = {
+            "title": title,
+            "file_path": file_path,
+            "section": section,
+            "similarity": similarity,
+        }
 
-        context_text = "\n\n".join(context_parts)
-        logger.info(f"Context built with {len(all_results)} documents after {round_idx-1} rounds.")
+        header = f"--- Source {source_num}: {title} ({section or 'Doc'}) ({file_path}) ---"
+        context_parts.append(f"{header}\n{content}")
 
-
-    else:
-        logger.warning("Failed to generate embedding for query, no context will be used.")
+    context_text = "\n\n".join(context_parts)
+    logger.info(f"Context built with {len(all_results)} documents.")
 
     return context_text, source_mapping, all_results
 

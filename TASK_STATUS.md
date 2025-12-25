@@ -24,8 +24,13 @@
     - [x] Implement Iterative Retrieval (Recursive Link Following)
     - [x] Verify Sequential Query success (Phantom Protocol)
     - [x] Verify Aggregation Query success (Shadow Board)
-- [x] Draft proposal
-    - [x] Create implementation plan <!-- id: 4 -->
+- [x] Stability & Regression Testing
+    - [x] Create STABILITY_TRACKING.md
+    - [x] Test T3: Implicit Connection (Pass)
+    - [x] Test T4: Temporal Reasoning (Pass)
+    - [x] Achieve Stability (2 consecutive passes)
+- [ ] Refinement
+    - [ ] Test T5: Contradiction Handling
 
 
 > [!IMPORTANT]

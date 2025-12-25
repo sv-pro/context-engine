@@ -4,18 +4,31 @@
       "id": "q001",
       "category": "configuration",
       "query": "How do I configure geographic filtering?",
-      "relevant_docs": ["Geographic_Filtering.md"],
+      "relevant_docs": [
+        "Geographic_Filtering.md"
+      ],
       "relevant_chunks": [],
-      "expected_answer_contains": ["GeoIP", "country", "region"],
+      "expected_answer_contains": [
+        "GeoIP",
+        "country",
+        "region"
+      ],
       "difficulty": "easy"
     },
     {
       "id": "q002",
       "category": "troubleshooting",
       "query": "Why is my SSL certificate not being recognized?",
-      "relevant_docs": ["SSL_Certificates.md", "Troubleshooting_Guide.md"],
+      "relevant_docs": [
+        "SSL_Certificates.md",
+        "Troubleshooting_Guide.md"
+      ],
       "relevant_chunks": [],
-      "expected_answer_contains": ["certificate chain", "intermediate CA", "validation"],
+      "expected_answer_contains": [
+        "certificate chain",
+        "intermediate CA",
+        "validation"
+      ],
       "difficulty": "medium"
     },
     {
@@ -29,7 +42,11 @@
         "Network_Peering.md"
       ],
       "relevant_chunks": [],
-      "expected_answer_contains": ["node location", "peering configuration", "regional routing"],
+      "expected_answer_contains": [
+        "node location",
+        "peering configuration",
+        "regional routing"
+      ],
       "difficulty": "hard",
       "reasoning_path": [
         "1. Latency issues → check Traffic_Scrubbing_Nodes",
@@ -51,7 +68,12 @@
         "DNS_Configuration.md"
       ],
       "relevant_chunks": [],
-      "expected_answer_contains": ["SSL certificate", "DNS configuration", "firewall rules", "certificate authority"],
+      "expected_answer_contains": [
+        "SSL certificate",
+        "DNS configuration",
+        "firewall rules",
+        "certificate authority"
+      ],
       "difficulty": "hard",
       "reasoning_path": [
         "1. HTTPS_Inspection mentions SSL certificates",
@@ -72,7 +94,11 @@
         "Troubleshooting_Guide.md"
       ],
       "relevant_chunks": [],
-      "expected_answer_contains": ["automatic for standard", "manual for custom CA", "use case dependent"],
+      "expected_answer_contains": [
+        "automatic for standard",
+        "manual for custom CA",
+        "use case dependent"
+      ],
       "difficulty": "hard",
       "reasoning_path": [
         "1. Getting_Started recommends automatic for new users",
@@ -94,7 +120,12 @@
         "Backup_and_Recovery.md"
       ],
       "relevant_chunks": [],
-      "expected_answer_contains": ["breaking change", "version", "rollback", "migration steps"],
+      "expected_answer_contains": [
+        "breaking change",
+        "version",
+        "rollback",
+        "migration steps"
+      ],
       "difficulty": "hard",
       "reasoning_path": [
         "1. Changelog shows breaking changes in v2.0",
@@ -115,7 +146,12 @@
         "Architecture.md"
       ],
       "relevant_chunks": [],
-      "expected_answer_contains": ["not supported", "GRE tunnels", "IPsec", "alternative"],
+      "expected_answer_contains": [
+        "not supported",
+        "GRE tunnels",
+        "IPsec",
+        "alternative"
+      ],
       "difficulty": "hard",
       "reasoning_path": [
         "1. Network_Peering lists supported methods",
@@ -137,7 +173,12 @@
         "SLA_Guarantees.md"
       ],
       "relevant_chunks": [],
-      "expected_answer_contains": ["inspection overhead", "latency", "SLA threshold", "trade-off"],
+      "expected_answer_contains": [
+        "inspection overhead",
+        "latency",
+        "SLA threshold",
+        "trade-off"
+      ],
       "difficulty": "hard",
       "reasoning_path": [
         "1. WAF_Rules explains inspection overhead",
@@ -148,6 +189,126 @@
       ],
       "why_straightforward_fails": "Returns WAF_Rules.md but misses performance implications. Answer is incomplete.",
       "why_sophisticated_succeeds": "Graph traversal finds performance docs linked to security. Synthesizes quantitative impact analysis."
+    },
+    {
+      "id": "lt001",
+      "category": "multi-hop",
+      "query": "Who is the Lead Researcher of the sector that houses the project utilizing the Phantom Protocol?",
+      "relevant_docs": [
+        "Phantom_Protocol.md",
+        "Project_Chimera.md",
+        "Sector_7.md",
+        "Dr__Aris_Thorne.md",
+        "Lead_Researcher.md"
+      ],
+      "relevant_chunks": [],
+      "expected_answer_contains": [
+        "Dr. Aris Thorne",
+        "Sector 7",
+        "Project Chimera"
+      ],
+      "difficulty": "hard",
+      "reasoning_path": [
+        "1. Phantom Protocol -> used by Project Chimera",
+        "2. Project Chimera -> located in Sector 7",
+        "3. Sector 7 -> lead researcher Dr. Aris Thorne"
+      ],
+      "why_straightforward_fails": "Phantom Protocol doc does not mention Dr. Thorne. Requires traversing 3 hops.",
+      "why_sophisticated_succeeds": "Graph traversal follows the chain of relationships to exact target."
+    },
+    {
+      "id": "lt002",
+      "category": "aggregation",
+      "query": "Who are the current members of the Shadow Board?",
+      "relevant_docs": [
+        "shadow_board_structure.md",
+        "Obsidian_Vanguard.md",
+        "Cipher_Bureau.md",
+        "Echo_Station.md",
+        "Director_Kael.md",
+        "Elara.md",
+        "Commander_Voss.md",
+        "Shadow_Board.md"
+      ],
+      "relevant_chunks": [],
+      "expected_answer_contains": [
+        "Director Kael",
+        "Elara",
+        "Commander Voss"
+      ],
+      "difficulty": "hard",
+      "reasoning_path": [
+        "1. Shadow Board -> composed of 3 divisions",
+        "2. Divisions -> led by 3 individuals",
+        "3. Aggregate list of individuals"
+      ],
+      "why_straightforward_fails": "Shadow Board doc contains ZERO names. Semantic search finds only the structure.",
+      "why_sophisticated_succeeds": "Graph aggregation collects 1-hop neighbors (Divisions) and 2-hop neighbors (Leaders)."
+    },
+    {
+      "id": "lt003",
+      "category": "implicit-dependency",
+      "query": "What other project is located in the same sector as Project Chimera?",
+      "relevant_docs": [
+        "Project_Chimera.md",
+        "Sector_7.md",
+        "Project_Aegis.md"
+      ],
+      "relevant_chunks": [],
+      "expected_answer_contains": [
+        "Project Aegis"
+      ],
+      "difficulty": "hard",
+      "reasoning_path": [
+        "1. Project Chimera -> Sector 7",
+        "2. Sector 7 -> Project Aegis"
+      ],
+      "why_straightforward_fails": "No direct link between Chimera and Aegis. Semantic similarity might miss it.",
+      "why_sophisticated_succeeds": "Graph traversal finds common parent (Sector 7) and sibling (Aegis)."
+    },
+    {
+      "id": "lt004",
+      "category": "temporal-reasoning",
+      "query": "Who commanded Sector 7 in 2022?",
+      "relevant_docs": [
+        "sector_7_history.md",
+        "General_Ironwood.md"
+      ],
+      "relevant_chunks": [],
+      "expected_answer_contains": [
+        "General Ironwood"
+      ],
+      "difficulty": "hard",
+      "reasoning_path": [
+        "1. Retrieve Sector 7 history",
+        "2. distinct timelines (2018-2023 vs 2024)",
+        "3. Select correct commander"
+      ],
+      "why_straightforward_fails": "Might retrieve current commander (Voss) if recent docs are prioritized.",
+      "why_sophisticated_succeeds": "Retrieves history doc, allows LLM to filter by date."
+    },
+    {
+      "id": "lt005",
+      "category": "multi-hop",
+      "query": "Where is Asset 99 currently located?",
+      "relevant_docs": [
+        "operation_log_101.md",
+        "The_Crimson_Sky_Initiative.md",
+        "glossary_v2.md",
+        "Asset_99.md"
+      ],
+      "relevant_chunks": [],
+      "expected_answer_contains": [
+        "Safehouse Alpha"
+      ],
+      "difficulty": "hard",
+      "reasoning_path": [
+        "1. Asset 99 -> defined in 'The Crimson Sky Initiative'",
+        "2. Crimson Sky Initiative -> executed in 'operation_log_101'",
+        "3. Operation Log -> mentions 'Safehouse Alpha'"
+      ],
+      "why_straightforward_fails": "Query 'Asset 99' matches Glossary, but not Operation Log. Semantic search returns Glossary (definition) but misses location.",
+      "why_sophisticated_succeeds": "Graph links Asset 99 -> Crimson Sky -> Operation Log."
     }
   ]
 }
