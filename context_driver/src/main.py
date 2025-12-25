@@ -738,77 +738,226 @@ async def mcp_messages(request: Request):
         return handler
 
 
+def classify_query(query: str) -> str:
+    """
+    Classifies the query to determine the best retrieval strategy.
+    Returns: 'semantic', 'graph', or 'super_hybrid'
+    """
+    try:
+        from litellm import completion
+        
+        prompt = f"""
+You are an expert Query Classifier for a RAG system.
+Your task is to analyze the user's query and select the optimal retrieval strategy.
+
+Strategies:
+1. **semantic**: Best for simple fact lookups, definition questions, or finding specific error messages. High precision, low noise.
+   - Examples: "How do I configure X?", "What is error 500?", "define caching"
+2. **graph**: Best for multi-hop reasoning, implicit dependencies, finding connections between distinct entities, or aggregation tasks.
+   - Examples: "Who manages the team that manages Project X?", "What is the common dependency of A and B?", "List all members of the board."
+3. **super_hybrid**: Best for complex questions that might need both exact facts and broader context, or when you are unsure.
+   - Examples: "Why is the system slow and showing geo-blocking errors?", "Explain the relationship between X and Y and how to fix Z."
+
+Query: "{query}"
+
+Output ONLY the strategy name: 'semantic', 'graph', or 'super_hybrid'.
+"""
+        response = completion(
+            model=REAL_MODEL,
+            messages=[{"role": "user", "content": prompt}]
+        )
+        strategy = response.choices[0].message.content.strip().lower()
+        
+        # Fallback for dirty output
+        if "graph" in strategy: return "graph"
+        if "hybrid" in strategy: return "super_hybrid"
+        if "semantic" in strategy: return "semantic"
+        
+        return "super_hybrid" # Default safe
+        
+    except Exception as e:
+        logger.error(f"Query classification failed: {e}")
+        return "super_hybrid"
+
 def retrieve_context_docs(user_query, *, strategy=SEARCH_STRATEGY, limit=5, cost_tracker=None):
     """
-    Retrieves relevant documents using iterative graph traversal.
+    Retrieves context documents based on the selected strategy.
+    Supported strategies: 'semantic', 'keyword', 'graph', 'hybrid', 'super_hybrid', 'adaptive'
     Returns a list of tuples: (file_path, title, content, type, score)
     """
+    
+    # Adaptive Selection
+    if strategy == "adaptive":
+        actual_strategy = classify_query(user_query)
+        logger.info(f"Adaptive Strategy selected: {actual_strategy} for query: '{user_query}'")
+        # Recursively call with the chosen strategy
+        return retrieve_context_docs(user_query, strategy=actual_strategy, limit=limit, cost_tracker=cost_tracker)
+        
+    # Standard Strategies
+    if strategy == "semantic":
+        query_vector = get_embedding(user_query, cost_tracker=cost_tracker)
+        if not query_vector: return []
+        results = db.search(user_query, query_vector, strategy="semantic", limit=limit)
+        # Adapt format to 5-tuple
+        return [(r[0], r[1], r[2], "semantic", r[3]) for r in results]
+
+    elif strategy == "keyword":
+        query_vector = get_embedding(user_query, cost_tracker=cost_tracker) # Vector needed for signature even if unused by pure keyword? 
+        # Actually db.search handles keyword only if vector is None? No, db.search requires vector usually.
+        # Let's rely on db.search('keyword') logic
+        if not query_vector: query_vector = [0.0]*1024 # Dummy
+        results = db.search(user_query, query_vector, strategy="keyword", limit=limit)
+        return [(r[0], r[1], r[2], "keyword", r[3]) for r in results]
+        
+    elif strategy == "hybrid":
+         query_vector = get_embedding(user_query, cost_tracker=cost_tracker)
+         if not query_vector: return []
+         results = db.search(user_query, query_vector, strategy="hybrid", limit=limit)
+         return [(r[0], r[1], r[2], "hybrid", r[3]) for r in results]
+
+    elif strategy == "graph":
+        # Pure graph traversal
+        return run_iterative_graph_retrieval(user_query, limit=limit, use_semantic_seed=False, cost_tracker=cost_tracker)
+
+    elif strategy == "super_hybrid":
+        # Graph + Semantic
+        return run_iterative_graph_retrieval(user_query, limit=limit, use_semantic_seed=True, cost_tracker=cost_tracker)
+
+    else:
+        logger.warning(f"Unknown strategy {strategy}, defaulting to super_hybrid")
+        return retrieve_context_docs(user_query, strategy="super_hybrid", limit=limit, cost_tracker=cost_tracker)
+
+def extract_query_edge_types(query: str) -> list:
+    """
+    Uses LLM to extract likely relationship types from a query.
+    Returns a list of relationship type keywords (e.g., ['designed', 'created', 'built']).
+    """
+    try:
+        from litellm import completion
+        
+        prompt = f"""
+You are an expert at understanding relationship semantics in knowledge graphs.
+
+Given this user query, extract 2-5 relationship types that would be most relevant for traversing a knowledge graph to find the answer.
+
+Query: "{query}"
+
+Examples of relationship types: located_in, commanded_by, designed_by, works_for, part_of, contains, founded, mentored, developed, uses, sourced_from, manufactured_by
+
+Output ONLY a comma-separated list of relationship types (lowercase, use underscores). No explanation.
+"""
+        response = completion(
+            model=REAL_MODEL,
+            messages=[{"role": "user", "content": prompt}]
+        )
+        result = response.choices[0].message.content.strip().lower()
+        # Parse comma-separated list
+        edge_types = [t.strip() for t in result.split(",") if t.strip()]
+        logger.info(f"Query edge types extracted: {edge_types}")
+        return edge_types
+        
+    except Exception as e:
+        logger.error(f"Edge type extraction failed: {e}")
+        return []
+
+def run_iterative_graph_retrieval(user_query, limit=5, use_semantic_seed=True, cost_tracker=None):
+    """
+    Retrieves relevant documents using iterative graph traversal with typed relationships.
+    Returns a list of tuples: (file_path, title, content, type, score)
+    
+    Parses relationship format: `- **relation_type** (from [[Target]])`
+    Uses query-aware edge filtering to prioritize relevant edges.
+    """
     MAX_ROUNDS = 5
-    source_mapping = {}
     seen_files = set()
     all_results = []
     
-    # Round 1: Vector/Hybrid Search
+    # Regex for typed relationships: `- **relation_type** (from [[Target]])`
+    TYPED_REL_PATTERN = re.compile(r'-\s*\*\*(\w+)\*\*\s*\((?:from|to)\s*\[\[(.*?)\]\]\)')
+    SIMPLE_LINK_PATTERN = re.compile(r'\[\[(.*?)\]\]')
+    
+    # Extract query-relevant edge types for filtering
+    query_edge_types = extract_query_edge_types(user_query)
+    
+    # 1. Initial Seed (Vector Search)
     query_vector = get_embedding(user_query, cost_tracker=cost_tracker)
-    if query_vector:
-        current_results = db.search(user_query, query_vector, strategy=strategy, limit=limit)
-        
-        round_idx = 1
-        while round_idx <= MAX_ROUNDS and current_results:
-            new_results = []
-            links_to_fetch = set()
-            
-            # Process current results
-            for r in current_results:
-                fpath = r[0]
-                if fpath not in seen_files:
-                    seen_files.add(fpath)
-                    all_results.append(r)
-                    
-                    # Extract links for Next Round
-                    # Regex to find [[WikiLink]] inside content
-                    # This works because we now put [[Target]] in Entity Node content
-                    found_links = re.findall(r'\[\[(.*?)\]\]', r[2])
-                    if found_links:
-                         logger.info(f"Doc {r[1]} has links: {found_links}")
-                    else:
-                         logger.debug(f"Doc {r[1]} has NO links. Content snippet: {r[2][:100]}")
+    if not query_vector:
+        return []
 
-                    for link in found_links:
-                        links_to_fetch.add(link)
+    seed_results = db.search(user_query, query_vector, strategy="hybrid", limit=limit)
+    current_results = [(r[0], r[1], r[2], "Seed", r[3]) for r in seed_results]
+    
+    round_idx = 1
+    while round_idx <= MAX_ROUNDS and current_results:
+        # Dict: target_entity -> list of (relation_type, source_entity, priority)
+        typed_links = {}
+        next_round_results = []
+        
+        logger.info(f"Round {round_idx}: Processing {len(current_results)} documents")
+        
+        for res in current_results:
+            fpath, title, content, _, score = res
             
-            # Prepare next round results
-            current_results = [] # Clear for next iteration
-            
-            if links_to_fetch:
-                logger.info(f"Round {round_idx}: Found {len(links_to_fetch)} links to follow: {list(links_to_fetch)[:10]}...")
+            if fpath not in seen_files:
+                seen_files.add(fpath)
+                all_results.append(res)
                 
-                for link_title in links_to_fetch:
-                    # Resolve links to notes
-                    # Fix: Handle Space vs Underscore mismatch
-                    # LLM generates "Project Chimera", DB has "Project_Chimera"
-                    sanitized_title = re.sub(r'[^a-zA-Z0-9_-]', '_', link_title)
-                    logger.info(f"Looking up link: '{link_title}' (Sanitized: '{sanitized_title}')")
+                # 1. Extract TYPED relationships
+                typed_matches = TYPED_REL_PATTERN.findall(content)
+                for rel_type, target in typed_matches:
+                    if target not in typed_links:
+                        typed_links[target] = []
                     
-                    with db.conn.cursor() as cur:
-                        # Try exact match or sanitized match
-                        cur.execute(
-                            "SELECT file_path, title, content, metadata FROM brain.notes WHERE title ILIKE %s OR title ILIKE %s", 
-                            (link_title, sanitized_title)
-                        )
-                        rows = cur.fetchall()
-                        if rows:
-                            logger.info(f"Found {len(rows)} matches for '{link_title}'")
-                        else:
-                            logger.warning(f"No matches for '{link_title}'")
-                            
-                        for row in rows:
-                            fpath, t, c, m = row
-                            if fpath not in seen_files:
-                                # Add to next round queue
-                                current_results.append((fpath, t, c, "Linked Entity", 1.0))
+                    # Calculate priority: higher if rel_type matches query edge types
+                    priority = 2 if any(qet in rel_type.lower() for qet in query_edge_types) else 1
+                    typed_links[target].append((rel_type, title, priority))
+                    
+                    if priority == 2:
+                        logger.info(f"HIGH PRIORITY edge: {title} --[{rel_type}]--> {target}")
+                
+                # 2. Extract simple [[WikiLinks]] as fallback
+                simple_links = SIMPLE_LINK_PATTERN.findall(content)
+                for link in simple_links:
+                    if link not in typed_links:
+                        typed_links[link] = []
+                    if not any(src == title for _, src, _ in typed_links[link]):
+                        typed_links[link].append(("links_to", title, 0))  # Lowest priority
+        
+        if not typed_links:
+            break
+        
+        # Sort targets by max priority of their edges (higher priority first)
+        sorted_targets = sorted(
+            typed_links.keys(),
+            key=lambda t: max((p for _, _, p in typed_links[t]), default=0),
+            reverse=True
+        )
+        
+        logger.info(f"Round {round_idx}: Found {len(typed_links)} entities (sorted by edge relevance)")
+        
+        # Fetch linked documents (prioritized)
+        for target_entity in sorted_targets:
+            edges = typed_links[target_entity]
+            sanitized_title = re.sub(r'[^a-zA-Z0-9_-]', '_', target_entity)
             
-            round_idx += 1
+            with db.conn.cursor() as cur:
+                cur.execute(
+                    "SELECT file_path, title, content, metadata FROM brain.notes WHERE title ILIKE %s OR title ILIKE %s", 
+                    (target_entity, sanitized_title)
+                )
+                rows = cur.fetchall()
+                
+                for row in rows:
+                    fpath, t, c, m = row
+                    if fpath not in seen_files:
+                        max_priority = max((p for _, _, p in edges), default=0)
+                        edge_info = ", ".join([f"{rel}←{src}" for rel, src, _ in edges[:3]])
+                        # Boost score based on priority
+                        boost = 1.0 + (max_priority * 0.1)
+                        next_round_results.append((fpath, t, c, f"Graph({max_priority}): {edge_info}", boost))
+        
+        current_results = next_round_results
+        round_idx += 1
             
     return all_results
 

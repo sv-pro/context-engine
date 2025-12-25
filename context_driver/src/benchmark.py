@@ -221,12 +221,19 @@ class BenchmarkEvaluator:
         
         gap_flag = len(fragments) == 0
         
+        # Helper to safely get float similarity
+        def safe_sim(val):
+            try:
+                return float(val)
+            except (ValueError, TypeError):
+                return 0.0
+
         debug = {
             "strategy": strategy,
             "num_results": len(search_results),
             "kb_state": kb_state or {},
-            "min_similarity": min((f.similarity for f in fragments), default=0.0),
-            "max_similarity": max((f.similarity for f in fragments), default=0.0),
+            "min_similarity": min((safe_sim(f.similarity) for f in fragments), default=0.0),
+            "max_similarity": max((safe_sim(f.similarity) for f in fragments), default=0.0),
         }
         
         return EvidencePack(
@@ -252,20 +259,30 @@ class BenchmarkEvaluator:
             Evaluation results with all metrics
         """
         # Extract document titles from evidence fragments
-        retrieved_docs = [f.source_title + ".md" for f in evidence_pack.fragments]
+        # Use set to dedup, then list to preserve order (though set destroys order, we need rank)
+        # Actually, for P@K and R@K, specific rank order matters less than "is it in top K".
+        # But MRR/nDCG need order.
+        # We should keep the first occurrence of each doc.
+        seen = set()
+        retrieved_docs_dedup = []
+        for f in evidence_pack.fragments:
+            doc_name = f.source_title + ".md"
+            if doc_name not in seen:
+                seen.add(doc_name)
+                retrieved_docs_dedup.append(doc_name)
         
         relevant = set(query.relevant_docs)
         
         # Calculate metrics
-        p_at_3 = self.metrics.precision_at_k(retrieved_docs, relevant, 3)
-        p_at_5 = self.metrics.precision_at_k(retrieved_docs, relevant, 5)
-        r_at_3 = self.metrics.recall_at_k(retrieved_docs, relevant, 3)
-        r_at_5 = self.metrics.recall_at_k(retrieved_docs, relevant, 5)
-        mrr = self.metrics.mean_reciprocal_rank(retrieved_docs, relevant)
-        ndcg = self.metrics.ndcg_at_k(retrieved_docs, relevant, 5)
+        p_at_3 = self.metrics.precision_at_k(retrieved_docs_dedup, relevant, 3)
+        p_at_5 = self.metrics.precision_at_k(retrieved_docs_dedup, relevant, 5)
+        r_at_3 = self.metrics.recall_at_k(retrieved_docs_dedup, relevant, 3)
+        r_at_5 = self.metrics.recall_at_k(retrieved_docs_dedup, relevant, 5)
+        mrr = self.metrics.mean_reciprocal_rank(retrieved_docs_dedup, relevant)
+        ndcg = self.metrics.ndcg_at_k(retrieved_docs_dedup, relevant, 5)
         
         # Find which relevant docs were retrieved
-        relevant_retrieved = [doc for doc in retrieved_docs if doc in relevant]
+        relevant_retrieved = [doc for doc in retrieved_docs_dedup if doc in relevant]
         
         return EvaluationResult(
             query_id=query.id,
@@ -276,7 +293,7 @@ class BenchmarkEvaluator:
             recall_at_5=r_at_5,
             mrr=mrr,
             ndcg_at_5=ndcg,
-            retrieved_docs=retrieved_docs[:5],  # Top 5
+            retrieved_docs=retrieved_docs_dedup[:5],  # Top 5
             relevant_retrieved=relevant_retrieved
         )
     

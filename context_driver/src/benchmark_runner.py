@@ -84,7 +84,7 @@ def run_retrieval_benchmark(
             continue
         
         # Perform search
-        if strategy in ["graph", "super_hybrid"]:
+        if strategy in ["graph", "super_hybrid", "adaptive"]:
             from main import retrieve_context_docs
             # retrieve context docs returns (fpath, title, content, type, score)
             # db.search returns (fpath, title, content, score)
@@ -146,6 +146,7 @@ def print_summary(strategy: str, results: List[EvaluationResult]):
 def compare_strategies(queries: List[BenchmarkQuery], strategies: List[str], db: Database):
     """Compare multiple strategies."""
     all_results = {}
+    query_map = {q.id: q for q in queries}
     
     for strategy in strategies:
         results = run_retrieval_benchmark(queries, strategy, db)
@@ -154,20 +155,73 @@ def compare_strategies(queries: List[BenchmarkQuery], strategies: List[str], db:
     
     # Print comparison table
     evaluator = BenchmarkEvaluator()
+    
+    # Prepare Stats
+    stats = {}
+    categories = set()
+    
+    for strategy, results in all_results.items():
+        stats[strategy] = {}
+        
+        # Overall
+        overall = evaluator.aggregate_results(results)
+        if overall:
+            overall['integral'] = (overall['mean_precision_at_3'] + overall['mean_recall_at_3'] + overall['mean_mrr'] + overall['mean_ndcg_at_5']) / 4
+        stats[strategy]['OVERALL'] = overall
+        
+        # Per Category
+        cat_buckets = {}
+        for r in results:
+            cat = query_map[r.query_id].category
+            categories.add(cat)
+            if cat not in cat_buckets:
+                cat_buckets[cat] = []
+            cat_buckets[cat].append(r)
+            
+        for cat, cat_results in cat_buckets.items():
+            m = evaluator.aggregate_results(cat_results)
+            if m:
+                m['integral'] = (m['mean_precision_at_3'] + m['mean_recall_at_3'] + m['mean_mrr'] + m['mean_ndcg_at_5']) / 4
+            stats[strategy][cat] = m
+
+    cats_sorted = sorted(list(categories))
+    
+    # Markdown Table: Integral Scores by Category
+    print("\n## Strategy Comparison - Integral Scores\n")
+    print("*Integral = Average of P@3, R@3, MRR, nDCG@5*\n")
+    
+    # Header row
+    headers = ["Strategy", "Overall"] + [c[:12] for c in cats_sorted]
+    print("| " + " | ".join(headers) + " |")
+    print("| " + " | ".join(["---"] * len(headers)) + " |")
+    
+    # Data rows
+    for strategy in strategies:
+        row = [strategy]
+        overall_score = stats[strategy].get('OVERALL', {}).get('integral', 0.0)
+        row.append(f"{overall_score:.3f}")
+        
+        for cat in cats_sorted:
+            score = stats[strategy].get(cat, {}).get('integral', 0.0)
+            row.append(f"{score:.3f}")
+            
+        print("| " + " | ".join(row) + " |")
+    
+    print()
+    
+    # Markdown Table: Standard Metrics
     comparison = evaluator.compare_strategies(all_results)
     
-    print(f"\n{'='*60}")
-    print("Strategy Comparison")
-    print(f"{'='*60}")
-    print(f"{'Strategy':<15} {'P@3':>8} {'R@3':>8} {'MRR':>8} {'nDCG@5':>8}")
-    print(f"{'-'*60}")
+    print("\n## Standard Metrics (Overall)\n")
+    print("| Strategy | P@3 | R@3 | MRR | nDCG@5 |")
+    print("| --- | --- | --- | --- | --- |")
     
     for strategy, metrics in comparison.items():
-        print(f"{strategy:<15} "
-              f"{metrics['mean_precision_at_3']:>8.3f} "
-              f"{metrics['mean_recall_at_3']:>8.3f} "
-              f"{metrics['mean_mrr']:>8.3f} "
-              f"{metrics['mean_ndcg_at_5']:>8.3f}")
+        print(f"| {strategy} | "
+              f"{metrics['mean_precision_at_3']:.3f} | "
+              f"{metrics['mean_recall_at_3']:.3f} | "
+              f"{metrics['mean_mrr']:.3f} | "
+              f"{metrics['mean_ndcg_at_5']:.3f} |")
     
     print(f"{'='*60}\n")
 
@@ -176,7 +230,7 @@ def main():
     parser = argparse.ArgumentParser(description="Run RAG benchmarks")
     parser.add_argument(
         "--strategy",
-        choices=["semantic", "keyword", "graph", "hybrid", "super_hybrid"],
+        choices=["semantic", "keyword", "graph", "hybrid", "super_hybrid", "adaptive"],
         default="super_hybrid",
         help="Search strategy to benchmark"
     )
@@ -218,7 +272,7 @@ def main():
     
     # Run benchmarks
     if args.all_strategies:
-        strategies = ["semantic", "keyword", "graph", "hybrid", "super_hybrid"]
+        strategies = ["semantic", "keyword", "graph", "hybrid", "super_hybrid", "adaptive"]
         compare_strategies(queries, strategies, db)
     else:
         results = run_retrieval_benchmark(queries, args.strategy, db)

@@ -309,6 +309,91 @@
       ],
       "why_straightforward_fails": "Query 'Asset 99' matches Glossary, but not Operation Log. Semantic search returns Glossary (definition) but misses location.",
       "why_sophisticated_succeeds": "Graph links Asset 99 -> Crimson Sky -> Operation Log."
+    },
+    {
+      "id": "gt001",
+      "category": "graph-only",
+      "query": "Who designed the weapon used in Operation Nightfall?",
+      "relevant_docs": [
+        "Dr__Helena_Vance.md",
+        "Blackout.md",
+        "operation_nightfall.md"
+      ],
+      "relevant_chunks": [],
+      "expected_answer_contains": [
+        "Dr. Helena Vance"
+      ],
+      "difficulty": "hard",
+      "reasoning_path": [
+        "1. Operation Nightfall -> deployed Blackout",
+        "2. Blackout -> engineered by Dr. Helena Vance"
+      ],
+      "why_straightforward_fails": "Query 'weapon' and 'designed' do not appear in Dr. Helena Vance's doc.",
+      "why_sophisticated_succeeds": "Graph: Nightfall -> Blackout -> Dr. Helena Vance"
+    },
+    {
+      "id": "gt002",
+      "category": "graph-only",
+      "query": "What is the current status of the research conducted at Site Omega?",
+      "relevant_docs": [
+        "Project_Helios.md",
+        "site_omega.md"
+      ],
+      "relevant_chunks": [],
+      "expected_answer_contains": [
+        "Terminated",
+        "2024"
+      ],
+      "difficulty": "hard",
+      "reasoning_path": [
+        "1. Site Omega -> hosts Project Helios",
+        "2. Project Helios -> Terminated in 2024"
+      ],
+      "why_straightforward_fails": "Query 'current status' and 'research' do not appear in Project Helios termination doc.",
+      "why_sophisticated_succeeds": "Graph: Site Omega -> Project Helios (status)"
+    },
+    {
+      "id": "gt003",
+      "category": "graph-only",
+      "query": "Who was the mentor of the current CEO of Nexus Corp?",
+      "relevant_docs": [
+        "Victor_Stone.md",
+        "Diana_Ross.md",
+        "nexus_corp.md"
+      ],
+      "relevant_chunks": [],
+      "expected_answer_contains": [
+        "Victor Stone"
+      ],
+      "difficulty": "hard",
+      "reasoning_path": [
+        "1. Nexus Corp -> CEO Diana Ross",
+        "2. Diana Ross -> mentored by Victor Stone"
+      ],
+      "why_straightforward_fails": "Query 'mentor' and 'CEO' link, but Victor Stone doc has no CEO mention.",
+      "why_sophisticated_succeeds": "Graph: Nexus Corp -> Diana Ross -> Victor Stone"
+    },
+    {
+      "id": "gt004",
+      "category": "graph-only",
+      "query": "Where are the raw materials for the Titan Rocket sourced from?",
+      "relevant_docs": [
+        "Kobani_Mine.md",
+        "Prometheus_Engine.md",
+        "titan_rocket.md"
+      ],
+      "relevant_chunks": [],
+      "expected_answer_contains": [
+        "Kobani Mine",
+        "Kazakhstan"
+      ],
+      "difficulty": "hard",
+      "reasoning_path": [
+        "1. Titan Rocket -> uses Prometheus Engine",
+        "2. Prometheus Engine -> uses rare earth from Kobani Mine"
+      ],
+      "why_straightforward_fails": "Query 'raw materials' and 'Titan Rocket' do not appear in Kobani Mine doc.",
+      "why_sophisticated_succeeds": "Graph: Titan Rocket -> Prometheus Engine -> Kobani Mine"
     }
   ]
 }
