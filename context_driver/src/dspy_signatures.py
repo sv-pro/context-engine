@@ -161,10 +161,24 @@ def configure_dspy(model: str = "openai/gpt-4o-mini"):
 
 # === HELPER FUNCTION ===
 
-def run_dspy_pipeline(title: str, content: str) -> Dict[str, Any]:
+def run_dspy_pipeline(
+    title: str, 
+    content: str, 
+    collect_examples: bool = True,
+    use_optimized: bool = False
+) -> Dict[str, Any]:
     """
     Convenience function to run the full pipeline.
     Ensures DSPy is configured before execution.
+    
+    Args:
+        title: Document title
+        content: Document content
+        collect_examples: If True, save successful runs for optimization
+        use_optimized: If True, try to load an optimized pipeline
+        
+    Returns:
+        Dict with capsule, facts, and rules
     """
     global _dspy_configured
     
@@ -172,5 +186,30 @@ def run_dspy_pipeline(title: str, content: str) -> Dict[str, Any]:
     if not _dspy_configured:
         configure_dspy()
     
-    pipeline = NeuroIngestionPipeline()
-    return pipeline(title=title, content=content)
+    # Try to use optimized pipeline
+    if use_optimized:
+        try:
+            from dspy_optimizer import load_optimized_pipeline
+            pipeline = load_optimized_pipeline()
+            if pipeline:
+                logger.info("[DSPy] Using optimized pipeline")
+            else:
+                pipeline = NeuroIngestionPipeline()
+        except ImportError:
+            pipeline = NeuroIngestionPipeline()
+    else:
+        pipeline = NeuroIngestionPipeline()
+    
+    result = pipeline(title=title, content=content)
+    
+    # Collect training example if successful
+    if collect_examples and result.get("capsule", {}).get("summary"):
+        try:
+            from dspy_optimizer import TrainingExampleCollector
+            collector = TrainingExampleCollector()
+            collector.save_example(title=title, content=content, result=result)
+        except Exception as e:
+            logger.debug(f"[DSPy] Could not save training example: {e}")
+    
+    return result
+

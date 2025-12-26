@@ -73,6 +73,66 @@ class RelatedArticlesResponse(BaseModel):
     incoming_links: List[str] = Field(default_factory=list, description="Articles that link to this document")
 
 
+# ==================== Neurosymbolic Data Models ====================
+
+class FactItem(BaseModel):
+    """A single extracted fact (subject-predicate-object triple)."""
+    id: int = Field(..., description="Unique fact ID")
+    subject: str = Field(..., description="Subject of the fact")
+    predicate: str = Field(..., description="Relationship or action")
+    object: str = Field(..., description="Object of the fact")
+    provenance: Optional[str] = Field(None, description="Source reference")
+    confidence: float = Field(..., description="Extraction confidence (0-1)")
+    source_id: int = Field(..., description="Source note ID")
+    source_title: str = Field(..., description="Source note title")
+
+
+class FactListResponse(BaseModel):
+    """Response containing list of facts."""
+    facts: List[FactItem] = Field(..., description="List of extracted facts")
+    total: int = Field(..., description="Number of facts returned")
+    filters: dict = Field(default_factory=dict, description="Applied filters")
+
+
+class RuleItem(BaseModel):
+    """A single extracted rule (IF-THEN logic)."""
+    id: int = Field(..., description="Unique rule ID")
+    rule_id: Optional[str] = Field(None, description="Human-readable rule identifier")
+    condition: str = Field(..., description="IF condition")
+    action: str = Field(..., description="THEN action")
+    severity: str = Field(..., description="Rule severity: critical, high, normal, low")
+    provenance: Optional[str] = Field(None, description="Source reference")
+    source_id: int = Field(..., description="Source note ID")
+    source_title: str = Field(..., description="Source note title")
+
+
+class RuleListResponse(BaseModel):
+    """Response containing list of rules."""
+    rules: List[RuleItem] = Field(..., description="List of extracted rules")
+    total: int = Field(..., description="Number of rules returned")
+    filters: dict = Field(default_factory=dict, description="Applied filters")
+
+
+class CapsuleItem(BaseModel):
+    """A condensed document capsule with summary and metadata."""
+    id: int = Field(..., description="Unique capsule ID")
+    summary: str = Field(..., description="2-3 sentence summary")
+    key_points: List[str] = Field(default_factory=list, description="Key bullet points")
+    intent: str = Field(..., description="Document intent: procedure, fact, policy, incident, reference")
+    domain: str = Field(..., description="Primary domain: ssl, networking, auth, etc.")
+    confidence: float = Field(..., description="Extraction confidence (0-1)")
+    source_id: int = Field(..., description="Source note ID")
+    source_title: str = Field(..., description="Source note title")
+    source_path: str = Field(..., description="Source file path")
+
+
+class CapsuleListResponse(BaseModel):
+    """Response containing list of capsules."""
+    capsules: List[CapsuleItem] = Field(..., description="List of document capsules")
+    total: int = Field(..., description="Number of capsules returned")
+    filters: dict = Field(default_factory=dict, description="Applied filters")
+
+
 # ==================== Tool Endpoints ====================
 
 @router.post(
@@ -291,6 +351,116 @@ async def get_related_articles(title_or_path: str) -> RelatedArticlesResponse:
             outgoing_links=outgoing,
             incoming_links=incoming
         )
+
+
+# ==================== Neurosymbolic Query Endpoints ====================
+
+@router.get(
+    "/facts",
+    response_model=FactListResponse,
+    summary="List Extracted Facts",
+    description="""
+Query extracted subject-predicate-object facts from the knowledge base.
+
+Facts are automatically extracted from documents during ingestion using DSPy.
+Use filters to narrow results by subject, predicate, or source document.
+"""
+)
+async def list_facts(
+    subject: Optional[str] = Query(None, description="Filter by subject (partial match)"),
+    predicate: Optional[str] = Query(None, description="Filter by predicate (partial match)"),
+    source_id: Optional[int] = Query(None, description="Filter by source note ID"),
+    limit: int = Query(50, ge=1, le=200, description="Maximum results")
+) -> FactListResponse:
+    """List extracted facts with optional filters."""
+    from db import Database
+    
+    db = Database()
+    facts = db.get_facts(source_id=source_id, subject=subject, predicate=predicate, limit=limit)
+    
+    return FactListResponse(
+        facts=[FactItem(**f) for f in facts],
+        total=len(facts),
+        filters={"subject": subject, "predicate": predicate, "source_id": source_id}
+    )
+
+
+@router.get(
+    "/rules",
+    response_model=RuleListResponse,
+    summary="List Extracted Rules",
+    description="""
+Query extracted IF-THEN rules from procedural documents.
+
+Rules are automatically extracted from procedures, policies, and incident reports.
+Use filters to find rules by severity or source document.
+"""
+)
+async def list_rules(
+    severity: Optional[str] = Query(None, description="Filter by severity: critical, high, normal, low"),
+    source_id: Optional[int] = Query(None, description="Filter by source note ID"),
+    limit: int = Query(50, ge=1, le=200, description="Maximum results")
+) -> RuleListResponse:
+    """List extracted rules with optional filters."""
+    from db import Database
+    
+    db = Database()
+    rules = db.get_rules(source_id=source_id, severity=severity, limit=limit)
+    
+    return RuleListResponse(
+        rules=[RuleItem(**r) for r in rules],
+        total=len(rules),
+        filters={"severity": severity, "source_id": source_id}
+    )
+
+
+@router.get(
+    "/capsules",
+    response_model=CapsuleListResponse,
+    summary="List Document Capsules",
+    description="""
+Query condensed document summaries (capsules) from the knowledge base.
+
+Capsules contain summary, key points, intent, and domain for each document.
+Use filters to find documents by domain or intent type.
+"""
+)
+async def list_capsules(
+    domain: Optional[str] = Query(None, description="Filter by domain: ssl, networking, auth, etc."),
+    intent: Optional[str] = Query(None, description="Filter by intent: procedure, fact, policy, incident, reference"),
+    limit: int = Query(50, ge=1, le=200, description="Maximum results")
+) -> CapsuleListResponse:
+    """List document capsules with optional filters."""
+    from db import Database
+    
+    db = Database()
+    capsules = db.get_capsules(domain=domain, intent=intent, limit=limit)
+    
+    return CapsuleListResponse(
+        capsules=[CapsuleItem(**c) for c in capsules],
+        total=len(capsules),
+        filters={"domain": domain, "intent": intent}
+    )
+
+
+@router.get(
+    "/capsule/{note_id}",
+    response_model=CapsuleItem,
+    summary="Get Capsule for Note",
+    description="Get the condensed capsule for a specific note by its ID."
+)
+async def get_capsule(note_id: int) -> CapsuleItem:
+    """Get capsule for a specific note."""
+    from db import Database
+    from fastapi import HTTPException
+    
+    db = Database()
+    capsule = db.get_capsule(note_id)
+    
+    if not capsule:
+        raise HTTPException(status_code=404, detail=f"Capsule for note {note_id} not found")
+    
+    return CapsuleItem(**capsule)
 
 
 # ==================== OpenAPI Customization ====================

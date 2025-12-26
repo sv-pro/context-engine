@@ -544,3 +544,153 @@ class Database:
                 """, (rule_id, condition, action, severity, provenance, source_id))
             
             logger.debug(f"Upserted {len(rules)} rules for note {source_id}")
+
+    # === NEUROSYMBOLIC QUERY METHODS ===
+    
+    def get_capsule(self, source_id):
+        """
+        Get capsule for a specific note.
+        Returns dict or None if not found.
+        """
+        with self.conn.cursor() as cur:
+            cur.execute("""
+                SELECT c.id, c.summary, c.key_points, c.intent, c.domain, c.confidence, 
+                       n.title, n.file_path
+                FROM brain.capsules c
+                JOIN brain.notes n ON c.source_id = n.id
+                WHERE c.source_id = %s;
+            """, (source_id,))
+            row = cur.fetchone()
+            if not row:
+                return None
+            return {
+                "id": row[0],
+                "summary": row[1],
+                "key_points": row[2] or [],
+                "intent": row[3],
+                "domain": row[4],
+                "confidence": row[5],
+                "source_title": row[6],
+                "source_path": row[7]
+            }
+    
+    def get_capsules(self, domain=None, intent=None, limit=50):
+        """
+        List capsules with optional filters.
+        """
+        with self.conn.cursor() as cur:
+            query = """
+                SELECT c.id, c.summary, c.key_points, c.intent, c.domain, c.confidence,
+                       c.source_id, n.title, n.file_path
+                FROM brain.capsules c
+                JOIN brain.notes n ON c.source_id = n.id
+                WHERE 1=1
+            """
+            params = []
+            
+            if domain:
+                query += " AND c.domain ILIKE %s"
+                params.append(f"%{domain}%")
+            if intent:
+                query += " AND c.intent = %s"
+                params.append(intent)
+            
+            query += " ORDER BY c.confidence DESC LIMIT %s"
+            params.append(limit)
+            
+            cur.execute(query, params)
+            results = []
+            for row in cur.fetchall():
+                results.append({
+                    "id": row[0],
+                    "summary": row[1],
+                    "key_points": row[2] or [],
+                    "intent": row[3],
+                    "domain": row[4],
+                    "confidence": row[5],
+                    "source_id": row[6],
+                    "source_title": row[7],
+                    "source_path": row[8]
+                })
+            return results
+    
+    def get_facts(self, source_id=None, subject=None, predicate=None, limit=50):
+        """
+        Query facts with optional filters.
+        """
+        with self.conn.cursor() as cur:
+            query = """
+                SELECT f.id, f.subject, f.predicate, f.object, f.provenance, 
+                       f.confidence, f.source_id, n.title
+                FROM brain.facts f
+                JOIN brain.notes n ON f.source_id = n.id
+                WHERE 1=1
+            """
+            params = []
+            
+            if source_id:
+                query += " AND f.source_id = %s"
+                params.append(source_id)
+            if subject:
+                query += " AND f.subject ILIKE %s"
+                params.append(f"%{subject}%")
+            if predicate:
+                query += " AND f.predicate ILIKE %s"
+                params.append(f"%{predicate}%")
+            
+            query += " ORDER BY f.confidence DESC LIMIT %s"
+            params.append(limit)
+            
+            cur.execute(query, params)
+            results = []
+            for row in cur.fetchall():
+                results.append({
+                    "id": row[0],
+                    "subject": row[1],
+                    "predicate": row[2],
+                    "object": row[3],
+                    "provenance": row[4],
+                    "confidence": row[5],
+                    "source_id": row[6],
+                    "source_title": row[7]
+                })
+            return results
+    
+    def get_rules(self, source_id=None, severity=None, limit=50):
+        """
+        Query rules with optional filters.
+        """
+        with self.conn.cursor() as cur:
+            query = """
+                SELECT r.id, r.rule_id, r.condition, r.action, r.severity, 
+                       r.provenance, r.source_id, n.title
+                FROM brain.rules r
+                JOIN brain.notes n ON r.source_id = n.id
+                WHERE 1=1
+            """
+            params = []
+            
+            if source_id:
+                query += " AND r.source_id = %s"
+                params.append(source_id)
+            if severity:
+                query += " AND r.severity = %s"
+                params.append(severity)
+            
+            query += " ORDER BY r.id DESC LIMIT %s"
+            params.append(limit)
+            
+            cur.execute(query, params)
+            results = []
+            for row in cur.fetchall():
+                results.append({
+                    "id": row[0],
+                    "rule_id": row[1],
+                    "condition": row[2],
+                    "action": row[3],
+                    "severity": row[4],
+                    "provenance": row[5],
+                    "source_id": row[6],
+                    "source_title": row[7]
+                })
+            return results
