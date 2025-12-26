@@ -12,3 +12,5 @@ __pycache__/
 *.pyo
 *.pyd
 .pytest_cache/
+bm*.md
+response.json
