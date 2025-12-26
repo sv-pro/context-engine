@@ -1,4 +1,4 @@
-# Neurosymbolic Knowledge Distillation
+# Neurosymbolic Ingestion Spec
 
 ## Phase 1: Knowledge Distillation Pipeline
 
@@ -9,163 +9,126 @@
             └──────────────┬───────────────┘
                            │
             ┌──────────────▼───────────────┐
-            │  PASS #1 — CONDENSE          │
-            │  извлечение ядра смысла      │
-            │  (summary, points, intent)   │
+            │  PASS #1 — CONDENSE (DSPy)   │
+            │  summary, key_points, intent │
             └──────────────┬───────────────┘
                            │
             ┌──────────────▼───────────────┐
-            │  PASS #2 — STRUCTURE         │
-            │  entities, facts, capsules   │
-            │  (graph / triples / schema)  │
+            │  PASS #2 — STRUCTURE (DSPy)  │
+            │  entities, facts, triples    │
             └──────────────┬───────────────┘
                            │
             ┌──────────────▼───────────────┐
-            │  PASS #3 — DISTILL RULES     │
-            │  invariants, conditions,     │
-            │  actions, logic              │
+            │  PASS #3 — DISTILL (DSPy)    │
+            │  rules, conditions, actions  │
             └──────────────┬───────────────┘
                            │
                 ┌──────────▼───────────┐
                 │  EXECUTABLE LORE     │
-                │  (runtime package)   │
-                └──────────┬───────────┘
-                           │
-                     ┌─────▼─────┐
-                     │ EXECUTE   │
-                     │ answer /  │
-                     │ triage /  │
-                     │ decisions │
-                     └───────────┘
+                └──────────────────────┘
 ```
 
 ---
 
-## Pass #1: CONDENSE
+## DSPy Integration
 
-**Goal**: Extract the core meaning from raw documents.
+DSPy provides **typed signatures** for predictable prompt execution. Each pass becomes a DSPy module with explicit input/output contracts.
 
-**Input**: Raw source file (markdown, runbook, log, Jira ticket)
+### Why DSPy?
+| Problem | DSPy Solution |
+| --- | --- |
+| Inconsistent LLM outputs | Typed signatures enforce structure |
+| Prompt engineering churn | Optimizers tune prompts automatically |
+| No validation | Field types + assertions catch errors |
+| Hard to test | Modules are unit-testable |
 
-**Output**: Condensed capsule
-```json
-{
-  "source_id": "runbook_ssl_renewal.md",
-  "summary": "...",
-  "key_points": ["...", "..."],
-  "intent": "procedure | fact | policy | incident",
-  "domain": "ssl | networking | auth | ...",
-  "confidence": 0.95
-}
+### DSPy Signatures for 3-Pass Pipeline
+
+```python
+import dspy
+
+# Pass #1: CONDENSE
+class CondenseDocument(dspy.Signature):
+    """Extract core meaning from a document."""
+    title: str = dspy.InputField()
+    content: str = dspy.InputField()
+    
+    summary: str = dspy.OutputField(desc="2-3 sentence summary")
+    key_points: list[str] = dspy.OutputField(desc="3-7 bullet points")
+    intent: str = dspy.OutputField(desc="procedure|fact|policy|incident|reference")
+    domain: str = dspy.OutputField(desc="ssl|networking|auth|database|security|...")
+
+# Pass #2: STRUCTURE
+class ExtractFacts(dspy.Signature):
+    """Extract subject-predicate-object facts from document."""
+    title: str = dspy.InputField()
+    content: str = dspy.InputField()
+    summary: str = dspy.InputField()
+    
+    facts: list[dict] = dspy.OutputField(desc="List of {subject, predicate, object}")
+
+# Pass #3: DISTILL RULES
+class DistillRules(dspy.Signature):
+    """Extract IF-THEN rules from procedural documents."""
+    title: str = dspy.InputField()
+    content: str = dspy.InputField()
+    intent: str = dspy.InputField()
+    facts: list[dict] = dspy.InputField()
+    
+    rules: list[dict] = dspy.OutputField(desc="List of {rule_id, condition, action, severity}")
 ```
 
-**Implementation**:
-- LLM prompt: "Summarize this document into its core meaning..."
-- Store in `brain.capsules`
+### DSPy Modules (Predictors)
+
+```python
+class NeuroIngestionPipeline(dspy.Module):
+    def __init__(self):
+        self.condense = dspy.Predict(CondenseDocument)
+        self.extract_facts = dspy.Predict(ExtractFacts)
+        self.distill_rules = dspy.Predict(DistillRules)
+    
+    def forward(self, title: str, content: str):
+        # Pass #1
+        capsule = self.condense(title=title, content=content)
+        
+        # Pass #2
+        facts_result = self.extract_facts(
+            title=title, content=content, summary=capsule.summary
+        )
+        
+        # Pass #3 (only for procedures/policies)
+        rules_result = {"rules": []}
+        if capsule.intent in ["procedure", "policy", "incident"]:
+            rules_result = self.distill_rules(
+                title=title, content=content,
+                intent=capsule.intent, facts=facts_result.facts
+            )
+        
+        return {
+            "capsule": capsule,
+            "facts": facts_result.facts,
+            "rules": rules_result.rules
+        }
+```
 
 ---
 
-## Pass #2: STRUCTURE
-
-**Goal**: Extract structured knowledge (entities, facts, relations).
-
-**Input**: Condensed capsule + original source
-
-**Output**: Facts and triples
-```json
-{
-  "entities": [
-    {"id": "ssl_cert", "type": "artifact", "name": "SSL Certificate"},
-    {"id": "lets_encrypt", "type": "service", "name": "Let's Encrypt"}
-  ],
-  "facts": [
-    {"subject": "ssl_cert", "predicate": "issued_by", "object": "lets_encrypt"},
-    {"subject": "ssl_cert", "predicate": "expires_in", "object": "90_days"}
-  ],
-  "provenance": "runbook_ssl_renewal.md#L12-L25"
-}
-```
-
-**Implementation**:
-- LLM prompt with schema constraint
-- Store in `brain.facts` (subject, predicate, object, provenance)
-- Link to existing `brain.edges` for graph traversal
-
----
-
-## Pass #3: DISTILL RULES
-
-**Goal**: Extract executable rules (invariants, conditions, actions).
-
-**Input**: Facts from Pass #2
-
-**Output**: Logical rules
-```json
-{
-  "rules": [
-    {
-      "id": "rule_ssl_renewal",
-      "condition": "ssl_cert.expires_in < 30_days",
-      "action": "trigger_renewal",
-      "severity": "critical",
-      "provenance": "runbook_ssl_renewal.md"
-    },
-    {
-      "id": "rule_geo_filter",
-      "condition": "request.country NOT IN allowed_countries",
-      "action": "block_request",
-      "severity": "normal",
-      "provenance": "geo_filtering.md"
-    }
-  ]
-}
-```
-
-**Implementation**:
-- LLM prompt: "Given these facts, extract IF-THEN rules..."
-- Store in `brain.rules` (condition, action, severity, provenance)
-
----
-
-## Executable Lore (Runtime Package)
-
-The final output is a **runtime-queryable knowledge package**:
+## Storage Schema
 
 | Table | Contents |
 |-------|----------|
 | `brain.capsules` | Condensed summaries per source |
 | `brain.facts` | Subject-predicate-object triples |
 | `brain.rules` | Executable IF-THEN logic |
-| `brain.provenance` | Links back to source locations |
-
----
-
-## Execution Phase
-
-At query time:
-
-1. **Retrieve**: Vector search + fact lookup
-2. **Reason**: Apply rules to derive new facts
-3. **Ground**: Link answer to provenance
-4. **Generate**: LLM produces grounded response
 
 ---
 
 ## Delta from Current Implementation
 
-| Aspect | Current | Neurosymbolic |
+| Aspect | Current (litellm) | DSPy |
 |--------|---------|---------------|
-| Extraction | 1-pass (entities + relations) | 3-pass (condense → structure → rules) |
-| Storage | `brain.notes`, `brain.edges` | + `brain.capsules`, `brain.facts`, `brain.rules` |
-| Reasoning | Graph traversal only | + Rule execution |
-| Grounding | WikiLinks | + Provenance chains |
-
----
-
-## Next Steps
-
-1. [ ] Define schema for `brain.capsules`, `brain.facts`, `brain.rules`
-2. [ ] Implement Pass #1 (CONDENSE) in `main.py`
-3. [ ] Implement Pass #2 (STRUCTURE) extending `prompts.py`
-4. [ ] Implement Pass #3 (DISTILL RULES) as new extraction step
-5. [ ] Create rule execution engine for query-time reasoning
+| Prompts | Manual f-strings | Typed signatures |
+| Output parsing | Manual JSON parse | Automatic type coercion |
+| Validation | None | Field types + assertions |
+| Optimization | Manual tuning | MIPROv2 / BootstrapFewShot |
+| Testing | Integration only | Unit testable modules |

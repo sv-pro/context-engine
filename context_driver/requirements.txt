@@ -9,3 +9,5 @@ fastapi
 uvicorn
 pydantic
 mcp
+dspy-ai
+tiktoken

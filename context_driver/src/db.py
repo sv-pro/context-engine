@@ -100,6 +100,63 @@ class Database:
                 CREATE INDEX IF NOT EXISTS idx_notes_content_gin ON brain.notes USING GIN (to_tsvector('english', content));
             """)
             
+            # === NEUROSYMBOLIC INGESTION TABLES ===
+            
+            # Capsules: condensed summaries from Pass #1
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS brain.capsules (
+                    id SERIAL PRIMARY KEY,
+                    source_id INT REFERENCES brain.notes(id) ON DELETE CASCADE,
+                    summary TEXT,
+                    key_points JSONB DEFAULT '[]'::jsonb,
+                    intent TEXT,  -- procedure, fact, policy, incident
+                    domain TEXT,  -- ssl, networking, auth, etc.
+                    confidence FLOAT DEFAULT 0.0,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    UNIQUE(source_id)
+                );
+            """)
+            
+            # Facts: subject-predicate-object triples from Pass #2
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS brain.facts (
+                    id SERIAL PRIMARY KEY,
+                    subject TEXT NOT NULL,
+                    predicate TEXT NOT NULL,
+                    object TEXT NOT NULL,
+                    provenance TEXT,  -- source_file#L12-L25
+                    confidence FLOAT DEFAULT 0.0,
+                    source_id INT REFERENCES brain.notes(id) ON DELETE CASCADE,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    UNIQUE(subject, predicate, object, source_id)
+                );
+            """)
+            
+            # Rules: IF-THEN logic from Pass #3
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS brain.rules (
+                    id SERIAL PRIMARY KEY,
+                    rule_id TEXT UNIQUE,  -- rule_ssl_renewal
+                    condition TEXT NOT NULL,  -- ssl_cert.expires_in < 30_days
+                    action TEXT NOT NULL,  -- trigger_renewal
+                    severity TEXT DEFAULT 'normal',  -- critical, high, normal, low
+                    provenance TEXT,  -- source_file
+                    source_id INT REFERENCES brain.notes(id) ON DELETE CASCADE,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            
+            # Indices for neurosymbolic tables
+            cur.execute("""
+                CREATE INDEX IF NOT EXISTS idx_facts_subject ON brain.facts(subject);
+            """)
+            cur.execute("""
+                CREATE INDEX IF NOT EXISTS idx_facts_predicate ON brain.facts(predicate);
+            """)
+            cur.execute("""
+                CREATE INDEX IF NOT EXISTS idx_rules_severity ON brain.rules(severity);
+            """)
+            
             logger.info("Database schema (brain) initialized with chunks table")
 
 
@@ -402,3 +459,88 @@ class Database:
                 ORDER BY chunk_index;
             """, (note_id,))
             return cur.fetchall()
+
+    # === NEUROSYMBOLIC STORAGE METHODS ===
+    
+    def upsert_capsule(self, source_id, summary, key_points, intent, domain, confidence):
+        """
+        Store or update a condensed capsule for a note.
+        """
+        with self.conn.cursor() as cur:
+            cur.execute("""
+                INSERT INTO brain.capsules (source_id, summary, key_points, intent, domain, confidence)
+                VALUES (%s, %s, %s, %s, %s, %s)
+                ON CONFLICT (source_id)
+                DO UPDATE SET 
+                    summary = EXCLUDED.summary,
+                    key_points = EXCLUDED.key_points,
+                    intent = EXCLUDED.intent,
+                    domain = EXCLUDED.domain,
+                    confidence = EXCLUDED.confidence,
+                    created_at = CURRENT_TIMESTAMP;
+            """, (source_id, summary, Json(key_points), intent, domain, confidence))
+            logger.debug(f"Upserted capsule for note {source_id}")
+    
+    def upsert_facts(self, source_id, facts, provenance):
+        """
+        Store facts (triples) for a note. Clears old facts first.
+        Args:
+            source_id: Note ID
+            facts: List of {subject, predicate, object}
+            provenance: Source file reference
+        """
+        with self.conn.cursor() as cur:
+            # Clear old facts for this source
+            cur.execute("DELETE FROM brain.facts WHERE source_id = %s", (source_id,))
+            
+            # Insert new facts
+            for fact in facts:
+                subj = fact.get("subject", "")
+                pred = fact.get("predicate", "")
+                obj = fact.get("object", "")
+                conf = fact.get("confidence", 0.8)
+                
+                if not subj or not pred or not obj:
+                    continue
+                    
+                cur.execute("""
+                    INSERT INTO brain.facts (subject, predicate, object, provenance, confidence, source_id)
+                    VALUES (%s, %s, %s, %s, %s, %s)
+                    ON CONFLICT (subject, predicate, object, source_id) DO NOTHING;
+                """, (subj, pred, obj, provenance, conf, source_id))
+            
+            logger.debug(f"Upserted {len(facts)} facts for note {source_id}")
+    
+    def upsert_rules(self, source_id, rules, provenance):
+        """
+        Store rules for a note. Clears old rules first.
+        Args:
+            source_id: Note ID
+            rules: List of {rule_id, condition, action, severity}
+            provenance: Source file reference
+        """
+        with self.conn.cursor() as cur:
+            # Clear old rules for this source
+            cur.execute("DELETE FROM brain.rules WHERE source_id = %s", (source_id,))
+            
+            # Insert new rules
+            for rule in rules:
+                rule_id = rule.get("rule_id", "")
+                condition = rule.get("condition", "")
+                action = rule.get("action", "")
+                severity = rule.get("severity", "normal")
+                
+                if not condition or not action:
+                    continue
+                    
+                cur.execute("""
+                    INSERT INTO brain.rules (rule_id, condition, action, severity, provenance, source_id)
+                    VALUES (%s, %s, %s, %s, %s, %s)
+                    ON CONFLICT (rule_id) DO UPDATE SET
+                        condition = EXCLUDED.condition,
+                        action = EXCLUDED.action,
+                        severity = EXCLUDED.severity,
+                        provenance = EXCLUDED.provenance;
+                """, (rule_id, condition, action, severity, provenance, source_id))
+            
+            logger.debug(f"Upserted {len(rules)} rules for note {source_id}")

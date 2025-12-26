@@ -422,9 +422,82 @@ def ingest_raw_file(file_path):
             f.write(final_content)
             
         logger.info(f"Generated Graph artifacts for {title}: {len(entities)} entities.")
+        
+        # 4. NEUROSYMBOLIC DISTILLATION (3-pass pipeline)
+        # Run after graph extraction to store capsules, facts, and rules
+        try:
+            neurosymbolic_distill(content, title, file_path)
+        except Exception as e:
+            logger.error(f"Neurosymbolic distillation failed for {title}: {e}")
 
     except Exception as e:
         logger.error(f"Error ingesting raw file {file_path}: {e}")
+
+
+def neurosymbolic_distill(content: str, title: str, source_path: str):
+    """
+    3-pass neurosymbolic knowledge distillation pipeline.
+    
+    Uses DSPy for structured, predictable extraction with litellm fallback.
+    Pass #1: CONDENSE -> capsule
+    Pass #2: STRUCTURE -> facts
+    Pass #3: DISTILL RULES -> rules
+    """
+    logger.info(f"[NEURO] Starting 3-pass distillation for: {title}")
+    
+    # Find the note_id for this source
+    with db.conn.cursor() as cur:
+        cur.execute("""
+            SELECT id FROM brain.notes WHERE title ILIKE %s OR file_path ILIKE %s LIMIT 1
+        """, (title, f"%{title}%"))
+        row = cur.fetchone()
+        if not row:
+            logger.warning(f"[NEURO] Note not found for {title}, skipping distillation")
+            return
+        note_id = row[0]
+    
+    provenance = f"{os.path.basename(source_path)}"
+    
+    # Try DSPy pipeline first
+    try:
+        from dspy_signatures import run_dspy_pipeline
+        
+        result = run_dspy_pipeline(title=title, content=content)
+        
+        capsule = result.get("capsule", {})
+        facts_list = result.get("facts", [])
+        rules_list = result.get("rules", [])
+        
+        logger.info(f"[NEURO/DSPy] Pipeline completed for {title}")
+        
+    except Exception as e:
+        logger.warning(f"[NEURO] DSPy pipeline failed, falling back to litellm: {e}")
+        
+        # Fallback to litellm prompts
+        from prompts import condense_document, extract_facts, distill_rules
+        
+        capsule = condense_document(content, title)
+        
+        facts_data = extract_facts(content, title, capsule)
+        facts_list = facts_data.get("facts", [])
+        
+        rules_data = distill_rules(content, title, capsule, facts_list)
+        rules_list = rules_data.get("rules", [])
+    
+    # Store results
+    db.upsert_capsule(
+        source_id=note_id,
+        summary=capsule.get("summary", ""),
+        key_points=capsule.get("key_points", []),
+        intent=capsule.get("intent", "unknown"),
+        domain=capsule.get("domain", "unknown"),
+        confidence=capsule.get("confidence", 0.0)
+    )
+    
+    db.upsert_facts(source_id=note_id, facts=facts_list, provenance=provenance)
+    db.upsert_rules(source_id=note_id, rules=rules_list, provenance=provenance)
+    
+    logger.info(f"[NEURO] Completed distillation for {title}: {len(facts_list)} facts, {len(rules_list)} rules")
 
 
 # ==================== PIPELINE STAGE 2: INDEXING (Graph -> DB) ====================
