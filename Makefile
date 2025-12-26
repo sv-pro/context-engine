@@ -175,7 +175,10 @@ db-restore-webui:
 	if [ -z "$$RESTORE_FILE" ]; then \
 		RESTORE_FILE=$$(ls -t $(BACKUP_DIR)/webui_*.sql 2>/dev/null | head -1); \
 		if [ -z "$$RESTORE_FILE" ]; then \
-			echo "No WebUI backups found in $(BACKUP_DIR)/"; \
+			RESTORE_FILE=$$(ls -t $(BACKUP_DIR)/*.sql 2>/dev/null | head -1); \
+		fi; \
+		if [ -z "$$RESTORE_FILE" ]; then \
+			echo "No backups found in $(BACKUP_DIR)/"; \
 			echo "Usage: make db-restore-webui [FILE=<backup_file>]"; \
 			exit 1; \
 		fi; \
