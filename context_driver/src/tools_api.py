@@ -133,6 +133,30 @@ class CapsuleListResponse(BaseModel):
     filters: dict = Field(default_factory=dict, description="Applied filters")
 
 
+# ==================== ReAct Agent Models ====================
+
+class ReActTrajectoryStep(BaseModel):
+    """A single step in the ReAct reasoning trajectory."""
+    thought: str = Field(default="", description="The agent's reasoning")
+    action: str = Field(default="", description="Tool action taken")
+    observation: str = Field(default="", description="Result of the action")
+
+
+class ReActRequest(BaseModel):
+    """Request model for ReAct agent queries."""
+    question: str = Field(..., description="Question to answer using ReAct reasoning")
+    max_iters: int = Field(5, ge=1, le=10, description="Maximum reasoning iterations")
+
+
+class ReActResponse(BaseModel):
+    """Response from the ReAct agent."""
+    question: str = Field(..., description="Original question")
+    answer: str = Field(..., description="Final answer from the agent")
+    reasoning_trace: List[ReActTrajectoryStep] = Field(default_factory=list, description="Step-by-step reasoning trajectory")
+    success: bool = Field(..., description="Whether the query completed successfully")
+    fallback: bool = Field(False, description="Whether fallback was used")
+
+
 # ==================== Tool Endpoints ====================
 
 @router.post(
@@ -461,6 +485,86 @@ async def get_capsule(note_id: int) -> CapsuleItem:
         raise HTTPException(status_code=404, detail=f"Capsule for note {note_id} not found")
     
     return CapsuleItem(**capsule)
+
+
+# ==================== ReAct Agent Endpoints ====================
+
+@router.post(
+    "/react",
+    response_model=ReActResponse,
+    summary="Ask Question with ReAct Reasoning",
+    description="""
+Ask a question that will be answered using ReAct (Reasoning + Acting) agent.
+
+The agent iteratively reasons about what information is needed, calls knowledge base 
+tools to gather information, observes results, and refines its approach until 
+it can provide a comprehensive answer.
+
+**Available Tools the Agent Can Use:**
+- `search_knowledge_base`: Semantic search for relevant documents
+- `get_facts`: Query extracted subject-predicate-object triples
+- `get_rules`: Query extracted IF-THEN rules
+- `get_capsule`: Get document summary and metadata
+- `list_documents`: Browse available documents
+
+**Use Cases:**
+- Complex questions requiring multiple pieces of information
+- Questions about procedures, policies, or troubleshooting steps
+- Questions requiring reasoning across multiple documents
+"""
+)
+async def react_query(request: ReActRequest) -> ReActResponse:
+    """Answer a question using ReAct reasoning agent."""
+    from react_agent import ask_question
+    
+    logger.info(f"ReAct query: '{request.question[:100]}...' (max_iters={request.max_iters})")
+    
+    try:
+        result = ask_question(
+            question=request.question,
+            max_iters=request.max_iters
+        )
+        
+        # Convert trajectory to response format
+        trajectory = []
+        for step in result.get("trajectory", []):
+            trajectory.append(ReActTrajectoryStep(
+                thought=step.get("thought", ""),
+                action=step.get("action", ""),
+                observation=step.get("observation", "")[:1000] if step.get("observation") else ""  # Truncate long observations
+            ))
+        
+        return ReActResponse(
+            question=request.question,
+            answer=result.get("answer", "Unable to generate an answer."),
+            reasoning_trace=trajectory,
+            success=result.get("success", False),
+            fallback=result.get("fallback", False)
+        )
+        
+    except Exception as e:
+        logger.error(f"ReAct query failed: {e}")
+        return ReActResponse(
+            question=request.question,
+            answer=f"Error processing query: {e}",
+            reasoning_trace=[],
+            success=False,
+            fallback=False
+        )
+
+
+@router.get(
+    "/react",
+    response_model=ReActResponse,
+    summary="Ask Question with ReAct (GET)",
+    description="GET version of ReAct endpoint for simple queries."
+)
+async def react_query_get(
+    question: str = Query(..., description="Question to answer"),
+    max_iters: int = Query(5, ge=1, le=10, description="Maximum reasoning iterations")
+) -> ReActResponse:
+    """Answer a question using ReAct (GET method for convenience)."""
+    return await react_query(ReActRequest(question=question, max_iters=max_iters))
 
 
 # ==================== OpenAPI Customization ====================

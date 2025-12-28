@@ -655,6 +655,11 @@ app.add_middleware(
 from tools_api import router as tools_router
 app.include_router(tools_router)
 
+# Include the ColBERTv2-compatible API router for DSPy integration
+from colbert_api import router as colbert_router
+app.include_router(colbert_router)
+
+
 @app.get("/")
 async def root():
     """API root - provides basic info and links to OpenAPI spec."""
