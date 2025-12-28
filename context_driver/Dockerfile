@@ -15,6 +15,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy source code and test data
 COPY src/ ./src/
 COPY test_queries.json .
+COPY test_*.py ./
 
 # Set python path
 ENV PYTHONPATH=/app

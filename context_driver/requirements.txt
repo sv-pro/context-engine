@@ -11,3 +11,5 @@ pydantic
 mcp
 dspy-ai
 tiktoken
+pytest
+pytest-cov
