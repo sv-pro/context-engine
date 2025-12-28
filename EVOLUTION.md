@@ -112,12 +112,55 @@ The full implementation brought:
 
 ---
 
+## Chapter 6: Agentic Reasoning & Scoped Knowledge
+
+**Commits: `16365cf` → `75c2831`**
+
+**From Passive Retrieval to Active Reasoning**
+
+> The system learned to **think**.
+
+🧠 **ReAct Integration:**
+
+The DSPy ReAct (Reasoning + Acting) agent arrived as a new **pseudo-model**:
+- `brain-rag` — Single-pass retrieval (fast, simple)
+- `brain-react` — Multi-step reasoning with tool use (thorough, complex)
+
+The ReAct agent iteratively:
+1. **Thinks** about what information is needed
+2. **Acts** by calling knowledge base tools (search, facts, rules)
+3. **Observes** results and continues reasoning
+4. Returns comprehensive answers with visible reasoning trace
+
+🎯 **Sub-Brains:**
+
+Knowledge became **scopable**. Any subdirectory can become its own context:
+
+```bash
+# Search only within a sub-brain
+curl -d '{"query": "...", "sub_path": "projects/myapp"}'
+
+# Configure default scope via environment
+BRAIN_SUBDIR=projects/myapp
+```
+
+`.brainignore` files prevent sub-brains from being indexed with their parent—enabling independent knowledge domains.
+
+**The API expanded:**
+- `/tools/sub-brains` — Discover available knowledge scopes
+- All search/list endpoints accept `sub_path` parameter
+- `Tools.scoped("path")` creates child instances in Python
+
+**Demo sub-brain** with 8 interconnected Acme Cloud docs showcases multi-step reasoning.
+
+---
+
 ## The Evolution Arc
 
 ```
-Infrastructure → Memory → Search → RAG → GraphRAG → Neurosymbolic
-     ↓            ↓        ↓       ↓        ↓            ↓
-  Docker       pgvector  Hybrid  Citations  Entities    DSPy
+Infrastructure → Memory → Search → RAG → GraphRAG → Neurosymbolic → Agentic
+     ↓            ↓        ↓       ↓        ↓            ↓            ↓
+   Docker       pgvector  Hybrid  Citations  Entities    DSPy        ReAct
 ```
 
 ---
@@ -135,6 +178,8 @@ Infrastructure → Memory → Search → RAG → GraphRAG → Neurosymbolic
 | GraphRAG | Entity extraction and graph traversal |
 | DSPy | Typed, optimizable prompt execution |
 | Neurosymbolic | Facts, rules, and capsule extraction |
+| **ReAct reasoning** | Multi-step thinking with tool use |
+| **Sub-brains** | Scoped knowledge domains |
 
 ---
 
@@ -145,7 +190,7 @@ Infrastructure → Memory → Search → RAG → GraphRAG → Neurosymbolic
 > that turns raw documents into executable knowledge,
 > without fine-tuning.
 >
-> From Docker → pgvector → RAG → GraphRAG → DSPy → Lore Extraction.
+> From Docker → pgvector → RAG → GraphRAG → DSPy → Lore Extraction → **ReAct Reasoning**.
 >
 > **The future isn't retrieval.**
-> **It's distillation.** 🥃
+> **It's reasoning over distilled knowledge.** 🥃🧠
