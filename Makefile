@@ -1,4 +1,4 @@
-.PHONY: help quickstart status stop start db-backup db-restore db-backup-webui db-restore-webui fetch-jira
+.PHONY: help quickstart status stop start db-backup db-restore db-backup-webui db-restore-webui fetch-jira test tests test-verbose test-file test-coverage
 
 # Default target: show help
 help:
@@ -16,6 +16,11 @@ help:
 	@echo "  rebuild-driver Rebuild only the context-driver"
 	@echo "  flush       Stop services and delete all volumes (factory reset)"
 	@echo "  presentation Show the project intro presentation path"
+	@echo ""
+	@echo "Testing targets:"
+	@echo "  test          Run all tests in Docker (alias: tests)"
+	@echo "  test-verbose  Run tests with verbose output"
+	@echo "  test-file FILE=<path> Run specific test file"
 	@echo ""
 	@echo "Database backup/restore targets:"
 	@echo "  db-backup       Backup entire PostgreSQL database"
@@ -241,3 +246,34 @@ benchmark-help:
 fetch-jira: check_env
 	@mkdir -p volumes/brain/jira
 	PYTHONPATH=context_driver/src python3 context_driver/src/jira_tools/fetch_issues.py --project $(or $(PROJECT),CDDOS) $(if $(JQL),--jql "$(JQL)",) $(if $(LIMIT),--limit $(LIMIT),) --output volumes/brain/jira
+
+# ==================== Testing Targets ====================
+
+# Run all tests in Docker
+test:
+	@echo "Running tests in context-driver container..."
+	docker exec context-driver sh -c "cd /app && PYTHONPATH=/app/src pytest -v"
+
+# Alias for test
+tests: test
+
+# Run tests with verbose output and no capture
+test-verbose:
+	@echo "Running tests with verbose output..."
+	docker exec context-driver sh -c "cd /app && PYTHONPATH=/app/src pytest -v -s --tb=long"
+
+# Run specific test file (usage: make test-file FILE=test_react_agent.py)
+test-file:
+	@if [ -z "$(FILE)" ]; then \
+		echo "Usage: make test-file FILE=<test_file.py>"; \
+		echo "Available test files:"; \
+		docker exec context-driver sh -c "ls /app/*.py 2>/dev/null | grep test || echo '  (no test files found in /app)'"; \
+		exit 1; \
+	fi
+	@echo "Running $(FILE)..."
+	docker exec context-driver sh -c "cd /app && PYTHONPATH=/app/src pytest -v -s $(FILE)"
+
+# Run tests with coverage (if pytest-cov is installed)
+test-coverage:
+	@echo "Running tests with coverage..."
+	docker exec context-driver sh -c "cd /app && PYTHONPATH=/app/src pytest --cov=src --cov-report=term-missing -v"
