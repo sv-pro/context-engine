@@ -76,3 +76,33 @@ To tighten the integration further:
 - **Automatic Verification**: Agent could automatically check its generated answer against `get_rules()` to ensure no constraints are violated.
 - **Rule Chaining**: Agent could be taught to chain rules (Rule A -> Rule B -> Conclusion).
 - **Feedback Loop**: When the agent discovers a gap, it could propose new standard operating procedures to be added to the knowledge base.
+
+## 5. Self-Improvement Loop (The Investigation Artifact)
+
+To finalize the neurosymbolic loop, every successful ReAct reasoning session is automatically saved as a **Knowledge Artifact** (an "Investigation").
+
+1.  **Process**: User asks complex question → ReAct Agent solves it.
+2.  **Capture**: The entire reasoning trace (Thought, Action, Observation) and Final Answer are formatted into a markdown document.
+3.  **Storage**: Saved to `volumes/raw/investigations/Investigation_<timestamp>_<topic>.md`.
+4.  **Ingestion**: The file watcher detects the new file, ingests it, and distills it into facts/rules.
+
+**Example Artifact Structure:**
+
+```markdown
+---
+type: investigation
+tags: [react, auto-generated]
+---
+# Investigation: Why did the database fail?
+
+## Executive Summary
+The database failed due to connection exhaustion...
+
+## Reasoning Trace
+### Step 1
+**Thought**: I need to check error logs.
+**Action**: `search("database error logs")`
+...
+```
+
+This means the system **remembers its own problem-solving**, converting transient reasoning into permanent knowledge. Future queries can retrieve this investigation directly via `search_knowledge_base`, skipping the expensive reasoning steps.
