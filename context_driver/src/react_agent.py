@@ -132,28 +132,64 @@ class KnowledgeBaseReActAgent(dspy.Module):
 
 # === Configuration ===
 
-_agent_configured = False
+import threading
+import os
+
+_agent_lock = threading.Lock()
 _agent_instance: Optional[KnowledgeBaseReActAgent] = None
+_dspy_configured = False
 
 
-def configure_react_agent(model: str = "openai/gpt-4o-mini"):
+def _ensure_dspy_configured():
+    """Ensure DSPy is configured (thread-safe, only once)."""
+    global _dspy_configured
+    
+    if _dspy_configured:
+        return
+    
+    # Determine model based on available API keys
+    if os.environ.get("OPENAI_API_KEY"):
+        model = "openai/gpt-4o-mini"
+    elif os.environ.get("ANTHROPIC_API_KEY"):
+        model = "anthropic/claude-3-haiku-20240307"
+    else:
+        model = "ollama/llama3"  # Fallback to local
+    
+    try:
+        lm = dspy.LM(model=model)
+        dspy.configure(lm=lm)
+        _dspy_configured = True
+        logger.info(f"DSPy configured with model: {model}")
+    except Exception as e:
+        logger.error(f"Failed to configure DSPy: {e}")
+        raise
+
+
+def configure_react_agent(model: str = None):
     """
     Configure DSPy and create the ReAct agent.
     
     Args:
-        model: LiteLLM-compatible model name
+        model: LiteLLM-compatible model name (optional, auto-detected if not provided)
     """
-    global _agent_configured
+    global _dspy_configured
     
-    from dspy_signatures import configure_dspy
-    configure_dspy(model)
-    _agent_configured = True
-    logger.info(f"ReAct agent configured with model: {model}")
+    if model:
+        try:
+            lm = dspy.LM(model=model)
+            dspy.configure(lm=lm)
+            _dspy_configured = True
+            logger.info(f"ReAct agent configured with model: {model}")
+        except Exception as e:
+            logger.error(f"Failed to configure DSPy with {model}: {e}")
+            raise
+    else:
+        _ensure_dspy_configured()
 
 
 def get_react_agent(max_iters: int = 5) -> KnowledgeBaseReActAgent:
     """
-    Get or create the ReAct agent singleton.
+    Get or create the ReAct agent singleton (thread-safe).
     
     Args:
         max_iters: Maximum reasoning iterations
@@ -161,14 +197,14 @@ def get_react_agent(max_iters: int = 5) -> KnowledgeBaseReActAgent:
     Returns:
         Configured KnowledgeBaseReActAgent
     """
-    global _agent_instance, _agent_configured
+    global _agent_instance
     
-    if not _agent_configured:
-        configure_react_agent()
+    _ensure_dspy_configured()
     
-    if _agent_instance is None:
-        _agent_instance = KnowledgeBaseReActAgent(max_iters=max_iters)
-        logger.info(f"Created ReAct agent with max_iters={max_iters}")
+    with _agent_lock:
+        if _agent_instance is None:
+            _agent_instance = KnowledgeBaseReActAgent(max_iters=max_iters)
+            logger.info(f"Created ReAct agent with max_iters={max_iters}")
     
     return _agent_instance
 
@@ -186,6 +222,7 @@ def ask_question(question: str, max_iters: int = 5) -> Dict[str, Any]:
     """
     agent = get_react_agent(max_iters=max_iters)
     return agent(question=question)
+
 
 
 # === Simple RAG Alternative ===

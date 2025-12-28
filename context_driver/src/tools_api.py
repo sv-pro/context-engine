@@ -515,15 +515,42 @@ it can provide a comprehensive answer.
 )
 async def react_query(request: ReActRequest) -> ReActResponse:
     """Answer a question using ReAct reasoning agent."""
-    from react_agent import ask_question
+    import asyncio
+    import concurrent.futures
     
     logger.info(f"ReAct query: '{request.question[:100]}...' (max_iters={request.max_iters})")
     
+    def _run_react_sync():
+        """Run ReAct in a dedicated thread with its own DSPy configuration."""
+        import os
+        import dspy
+        
+        # Determine model based on available API keys
+        if os.environ.get("OPENAI_API_KEY"):
+            model = "openai/gpt-4o-mini"
+        elif os.environ.get("ANTHROPIC_API_KEY"):
+            model = "anthropic/claude-3-haiku-20240307"
+        else:
+            model = "ollama/llama3"
+        
+        try:
+            lm = dspy.LM(model=model)
+            
+            # Use dspy.context() for thread-safe per-request configuration
+            with dspy.context(lm=lm):
+                from react_agent import KnowledgeBaseReActAgent
+                agent = KnowledgeBaseReActAgent(max_iters=request.max_iters)
+                return agent(question=request.question)
+                
+        except Exception as e:
+            logger.error(f"ReAct agent error: {e}")
+            return {"answer": f"ReAct agent error: {e}", "trajectory": [], "success": False}
+    
     try:
-        result = ask_question(
-            question=request.question,
-            max_iters=request.max_iters
-        )
+        # Run in a thread pool executor to isolate DSPy thread context
+        loop = asyncio.get_event_loop()
+        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+            result = await loop.run_in_executor(executor, _run_react_sync)
         
         # Convert trajectory to response format
         trajectory = []
@@ -531,7 +558,7 @@ async def react_query(request: ReActRequest) -> ReActResponse:
             trajectory.append(ReActTrajectoryStep(
                 thought=step.get("thought", ""),
                 action=step.get("action", ""),
-                observation=step.get("observation", "")[:1000] if step.get("observation") else ""  # Truncate long observations
+                observation=step.get("observation", "")[:1000] if step.get("observation") else ""
             ))
         
         return ReActResponse(
