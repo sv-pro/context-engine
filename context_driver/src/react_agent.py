@@ -112,22 +112,49 @@ class KnowledgeBaseReActAgent(dspy.Module):
         """Extract the reasoning trajectory from a ReAct result."""
         trajectory = []
         
-        # DSPy ReAct stores trajectory in result.trajectory or similar
-        if hasattr(result, 'trajectory'):
-            for step in result.trajectory:
+        # DSPy ReAct stores trajectory as a dict with thought_N, tool_name_N, observation_N keys
+        if hasattr(result, 'trajectory') and isinstance(result.trajectory, dict):
+            traj_dict = result.trajectory
+            
+            # Find all steps by looking for thought_N keys
+            step_nums = set()
+            for key in traj_dict.keys():
+                if key.startswith('thought_'):
+                    try:
+                        step_num = int(key.split('_')[1])
+                        step_nums.add(step_num)
+                    except (ValueError, IndexError):
+                        pass
+            
+            # Extract each step
+            for i in sorted(step_nums):
+                thought = traj_dict.get(f'thought_{i}', '')
+                tool_name = traj_dict.get(f'tool_name_{i}', '')
+                tool_args = traj_dict.get(f'tool_args_{i}', {})
+                observation = traj_dict.get(f'observation_{i}', '')
+                
+                # Format action as "tool_name(args)" if present
+                if tool_name and tool_name != 'finish':
+                    action = f"{tool_name}({tool_args})" if tool_args else tool_name
+                else:
+                    action = tool_name or ''
+                
                 trajectory.append({
-                    "thought": getattr(step, 'thought', ''),
-                    "action": getattr(step, 'action', ''),
-                    "observation": getattr(step, 'observation', '')
+                    "thought": thought,
+                    "action": action,
+                    "observation": observation
                 })
-        elif hasattr(result, 'reasoning'):
+        
+        # Also include final reasoning if present
+        elif hasattr(result, 'reasoning') and result.reasoning:
             trajectory.append({
                 "thought": result.reasoning,
                 "action": "final_answer",
-                "observation": result.answer
+                "observation": getattr(result, 'answer', '')
             })
         
         return trajectory
+
 
 
 # === Configuration ===
