@@ -105,6 +105,9 @@ check-db:
 	@echo ""
 	@echo "Checking indexed content in database..."
 	@docker compose exec db psql -U postgres -d litellm -c "SELECT (SELECT count(*) FROM brain.notes) as notes, (SELECT count(*) FROM brain.chunks) as chunks, (SELECT count(*) FROM brain.chunks WHERE embedding IS NOT NULL) as embedded_chunks;"
+	@echo ""
+	@echo "Neurosymbolic ingestion status:"
+	@docker compose exec db psql -U postgres -d litellm -c "SELECT (SELECT count(*) FROM brain.capsules) as capsules, (SELECT count(*) FROM brain.facts) as facts, (SELECT count(*) FROM brain.rules) as rules;"
 
 
 # Reindex DB (Clear and Restart)
