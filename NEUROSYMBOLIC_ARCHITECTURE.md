@@ -97,6 +97,8 @@ The coherence comes from the **DSPy Signatures** which act as a **Procedural Con
 
 This reframes the design as disciplined reasoning, enhancing auditability and enterprise credibility.
 
+**Defense against Shortcuts:** The ReAct agent must not derive normative conclusions solely from Capsules.
+
 ### Answer Mode & Confidence
 
 All agent responses include explicit signals for trust:
@@ -109,6 +111,7 @@ confidence: 0.47
 **Semantics:**
 - **Confidence** is a heuristic signal, not a probability. It reflects internal agreement between sources and rules.
 - **Fallback** indicates absence of verified knowledge, not agent failure.
+- **Aggregation**: Confidence aggregation logic is implementation-specific and may evolve over time.
 
 ## Failure & Degradation Modes
 
@@ -118,6 +121,7 @@ The system defines explicit behavior for non-ideal conditions:
 - **Rule conflict**: The agent refuses to answer and requests escalation.
 - **Low provenance**: The agent switches to `fallback` mode.
 - **Reasoning loop detected**: The agent terminates reasoning and returns partial findings.
+- **Escalation**: Escalation targets (human operator, workflow system, or supervisory agent) are deployment-defined.
 
 ## 4. Truth & Provenance Model
 
@@ -134,6 +138,8 @@ Promotion from Investigations into Facts or Rules is gated by explicit policies:
 - **Multi-source corroboration**: Independent confirmation from multiple primary sources.
 - **Repeated evidence**: The same conclusion appears in N investigations with confidence ≥ X over Y time window.
 
+Authorized operators and promotion permissions are defined by system governance configuration.
+
 No automatic promotion occurs without satisfying at least one policy.
 
 ## 5. Self-Improvement Loop (The Investigation Artifact)
@@ -141,7 +147,7 @@ No automatic promotion occurs without satisfying at least one policy.
 To finalize the neurosymbolic loop, every successful ReAct reasoning session is automatically saved as a **Knowledge Artifact** (an "Investigation").
 
 **Distinction:**
-- **Investigations (Descriptive)**: Result of specific reasoning. May be incomplete. Used for retrieval navigation.
+- **Investigations (Descriptive)**: Result of specific reasoning. May be incomplete. Used for retrieval navigation. Investigations may be retrieved for context and navigation, but must not be treated as authoritative sources without validation.
 - **Facts / Rules (Normative)**: Verified, versioned, authoritative.
 
 **Process:**
@@ -185,3 +191,5 @@ The system remembers its own problem-solving as investigations. Verified fragmen
 - **Investigation → Candidate Rule**: Automated pipeline to suggest rules from repeated investigations.
 
 **The system prioritizes correctness, auditability, and controlled evolution over autonomous behavior.**
+
+All autonomous behavior is constrained by explicit governance, validation, and lifecycle policies.
