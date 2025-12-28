@@ -30,7 +30,8 @@ LLM Response: "Private keys are stored in HashiCorp Vault
 
 ### Core
 - **Open WebUI** - Beautiful chat interface
-- **RAG Pipeline** - Semantic search over your knowledge base
+- **RAG Pipeline** - Semantic search over your knowledge base (`brain-rag` model)
+- **ReAct Reasoning** - Iterative reasoning with tool use (`brain-react` model)
 - **MCP Server** - Tool-based article exploration for Agentic AI
 - **Chunked Embeddings** - 500-token chunks for precise retrieval
 - **Vendor LLM Priority** - OpenAI → Anthropic → Ollama fallback
@@ -42,6 +43,8 @@ LLM Response: "Private keys are stored in HashiCorp Vault
 - **File Watcher** - Auto-ingests new/modified files
 - **Open WebUI Notes Sync** - Create knowledge via chat interface
 - **Cost Tracking Dashboard** - Monitor LLM API costs and token usage in real-time
+- **Sub-Brains** - Scope searches to specific subdirectories for different modes/apps
+- **`.brainignore`** - Exclude sub-brains from parent indexing
 
 ### Technical
 - **pgvector** - PostgreSQL extension for vector similarity search
@@ -119,6 +122,22 @@ EOF
 3. Create a note with your knowledge
 4. Trigger sync: `curl -X POST http://localhost:8000/sync-notes`
 
+### Sub-Brains
+
+Scope searches to specific subdirectories for different modes, apps, or contexts:
+
+```bash
+# Search only within a sub-brain
+curl -X POST "http://localhost:8000/tools/search" \
+  -H "Content-Type: application/json" \
+  -d '{"query": "SSL certificates", "sub_path": "projects/myapp"}'
+
+# Discover available sub-brains
+curl "http://localhost:8000/tools/sub-brains"
+```
+
+Use `.brainignore` to exclude sub-brains from parent indexing. See [SUB_BRAINS.md](SUB_BRAINS.md) for details.
+
 ### How Chunking Works
 
 Large articles are split into ~500-token chunks with 50-token overlap:
@@ -137,12 +156,14 @@ Each chunk gets its own embedding, enabling precise semantic matching.
 
 ### Environment Variables
 
-| Variable            | Description                  | Default               |
-| ------------------- | ---------------------------- | --------------------- |
-| `OPENAI_API_KEY`    | OpenAI API key (optional)    | -                     |
-| `ANTHROPIC_API_KEY` | Anthropic API key (optional) | -                     |
-| `BRAIN_DIR`         | Knowledge base directory     | `/app/brain`          |
-| `OLLAMA_API_BASE`   | Ollama API endpoint          | `http://ollama:11434` |
+| Variable            | Description                        | Default               |
+| ------------------- | ---------------------------------- | --------------------- |
+| `OPENAI_API_KEY`    | OpenAI API key (optional)          | -                     |
+| `ANTHROPIC_API_KEY` | Anthropic API key (optional)       | -                     |
+| `BRAIN_DIR`         | Processed knowledge base directory | `/app/brain`          |
+| `RAW_DIR`           | Raw document ingestion source      | `/app/raw`            |
+| `BRAIN_SUBDIR`      | Default sub-brain scope (optional) | - (full brain)        |
+| `OLLAMA_API_BASE`   | Ollama API endpoint                | `http://ollama:11434` |
 
 ### LLM Priority
 
@@ -150,6 +171,26 @@ The system automatically selects the best available LLM:
 1. **OpenAI** (gpt-4o-mini) - if `OPENAI_API_KEY` set
 2. **Anthropic** (claude-3-haiku) - if `ANTHROPIC_API_KEY` set
 3. **Ollama** (llama3) - local fallback
+
+### Brain Models
+
+Two specialized pseudo-models are available in Open WebUI:
+
+| Model | Description | Best For |
+|-------|-------------|----------|
+| `brain-rag` | Single-pass RAG - retrieves context, injects into prompt | Simple questions, fast responses |
+| `brain-react` | ReAct reasoning - iterative tool use with thinking | Complex questions requiring multi-step reasoning |
+
+**Example - Using brain-react:**
+```
+User: "How is SSL configured in the system and what troubleshooting steps exist?"
+
+🧠 ReAct Reasoning:
+1. Search for "SSL configuration"
+2. Find related facts and rules
+3. Search for "SSL troubleshooting"
+4. Synthesize comprehensive answer
+```
 
 ## 📊 API Endpoints
 
@@ -161,6 +202,8 @@ The system automatically selects the best available LLM:
 | `/v1/context`          | POST   | Context preview (no LLM call) |
 | `/sync-notes`          | POST   | Sync Open WebUI notes to KB  |
 | `/sync-notes/status`   | GET    | Check note sync status       |
+| `/tools/search`        | POST   | Search with optional sub_path |
+| `/tools/sub-brains`    | GET    | List available sub-brains    |
 | `/mcp/sse`             | GET    | MCP Server-Sent Events (SSE) |
 | `/mcp/messages`        | POST   | MCP Messages transport       |
 | `/health`              | GET    | Health check                 |
@@ -251,6 +294,7 @@ See [FEATURES.md](FEATURES.md) for the full roadmap.
 - ✅ LLM cost tracking dashboard (`/cost-dashboard`)
 - ✅ Prompt logging for debugging (`CONTEXT_DRIVER_LOG_PROMPTS=true`)
 - ✅ Database backup/restore (`make db-backup`, `make db-restore-webui`)
+- ✅ **Sub-brains** - Scope searches to subdirectories with `.brainignore` support
 
 ### Planned
 - MCP Knowledge Base server

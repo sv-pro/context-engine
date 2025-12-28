@@ -8,12 +8,16 @@ Open WebUI will auto-discover these tools via the OpenAPI spec at /openapi.json
 and make them available to reasoning models for function calling.
 """
 
+import os
 import logging
 from typing import Optional, List
 from fastapi import APIRouter, Query
 from pydantic import BaseModel, Field
 
 logger = logging.getLogger("tools-api")
+
+# Default sub-brain path from environment (empty string = full brain)
+DEFAULT_SUBDIR = os.environ.get("BRAIN_SUBDIR", "").strip() or None
 
 router = APIRouter(prefix="/tools", tags=["Knowledge Base Tools"])
 
@@ -25,6 +29,7 @@ class SearchRequest(BaseModel):
     query: str = Field(..., description="Natural language search query")
     limit: int = Field(5, ge=1, le=20, description="Maximum number of results to return")
     strategy: str = Field("super_hybrid", description="Search strategy: semantic, keyword, hybrid, super_hybrid, graph")
+    sub_path: Optional[str] = Field(None, description="Sub-brain path prefix to scope search (e.g., 'projects/myapp' or 'modes/debug')")
 
 
 class SearchResult(BaseModel):
@@ -41,6 +46,7 @@ class SearchResponse(BaseModel):
     """Response containing search results."""
     query: str = Field(..., description="Original search query")
     strategy: str = Field(..., description="Search strategy used")
+    sub_path: Optional[str] = Field(None, description="Sub-brain path filter applied")
     results: List[SearchResult] = Field(..., description="List of search results")
     total_results: int = Field(..., description="Number of results returned")
 
@@ -62,6 +68,7 @@ class ArticleListItem(BaseModel):
 class ArticleListResponse(BaseModel):
     """Response containing list of articles."""
     filter: Optional[str] = Field(None, description="Filter applied")
+    sub_path: Optional[str] = Field(None, description="Sub-brain path filter applied")
     articles: List[ArticleListItem] = Field(..., description="List of articles")
     total: int = Field(..., description="Total number of articles")
 
@@ -157,6 +164,21 @@ class ReActResponse(BaseModel):
     fallback: bool = Field(False, description="Whether fallback was used")
 
 
+# ==================== Sub-Brain Models ====================
+
+class SubBrainInfo(BaseModel):
+    """Information about a sub-brain (scoped knowledge area)."""
+    path: str = Field(..., description="Path prefix for this sub-brain (e.g., 'projects/myapp')")
+    article_count: int = Field(..., description="Number of articles in this sub-brain")
+    sample_titles: List[str] = Field(default_factory=list, description="Sample article titles")
+
+
+class SubBrainListResponse(BaseModel):
+    """Response containing available sub-brains."""
+    sub_brains: List[SubBrainInfo] = Field(..., description="List of discovered sub-brains")
+    total: int = Field(..., description="Total number of sub-brains found")
+
+
 # ==================== Tool Endpoints ====================
 
 @router.post(
@@ -175,6 +197,11 @@ Use it when you need to find information about a specific topic.
 - `hybrid`: Combines semantic and keyword scores
 - `super_hybrid`: Best quality - combines semantic, keyword, and graph traversal
 - `graph`: Follow wikilinks between related documents
+
+**Sub-Brains:**
+Use the `sub_path` parameter to scope your search to a specific subdirectory of the brain.
+For example, `sub_path="projects/myapp"` will only search within that folder.
+This is useful for different modes, apps, or contexts.
 """
 )
 async def search_knowledge_base(request: SearchRequest) -> SearchResponse:
@@ -184,11 +211,15 @@ async def search_knowledge_base(request: SearchRequest) -> SearchResponse:
     
     db = Database()
     
+    # Use request sub_path or fall back to environment default
+    effective_sub_path = request.sub_path or DEFAULT_SUBDIR
+    
     query_vector = get_embedding(request.query)
     if not query_vector:
         return SearchResponse(
             query=request.query,
             strategy=request.strategy,
+            sub_path=effective_sub_path,
             results=[],
             total_results=0
         )
@@ -197,7 +228,8 @@ async def search_knowledge_base(request: SearchRequest) -> SearchResponse:
         request.query, 
         query_vector, 
         strategy=request.strategy, 
-        limit=request.limit
+        limit=request.limit,
+        sub_path=effective_sub_path
     )
     
     results = []
@@ -215,6 +247,7 @@ async def search_knowledge_base(request: SearchRequest) -> SearchResponse:
     return SearchResponse(
         query=request.query,
         strategy=request.strategy,
+        sub_path=effective_sub_path,
         results=results,
         total_results=len(results)
     )
@@ -229,13 +262,15 @@ async def search_knowledge_base(request: SearchRequest) -> SearchResponse:
 async def search_knowledge_base_get(
     query: str = Query(..., description="Natural language search query"),
     limit: int = Query(5, ge=1, le=20, description="Maximum number of results"),
-    strategy: str = Query("super_hybrid", description="Search strategy")
+    strategy: str = Query("super_hybrid", description="Search strategy"),
+    sub_path: Optional[str] = Query(None, description="Sub-brain path prefix to scope search")
 ) -> SearchResponse:
     """Search the knowledge base (GET method for convenience)."""
     return await search_knowledge_base(SearchRequest(
         query=query,
         limit=limit,
-        strategy=strategy
+        strategy=strategy,
+        sub_path=sub_path
     ))
 
 
@@ -286,40 +321,120 @@ async def get_article(title_or_path: str) -> ArticleResponse:
     description="""
 List all available articles in the knowledge base.
 
-Optionally filter by title text. Use this to discover what topics are available.
+Optionally filter by title text or scope to a specific sub-brain.
+Use this to discover what topics are available.
 """
 )
 async def list_articles(
-    filter: Optional[str] = Query(None, description="Filter articles by title (case-insensitive)")
+    filter: Optional[str] = Query(None, description="Filter articles by title (case-insensitive)"),
+    sub_path: Optional[str] = Query(None, description="Sub-brain path prefix to scope listing")
 ) -> ArticleListResponse:
-    """List all articles, optionally filtered by title."""
+    """List all articles, optionally filtered by title and/or sub-brain path."""
     from db import Database
     
     db = Database()
     
+    # Use request sub_path or fall back to environment default
+    effective_sub_path = sub_path or DEFAULT_SUBDIR
+    
     with db.conn.cursor() as cur:
+        # Build query with optional filters
+        query = "SELECT title, file_path FROM brain.notes WHERE 1=1"
+        params = []
+        
         if filter:
-            cur.execute("""
-                SELECT title, file_path 
-                FROM brain.notes 
-                WHERE title ILIKE %s 
-                ORDER BY title ASC
-            """, (f"%{filter}%",))
-        else:
-            cur.execute("""
-                SELECT title, file_path 
-                FROM brain.notes 
-                ORDER BY title ASC
-            """)
+            query += " AND title ILIKE %s"
+            params.append(f"%{filter}%")
+        
+        if effective_sub_path:
+            # Filter by file_path prefix
+            normalized_path = effective_sub_path.rstrip('/') + '/%'
+            query += " AND file_path LIKE %s"
+            params.append(normalized_path)
+        
+        query += " ORDER BY title ASC"
+        
+        cur.execute(query, params if params else None)
         
         rows = cur.fetchall()
         articles = [ArticleListItem(title=row[0], file_path=row[1]) for row in rows]
         
         return ArticleListResponse(
             filter=filter,
+            sub_path=effective_sub_path,
             articles=articles,
             total=len(articles)
         )
+
+
+@router.get(
+    "/sub-brains",
+    response_model=SubBrainListResponse,
+    summary="List Sub-Brains",
+    description="""
+Discover available sub-brains (scoped knowledge areas) in the knowledge base.
+
+Sub-brains are identified by analyzing the directory structure of indexed documents.
+Each unique first-level directory becomes a potential sub-brain.
+
+Use the returned paths with the `sub_path` parameter on search and list endpoints
+to scope operations to a specific sub-brain.
+"""
+)
+async def list_sub_brains(
+    min_articles: int = Query(1, ge=1, description="Minimum articles to consider a directory a sub-brain")
+) -> SubBrainListResponse:
+    """Discover available sub-brains based on document paths."""
+    from db import Database
+    from collections import defaultdict
+    
+    db = Database()
+    
+    with db.conn.cursor() as cur:
+        # Get all file paths
+        cur.execute("SELECT file_path, title FROM brain.notes ORDER BY file_path")
+        rows = cur.fetchall()
+    
+    # Analyze directory structure
+    sub_brains = defaultdict(lambda: {"count": 0, "titles": []})
+    
+    for file_path, title in rows:
+        # Get directory components
+        parts = file_path.split('/')
+        
+        # Skip root-level files (no directory)
+        if len(parts) < 2:
+            continue
+        
+        # Use first directory as sub-brain identifier
+        # Could be enhanced to support deeper nesting
+        first_dir = parts[0]
+        
+        # Also track second-level for deeper sub-brains
+        if len(parts) >= 3:
+            second_level = f"{parts[0]}/{parts[1]}"
+            sub_brains[second_level]["count"] += 1
+            if len(sub_brains[second_level]["titles"]) < 3:
+                sub_brains[second_level]["titles"].append(title)
+        
+        sub_brains[first_dir]["count"] += 1
+        if len(sub_brains[first_dir]["titles"]) < 3:
+            sub_brains[first_dir]["titles"].append(title)
+    
+    # Filter by minimum articles and create response
+    result = []
+    for path, info in sorted(sub_brains.items()):
+        if info["count"] >= min_articles:
+            result.append(SubBrainInfo(
+                path=path,
+                article_count=info["count"],
+                sample_titles=info["titles"]
+            ))
+    
+    return SubBrainListResponse(
+        sub_brains=result,
+        total=len(result)
+    )
 
 
 @router.get(

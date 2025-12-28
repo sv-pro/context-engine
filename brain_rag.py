@@ -12,22 +12,53 @@ BASE_URL = "http://context-driver:8000"
 
 
 class Tools:
-    def __init__(self):
-        pass
+    def __init__(self, sub_path: Optional[str] = None):
+        """
+        Initialize Tools with optional sub-brain scoping.
+        
+        Args:
+            sub_path: Optional path prefix to scope all operations to a sub-brain.
+                     Example: "projects/myapp" or "modes/debug"
+        """
+        self.sub_path = sub_path
 
-    def search_knowledge_base(self, query: str, limit: int = 5, strategy: str = "super_hybrid") -> str:
+    def scoped(self, sub_path: str) -> "Tools":
+        """
+        Create a new Tools instance scoped to a specific sub-brain.
+        
+        Args:
+            sub_path: Path prefix relative to brain root (e.g., "projects/myapp")
+        
+        Returns:
+            A new Tools instance that will only search within the specified path.
+        """
+        return Tools(sub_path=sub_path)
+
+    def search_knowledge_base(self, query: str, limit: int = 5, strategy: str = "super_hybrid", sub_path: Optional[str] = None) -> str:
         """
         Search the knowledge base using hybrid RAG retrieval.
         
         :param query: Natural language search query
         :param limit: Maximum number of results (default 5)
         :param strategy: Search strategy - semantic, keyword, hybrid, super_hybrid, graph
+        :param sub_path: Optional override for sub-brain path (uses instance sub_path if not specified)
         :return: Search results with titles and content snippets
         """
+        # Use provided sub_path or fall back to instance default
+        effective_sub_path = sub_path or self.sub_path
+        
         try:
+            payload = {
+                "query": query, 
+                "limit": limit, 
+                "strategy": strategy
+            }
+            if effective_sub_path:
+                payload["sub_path"] = effective_sub_path
+            
             response = requests.post(
                 f"{BASE_URL}/tools/search",
-                json={"query": query, "limit": limit, "strategy": strategy},
+                json=payload,
                 timeout=30
             )
             response.raise_for_status()
@@ -66,17 +97,23 @@ class Tools:
         except Exception as e:
             return f"Error getting article: {str(e)}"
 
-    def list_articles(self, filter: Optional[str] = None) -> str:
+    def list_articles(self, filter: Optional[str] = None, sub_path: Optional[str] = None) -> str:
         """
         List all articles in the knowledge base.
         
         :param filter: Optional title filter (partial match)
+        :param sub_path: Optional sub-brain path to scope listing
         :return: List of article titles
         """
+        # Use provided sub_path or fall back to instance default
+        effective_sub_path = sub_path or self.sub_path
+        
         try:
             params = {}
             if filter:
                 params["filter"] = filter
+            if effective_sub_path:
+                params["sub_path"] = effective_sub_path
             
             response = requests.get(
                 f"{BASE_URL}/tools/articles",

@@ -241,21 +241,35 @@ class Database:
                     DO UPDATE SET type = EXCLUDED.type
                 """, (note_id, target_title, relation_type))
 
-    def semantic_search(self, query_vector, limit=3):
+    def semantic_search(self, query_vector, limit=3, sub_path=None):
         """
         Performs vector similarity search on chunks (preferred) or notes.
         Returns chunks with their parent note titles for context.
+        
+        Args:
+            query_vector: The embedding vector for the query
+            limit: Maximum number of results
+            sub_path: Optional path prefix to scope search to a sub-brain (e.g., "projects/myapp")
         """
         with self.conn.cursor() as cur:
+            # Build path filter clause if sub_path specified
+            path_filter = ""
+            path_params = []
+            if sub_path:
+                path_filter = " AND n.file_path LIKE %s"
+                # Ensure sub_path ends with / for proper prefix matching
+                normalized_path = sub_path.rstrip('/') + '/%'
+                path_params = [normalized_path]
+            
             # First try chunk-based search
             cur.execute(f"""
                 SELECT n.file_path, n.title, c.content, c.section, 1 - (c.embedding <=> %s::{self.vector_type}) as similarity
                 FROM brain.chunks c
                 JOIN brain.notes n ON c.note_id = n.id
-                WHERE c.embedding IS NOT NULL
+                WHERE c.embedding IS NOT NULL{path_filter}
                 ORDER BY similarity DESC
                 LIMIT %s;
-            """, (query_vector, limit))
+            """, (query_vector, *path_params, limit))
             results = cur.fetchall()
             
             # Fall back to note-based search if no chunks exist
@@ -263,22 +277,39 @@ class Database:
                 cur.execute(f"""
                     SELECT file_path, title, content, metadata, 1 - (embedding <=> %s::{self.vector_type}) as similarity
                     FROM brain.notes
-                    WHERE embedding IS NOT NULL
+                    WHERE embedding IS NOT NULL{path_filter}
                     ORDER BY similarity DESC
                     LIMIT %s;
-                """, (query_vector, limit))
+                """, (query_vector, *path_params, limit))
                 results = cur.fetchall()
             
             return results
 
-    def graph_hybrid_search(self, query_vector, limit=5, wide_limit=15, threshold=0.4):
+    def graph_hybrid_search(self, query_vector, limit=5, wide_limit=15, threshold=0.4, sub_path=None):
         """
         Implements Graph-Hybrid search:
         1. Wide semantic sweep (low threshold) to find candidates.
         2. Path-weighting to find "Hub" documents linked by candidates.
         3. Returns a mix of direct semantic hits and highly-linked hubs.
+        
+        Args:
+            query_vector: The embedding vector for the query
+            limit: Maximum number of results
+            wide_limit: Number of candidates to consider in wide sweep
+            threshold: Minimum similarity threshold for candidates
+            sub_path: Optional path prefix to scope search to a sub-brain
         """
         with self.conn.cursor() as cur:
+            # Build path filter clause if sub_path specified
+            path_filter = ""
+            hub_path_filter = ""
+            path_params = []
+            if sub_path:
+                normalized_path = sub_path.rstrip('/') + '/%'
+                path_filter = " AND n.file_path LIKE %s"
+                hub_path_filter = " AND n.file_path LIKE %s"
+                path_params = [normalized_path]
+            
             # Stage 1 & 2: Wide sweep and neighbor voting in one query
             # We use CTEs to find candidates and then count their outgoing links to other notes.
             cur.execute(f"""
@@ -287,7 +318,7 @@ class Database:
                            1 - (c.embedding <=> %s::{self.vector_type}) as similarity
                     FROM brain.chunks c
                     JOIN brain.notes n ON c.note_id = n.id
-                    WHERE c.embedding IS NOT NULL AND 1 - (c.embedding <=> %s::{self.vector_type}) > %s
+                    WHERE c.embedding IS NOT NULL AND 1 - (c.embedding <=> %s::{self.vector_type}) > %s{path_filter}
                     ORDER BY similarity DESC
                     LIMIT %s
                 ),
@@ -302,7 +333,7 @@ class Database:
                            'Structural Hub' as section, 0.4 as similarity, h.path_count
                     FROM brain.notes n
                     JOIN hub_votes h ON n.title = h.target_title
-                    WHERE n.title NOT IN (SELECT title FROM wide_pool)
+                    WHERE n.title NOT IN (SELECT title FROM wide_pool){hub_path_filter}
                     ORDER BY h.path_count DESC
                     LIMIT 2
                 )
@@ -314,58 +345,85 @@ class Database:
                 ) combined
                 ORDER BY path_count DESC, similarity DESC
                 LIMIT %s;
-            """, (query_vector, query_vector, threshold, wide_limit, limit))
+            """, (query_vector, query_vector, threshold, *path_params, wide_limit, *path_params, limit))
             
             results = cur.fetchall()
             return results
 
-    def keyword_search(self, query_text, limit=3):
+    def keyword_search(self, query_text, limit=3, sub_path=None):
         """
         Performs full-text keyword search on chunks.
+        
+        Args:
+            query_text: The search query text
+            limit: Maximum number of results
+            sub_path: Optional path prefix to scope search to a sub-brain
         """
         with self.conn.cursor() as cur:
-            cur.execute("""
+            # Build path filter clause if sub_path specified
+            path_filter = ""
+            path_params = []
+            if sub_path:
+                path_filter = " AND n.file_path LIKE %s"
+                normalized_path = sub_path.rstrip('/') + '/%'
+                path_params = [normalized_path]
+            
+            cur.execute(f"""
                 SELECT n.file_path, n.title, c.content, c.section, 
                        ts_rank_cd(to_tsvector('english', c.content), plainto_tsquery('english', %s)) as similarity
                 FROM brain.chunks c
                 JOIN brain.notes n ON c.note_id = n.id
-                WHERE to_tsvector('english', c.content) @@ plainto_tsquery('english', %s)
+                WHERE to_tsvector('english', c.content) @@ plainto_tsquery('english', %s){path_filter}
                 ORDER BY similarity DESC
                 LIMIT %s;
-            """, (query_text, query_text, limit))
+            """, (query_text, query_text, *path_params, limit))
             return cur.fetchall()
 
-    def search(self, query_text, query_vector, strategy='graph', limit=5):
+    def search(self, query_text, query_vector, strategy='graph', limit=5, sub_path=None):
         """
         Unified search router that supports multiple strategies and RRF merging.
-         Strategies: 'semantic', 'keyword', 'graph', 'hybrid', 'super_hybrid'
+        
+        Args:
+            query_text: The search query text
+            query_vector: The embedding vector for the query
+            strategy: Search strategy - 'semantic', 'keyword', 'graph', 'hybrid', 'super_hybrid'
+            limit: Maximum number of results
+            sub_path: Optional path prefix to scope search to a sub-brain (e.g., "projects/myapp")
         """
         if strategy == 'semantic':
-            return self.semantic_search(query_vector, limit=limit)
+            return self.semantic_search(query_vector, limit=limit, sub_path=sub_path)
         elif strategy == 'keyword':
-            return self.keyword_search(query_text, limit=limit)
+            return self.keyword_search(query_text, limit=limit, sub_path=sub_path)
         elif strategy == 'graph':
-            return self.graph_hybrid_search(query_vector, limit=limit)
+            return self.graph_hybrid_search(query_vector, limit=limit, sub_path=sub_path)
         elif strategy == 'hybrid':
-            return self._rrf_search(query_text, query_vector, limit=limit, include_graph=False)
+            return self._rrf_search(query_text, query_vector, limit=limit, include_graph=False, sub_path=sub_path)
         elif strategy == 'super_hybrid':
-            return self._rrf_search(query_text, query_vector, limit=limit, include_graph=True)
+            return self._rrf_search(query_text, query_vector, limit=limit, include_graph=True, sub_path=sub_path)
         else:
             logger.warning(f"Unknown search strategy: {strategy}. Defaulting to semantic.")
-            return self.semantic_search(query_vector, limit=limit)
+            return self.semantic_search(query_vector, limit=limit, sub_path=sub_path)
 
-    def _rrf_search(self, query_text, query_vector, limit=5, include_graph=False, k=60):
+    def _rrf_search(self, query_text, query_vector, limit=5, include_graph=False, k=60, sub_path=None):
         """
         Implements Reciprocal Rank Fusion (RRF) to combine multiple search results.
         score = sum(1 / (k + rank))
+        
+        Args:
+            query_text: The search query text
+            query_vector: The embedding vector for the query
+            limit: Maximum number of results
+            include_graph: Whether to include graph search in fusion
+            k: RRF constant (default 60)
+            sub_path: Optional path prefix to scope search to a sub-brain
         """
-        # Gather result sets
-        semantic_results = self.semantic_search(query_vector, limit=limit*2)
-        keyword_results = self.keyword_search(query_text, limit=limit*2)
+        # Gather result sets (pass sub_path to all methods)
+        semantic_results = self.semantic_search(query_vector, limit=limit*2, sub_path=sub_path)
+        keyword_results = self.keyword_search(query_text, limit=limit*2, sub_path=sub_path)
         
         streams = [semantic_results, keyword_results]
         if include_graph:
-            graph_results = self.graph_hybrid_search(query_vector, limit=limit*2)
+            graph_results = self.graph_hybrid_search(query_vector, limit=limit*2, sub_path=sub_path)
             streams.append(graph_results)
 
         # Merge results using RRF

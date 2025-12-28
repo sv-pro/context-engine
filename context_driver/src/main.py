@@ -65,6 +65,124 @@ os.makedirs(DOCS_DIR, exist_ok=True)
 os.makedirs(ENTITIES_DIR, exist_ok=True)
 os.makedirs(RAW_DIR, exist_ok=True)
 
+# ==================== .brainignore Support ====================
+
+def load_brainignore(directory: str) -> set:
+    """
+    Load a .brainignore file from a directory.
+    Returns a set of directory patterns to ignore (relative to that directory).
+    
+    .brainignore format (similar to .gitignore but simpler):
+    - One pattern per line
+    - Lines starting with # are comments
+    - Patterns are relative paths to subdirectories to exclude
+    - Leading/trailing slashes are normalized
+    
+    Example .brainignore:
+        # Ignore these sub-brains (they're indexed separately)
+        projects/myapp
+        modes/debug
+    """
+    ignore_file = os.path.join(directory, '.brainignore')
+    ignored = set()
+    
+    if not os.path.exists(ignore_file):
+        return ignored
+    
+    try:
+        with open(ignore_file, 'r', encoding='utf-8') as f:
+            for line in f:
+                line = line.strip()
+                # Skip empty lines and comments
+                if not line or line.startswith('#'):
+                    continue
+                # Normalize: remove leading/trailing slashes
+                pattern = line.strip('/').strip('\\')
+                if pattern:
+                    ignored.add(pattern)
+        
+        if ignored:
+            logger.info(f"Loaded .brainignore from {directory}: {ignored}")
+    except Exception as e:
+        logger.warning(f"Failed to load .brainignore from {directory}: {e}")
+    
+    return ignored
+
+
+def is_path_ignored(file_path: str, base_dir: str, ignored_patterns: set) -> bool:
+    """
+    Check if a file path should be ignored based on .brainignore patterns.
+    
+    Args:
+        file_path: Absolute path to the file
+        base_dir: Base directory where .brainignore was loaded from
+        ignored_patterns: Set of patterns from .brainignore
+    
+    Returns:
+        True if the path should be ignored, False otherwise
+    """
+    if not ignored_patterns:
+        return False
+    
+    # Get relative path from base_dir
+    try:
+        rel_path = os.path.relpath(file_path, base_dir)
+    except ValueError:
+        return False  # On Windows, paths on different drives can cause this
+    
+    # Check if any ignored pattern is a prefix of the relative path
+    for pattern in ignored_patterns:
+        # Check if the file is under the ignored directory
+        if rel_path == pattern or rel_path.startswith(pattern + os.sep):
+            return True
+    
+    return False
+
+
+def walk_with_brainignore(base_dir: str):
+    """
+    Walk a directory tree like os.walk, but respecting .brainignore files.
+    
+    Yields (root, dirs, files) tuples just like os.walk, but:
+    - Loads .brainignore from base_dir
+    - Excludes directories matching patterns in .brainignore
+    - Also loads nested .brainignore files and respects them
+    
+    Args:
+        base_dir: The base directory to walk
+    
+    Yields:
+        Tuples of (root, dirs, files) like os.walk
+    """
+    # Load top-level .brainignore
+    global_ignored = load_brainignore(base_dir)
+    
+    for root, dirs, files in os.walk(base_dir):
+        # Check for local .brainignore in current directory
+        local_ignored = load_brainignore(root) if root != base_dir else set()
+        
+        # Filter out ignored directories
+        # We need to modify dirs in-place to prevent os.walk from descending
+        dirs_to_remove = []
+        for d in dirs:
+            dir_path = os.path.join(root, d)
+            
+            # Check against global patterns (relative to base_dir)
+            if is_path_ignored(dir_path, base_dir, global_ignored):
+                dirs_to_remove.append(d)
+                logger.debug(f"Ignoring directory (global .brainignore): {dir_path}")
+                continue
+            
+            # Check against local patterns (relative to current root)
+            if d in local_ignored or d.rstrip('/') in local_ignored:
+                dirs_to_remove.append(d)
+                logger.debug(f"Ignoring directory (local .brainignore): {dir_path}")
+        
+        for d in dirs_to_remove:
+            dirs.remove(d)
+        
+        yield root, dirs, files
+
 OLLAMA_API_BASE = os.environ.get("OLLAMA_API_BASE", "http://host.docker.internal:11434")
 LITELLM_API_BASE = os.environ.get("LITELLM_API_BASE", "http://litellm:4000/v1")
 LITELLM_MASTER_KEY = os.environ.get("LITELLM_MASTER_KEY", "sk-1234-5678-admin")
@@ -514,20 +632,47 @@ def index_processed_file(file_path):
 
 
 class RawEventHandler(FileSystemEventHandler):
+    def __init__(self):
+        super().__init__()
+        self._ignored = load_brainignore(RAW_DIR)
+    
+    def _should_process(self, path):
+        if not path.endswith('.md'):
+            return False
+        if is_path_ignored(path, RAW_DIR, self._ignored):
+            logger.debug(f"Ignoring file (brainignore): {path}")
+            return False
+        return True
+    
     def on_created(self, event):
-        if not event.is_directory and event.src_path.endswith('.md'):
+        if not event.is_directory and self._should_process(event.src_path):
             ingest_raw_file(event.src_path)
+    
     def on_modified(self, event):
-        if not event.is_directory and event.src_path.endswith('.md'):
+        if not event.is_directory and self._should_process(event.src_path):
             ingest_raw_file(event.src_path)
 
+
 class BrainEventHandler(FileSystemEventHandler):
+    def __init__(self):
+        super().__init__()
+        self._ignored = load_brainignore(BRAIN_DIR)
+    
+    def _should_process(self, path):
+        if not path.endswith('.md'):
+            return False
+        if is_path_ignored(path, BRAIN_DIR, self._ignored):
+            logger.debug(f"Ignoring file (brainignore): {path}")
+            return False
+        return True
+    
     def on_created(self, event):
-        if not event.is_directory and event.src_path.endswith('.md'):
+        if not event.is_directory and self._should_process(event.src_path):
             logger.info(f"Indexing new graph node: {event.src_path}")
             index_processed_file(event.src_path)
+    
     def on_modified(self, event):
-        if not event.is_directory and event.src_path.endswith('.md'):
+        if not event.is_directory and self._should_process(event.src_path):
             logger.info(f"Re-indexing graph node: {event.src_path}")
             index_processed_file(event.src_path)
 
@@ -546,19 +691,19 @@ def start_watchers():
     brain_observer.start()
     logger.info(f"Started watching GRAPH (Brain): {BRAIN_DIR}")
     
-    # Initial Scan RAW
+    # Initial Scan RAW (uses walk_with_brainignore to respect .brainignore)
     def initial_scan_raw():
-        logger.info("Scanning RAW source...")
-        for root, dirs, files in os.walk(RAW_DIR):
+        logger.info("Scanning RAW source (respecting .brainignore)...")
+        for root, dirs, files in walk_with_brainignore(RAW_DIR):
             for file in files:
                 if file.endswith(".md"):
                     ingest_raw_file(os.path.join(root, file))
         logger.info("Raw scan complete.")
 
-    # Initial Scan BRAIN (Indexing) - in case we restarted and graph persists
+    # Initial Scan BRAIN (Indexing) - uses walk_with_brainignore to respect .brainignore
     def initial_scan_brain():
-        logger.info("Scanning GRAPH for index...")
-        for root, dirs, files in os.walk(BRAIN_DIR):
+        logger.info("Scanning GRAPH for index (respecting .brainignore)...")
+        for root, dirs, files in walk_with_brainignore(BRAIN_DIR):
             for file in files:
                 if file.endswith(".md"):
                     try:
@@ -1137,6 +1282,131 @@ async def context_preview(request: Request):
     return JSONResponse(response)
 
 
+# ==================== ReAct Mode Handler ====================
+
+async def handle_react_request(request: Request, user_query: str, body: dict):
+    """
+    Handle a chat completion request using the ReAct reasoning agent.
+    
+    This routes the request to the DSPy ReAct agent, which iteratively
+    reasons and uses knowledge base tools to answer the question.
+    
+    Args:
+        request: FastAPI request object
+        user_query: The user's question
+        body: The original request body
+    
+    Returns:
+        JSONResponse in OpenAI chat completion format
+    """
+    import time as _time
+    import uuid
+    
+    start_time = _time.time()
+    
+    try:
+        from react_agent import ask_question
+        
+        # Use ReAct agent to answer the question
+        result = ask_question(user_query, max_iters=5)
+        
+        latency_ms = int((_time.time() - start_time) * 1000)
+        
+        # Extract answer and trajectory
+        answer = result.get("answer", "I couldn't find an answer to your question.")
+        trajectory = result.get("trajectory", [])
+        success = result.get("success", False)
+        
+        # Format reasoning trace as markdown for display
+        reasoning_trace = ""
+        if trajectory:
+            reasoning_trace = "\n\n---\n**🧠 Reasoning Trace:**\n"
+            for i, step in enumerate(trajectory):
+                thought = step.get("thought", "")
+                action = step.get("action", "")
+                observation = step.get("observation", "")
+                
+                if thought:
+                    reasoning_trace += f"\n**Step {i+1} - Thinking:** {thought}"
+                if action:
+                    reasoning_trace += f"\n**Action:** `{action}`"
+                if observation:
+                    # Truncate long observations
+                    obs = observation[:500] + "..." if len(observation) > 500 else observation
+                    reasoning_trace += f"\n**Observation:** {obs}"
+                reasoning_trace += "\n"
+        
+        # Build the response content
+        content = answer
+        if trajectory and len(trajectory) > 0:
+            content += reasoning_trace
+        
+        # Create OpenAI-compatible response
+        response = {
+            "id": f"chatcmpl-react-{uuid.uuid4().hex[:8]}",
+            "object": "chat.completion",
+            "created": int(_time.time()),
+            "model": "brain-react",
+            "choices": [
+                {
+                    "index": 0,
+                    "message": {
+                        "role": "assistant",
+                        "content": content
+                    },
+                    "finish_reason": "stop"
+                }
+            ],
+            "usage": {
+                "prompt_tokens": len(user_query.split()),  # Approximate
+                "completion_tokens": len(content.split()),  # Approximate
+                "total_tokens": len(user_query.split()) + len(content.split())
+            }
+        }
+        
+        # Log cost if tracker available
+        cost_tracker = getattr(request.app.state, 'cost_tracker', None)
+        if cost_tracker:
+            try:
+                cost_tracker.log_request(
+                    operation="react-agent",
+                    model="brain-react",
+                    input_tokens=response["usage"]["prompt_tokens"],
+                    output_tokens=response["usage"]["completion_tokens"],
+                    latency_ms=latency_ms
+                )
+            except Exception as log_e:
+                logger.warning(f"Failed to log ReAct cost: {log_e}")
+        
+        logger.info(f"ReAct completed in {latency_ms}ms, success={success}, steps={len(trajectory)}")
+        return JSONResponse(response)
+        
+    except Exception as e:
+        logger.error(f"ReAct agent error: {e}")
+        import traceback
+        traceback.print_exc()
+        
+        # Return error as a chat response so user sees it
+        error_response = {
+            "id": f"chatcmpl-error-{uuid.uuid4().hex[:8]}",
+            "object": "chat.completion",
+            "created": int(_time.time()),
+            "model": "brain-react",
+            "choices": [
+                {
+                    "index": 0,
+                    "message": {
+                        "role": "assistant",
+                        "content": f"⚠️ ReAct reasoning failed: {str(e)}\n\nPlease try rephrasing your question or use the standard RAG model."
+                    },
+                    "finish_reason": "stop"
+                }
+            ],
+            "usage": {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0}
+        }
+        return JSONResponse(error_response)
+
+
 @app.post("/v1/chat/completions")
 async def chat_completions(request: Request):
     try:
@@ -1147,7 +1417,16 @@ async def chat_completions(request: Request):
 
         # 1. Get user query
         user_query = messages[-1]["content"] or ""
-        logger.info(f"RAG Request: {user_query[:50]}...")
+        model_name = body.get("model", "")
+        logger.info(f"RAG Request: {user_query[:50]}... (model: {model_name})")
+
+        # Check if this is a brain-react model (ReAct reasoning mode)
+        is_react_mode = "brain-react" in model_name.lower() or "react" in model_name.lower()
+        
+        if is_react_mode:
+            # Use ReAct agent for this request
+            logger.info("Using ReAct reasoning mode...")
+            return await handle_react_request(request, user_query, body)
 
         # Check for Open WebUI meta-prompts (title, tags, follow-up suggestions)
         # These internal tasks don't benefit from RAG context

@@ -5,6 +5,12 @@ model_list:
       api_base: http://context-driver:8000/v1
       api_key: sk-optional
 
+  - model_name: brain-react
+    litellm_params:
+      model: custom_openai/context-brain-react
+      api_base: http://context-driver:8000/v1
+      api_key: sk-optional
+
   - model_name: llama3
     litellm_params:
       model: ollama/llama3.2:latest
