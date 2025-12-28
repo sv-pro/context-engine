@@ -19,6 +19,8 @@ When a document is ingested, the `NeuroIngestionPipeline` (in `db.py`) runs it t
 | **Facts** | Subject-Predicate-Object triples | `brain.facts` | Entity relationships & knowledge graph |
 | **Rules** | IF-THEN logic with severity | `brain.rules` | Constraints, procedures, & invariants |
 
+**Architectural Guardrail:** Capsules are navigation artifacts. They are non-normative, non-executable, and must not be used for validation. They exist solely to aid discovery and routing.
+
 ### Formalized Schemas
 
 #### Rule Schema
@@ -39,7 +41,12 @@ provenance:
   doc_id: prod_db_policy.md
   span: lines 12–18
 version: 1
+status: active
+valid_from: 2025-01-01
+valid_until: null
 ```
+
+**The ReAct agent must prefer `active` artifacts, may reference `deprecated` ones with warning, and must ignore `invalid` artifacts.**
 
 #### Fact Schema
 Facts form a stable entity spine across the system.
@@ -53,6 +60,7 @@ confidence: 0.9
 provenance:
   doc_id: prod_db_policy.md
   span: lines 5–7
+status: active
 ```
 
 ## 2. The ReAct Layer (Inference)
@@ -98,12 +106,35 @@ answer_mode: kb-backed | mixed | fallback
 confidence: 0.47
 ```
 
+**Semantics:**
+- **Confidence** is a heuristic signal, not a probability. It reflects internal agreement between sources and rules.
+- **Fallback** indicates absence of verified knowledge, not agent failure.
+
+## Failure & Degradation Modes
+
+The system defines explicit behavior for non-ideal conditions:
+
+- **Tool conflict**: Conflicting tool outputs are surfaced explicitly.
+- **Rule conflict**: The agent refuses to answer and requests escalation.
+- **Low provenance**: The agent switches to `fallback` mode.
+- **Reasoning loop detected**: The agent terminates reasoning and returns partial findings.
+
 ## 4. Truth & Provenance Model
 
 - **Everything has provenance**: Every fact and rule links back to a source line in a document.
 - **Investigations are descriptive, not normative**: They capture a specific reasoning trace but are not authoritative sources of truth.
 - **Rules are verified**: Only verified artifacts become normative rules.
 - **Correctness > Completeness**: It is better to return "unknown" than a hallucinated fact.
+
+## Rule & Fact Promotion Policy
+
+Promotion from Investigations into Facts or Rules is gated by explicit policies:
+
+- **Human-approved**: Manual confirmation by an authorized operator.
+- **Multi-source corroboration**: Independent confirmation from multiple primary sources.
+- **Repeated evidence**: The same conclusion appears in N investigations with confidence ≥ X over Y time window.
+
+No automatic promotion occurs without satisfying at least one policy.
 
 ## 5. Self-Improvement Loop (The Investigation Artifact)
 
@@ -146,8 +177,11 @@ The system remembers its own problem-solving as investigations. Verified fragmen
 - **Automatic Rule Verification**: Agent automatically checks generated answers against stored rules.
 - **Rule Conflict Detection**: Identifying contradictory rules in the knowledge base.
 - **Answer Validation**: Ensuring outputs respect all critical severity rules.
+- **Reasoning Telemetry**: Recording which tools, rules, and facts were consulted per answer.
 
 ### Knowledge Evolution
 - **Rule Chaining**: Teaching agents to chain `Rule A -> Rule B -> Conclusion`.
 - **SOP Proposal**: Pipeline to propose new Standard Operating Procedures (draft mode) based on successful investigations.
 - **Investigation → Candidate Rule**: Automated pipeline to suggest rules from repeated investigations.
+
+**The system prioritizes correctness, auditability, and controlled evolution over autonomous behavior.**
