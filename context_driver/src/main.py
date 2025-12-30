@@ -53,16 +53,17 @@ def log_prompt_to_litellm(operation: str, model: str, messages: list, extra_info
 from config import current_config
 
 # Configuration
-# Configuration
 RAW_DIR = os.environ.get("RAW_DIR", "/app/raw")
 BRAIN_DIR = os.environ.get("BRAIN_DIR", "/app/brain")
 # Subdirectories for the Graph
 DOCS_DIR = os.path.join(BRAIN_DIR, "documents")
 ENTITIES_DIR = os.path.join(BRAIN_DIR, "entities")
+CAPSULES_DIR = os.path.join(BRAIN_DIR, "capsules")
 
 # Ensure directories exist
 os.makedirs(DOCS_DIR, exist_ok=True)
 os.makedirs(ENTITIES_DIR, exist_ok=True)
+os.makedirs(CAPSULES_DIR, exist_ok=True)
 os.makedirs(RAW_DIR, exist_ok=True)
 
 # ==================== .brainignore Support ====================
@@ -559,6 +560,39 @@ def ingest_raw_file(file_path):
     except Exception as e:
         logger.error(f"Error ingesting raw file {file_path}: {e}")
 
+def save_capsule_to_file(title, capsule_data):
+    """Save capsule as markdown file in brain/capsules/"""
+    try:
+        # Sanitize filename
+        safe_name = re.sub(r'[^a-zA-Z0-9_-]', '_', title)
+        capsule_path = os.path.join(CAPSULES_DIR, f"{safe_name}.md")
+        
+        # Format as markdown
+        content = f"""---
+type: Capsule
+source_title: {title}
+intent: {capsule_data.get('intent', 'unknown')}
+domain: {capsule_data.get('domain', 'unknown')}
+confidence: {capsule_data.get('confidence', 0.0)}
+---
+
+# {title}
+
+## Summary
+{capsule_data.get('summary', 'No summary available.')}
+
+## Key Points
+"""
+        for point in capsule_data.get('key_points', []):
+            content += f"- {point}\n"
+        
+        with open(capsule_path, 'w', encoding='utf-8') as f:
+            f.write(content)
+        
+        logger.info(f"Saved capsule to {capsule_path}")
+    except Exception as e:
+        logger.error(f"Failed to save capsule for {title}: {e}")
+
 
 def neurosymbolic_distill(content: str, title: str, source_path: str):
     """
@@ -619,6 +653,9 @@ def neurosymbolic_distill(content: str, title: str, source_path: str):
         domain=capsule.get("domain", "unknown"),
         confidence=capsule.get("confidence", 0.0)
     )
+    
+    # Save capsule as markdown file
+    save_capsule_to_file(title, capsule)
     
     db.upsert_facts(source_id=note_id, facts=facts_list, provenance=provenance)
     db.upsert_rules(source_id=note_id, rules=rules_list, provenance=provenance)

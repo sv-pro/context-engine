@@ -38,19 +38,24 @@ class AnswerWithContext(dspy.Signature):
 
 
 class VerifyAnswer(dspy.Signature):
-    """Verify a draft answer against facts in the knowledge base.
+    """Verify and potentially correct a draft answer using the knowledge base"""
     
-    1. Extract key entities and claims from the draft answer.
-    2. Check if these conflict with known facts (provided in context).
-    3. If conflicts exist, provide a corrected answer.
-    4. If no conflicts, return the original answer.
-    """
+    question: str = dspy.InputField(desc="Original question")
+    draft_answer: str = dspy.InputField(desc="Draft answer from ReAct agent")
     
-    question: str = dspy.InputField(desc="The original question")
-    draft_answer: str = dspy.InputField(desc="The draft answer to verify")
-    knowledge_context: str = dspy.InputField(desc="Facts and rules relevant to the answer")
-    verification_result: str = dspy.OutputField(desc="Assessment of the answer (Correct/Incorrect/Partial)")
-    final_answer: str = dspy.OutputField(desc="The verified and corrected answer")
+    verified_answer: str = dspy.OutputField(desc="Verified/corrected answer")
+    verification_status: str = dspy.OutputField(desc="Verification status: 'Correct', 'Partial', or 'Incorrect'")
+
+class EstimateConfidence(dspy.Signature):
+    """Estimate confidence in the current answer based on information gathered"""
+    
+    question: str = dspy.InputField(desc="Original question being investigated")
+    gathered_info: str = dspy.InputField(desc="Summary of information gathered so far from all observations")
+    current_answer: str = dspy.InputField(desc="Current draft answer based on gathered information")
+    
+    confidence_score: float = dspy.OutputField(desc="Confidence score between 0.0 and 1.0, where 1.0 means complete certainty")
+    missing_aspects: str = dspy.OutputField(desc="Key aspects or information still missing from the answer, if any")
+    recommendation: str = dspy.OutputField(desc="Recommendation: 'finish' if confident, or specific next steps to improve confidence")
 
 
 # === ReAct Agent ===
@@ -131,7 +136,6 @@ class KnowledgeBaseReActAgent(dspy.Module):
         try:
             result = self.react(question=question)
             
-            # === Verify Step ===
             logger.info("Verifying draft answer...")
             
             # extract answer safely
@@ -139,6 +143,34 @@ class KnowledgeBaseReActAgent(dspy.Module):
             if not draft_answer:
                  logger.warning("ReAct did not produce a final answer.")
                  draft_answer = "No answer produced."
+            
+            # Estimate confidence in the answer
+            try:
+                conf_predictor = dspy.Predict(EstimateConfidence)
+                conf_result = conf_predictor(
+                    question=question,
+                    gathered_info=self._extract_trajectory(result),
+                    current_answer=draft_answer
+                )
+                
+                try:
+                    confidence = float(conf_result.confidence_score)
+                    # Clamp to valid range
+                    confidence = max(0.0, min(1.0, confidence))
+                except (ValueError, TypeError):
+                    confidence = 0.5  # Default if parsing fails
+                
+                logger.info(f"📊 Answer Confidence: {confidence:.2f}")
+                logger.info(f"📋 Missing Aspects: {conf_result.missing_aspects}")
+                logger.info(f"💡 Recommendation: {conf_result.recommendation}")
+                
+                # Warn if confidence is low
+                if confidence < 0.8:
+                    logger.warning(f"⚠️  Low confidence ({confidence:.2f}) - answer may be incomplete!")
+                    
+            except Exception as e:
+                logger.warning(f"Confidence estimation failed: {e}")
+                confidence = None
 
             verification = self.verifier(question=question, draft_answer=draft_answer)
             
