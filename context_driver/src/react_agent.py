@@ -243,6 +243,7 @@ class KnowledgeBaseReActAgent(dspy.Module):
                 thought = traj_dict.get(f'thought_{i}', '')
                 tool_name = traj_dict.get(f'tool_name_{i}', '')
                 tool_args = traj_dict.get(f'tool_args_{i}', {})
+                observation = traj_dict.get(f'observation_{i}', '')
                 
                 # Format action as "tool_name(args)" if present
                 if tool_name and tool_name != 'finish':
