@@ -198,6 +198,16 @@ def get_capsule(title: str) -> str:
         for point in capsule.get("key_points", []):
             output.append(f"• {point}")
         
+        # Add navigation footer with related documents
+        edges = db.get_edges_for_note(note_id, limit=8)
+        if edges:
+            output.append("")
+            output.append("# Related Documents")
+            for edge in edges:
+                relation_type = edge['type']
+                target_title = edge['target_title']
+                output.append(f"- [[{target_title}]] ({relation_type})")
+        
         return "\n".join(output)
         
     except Exception as e:

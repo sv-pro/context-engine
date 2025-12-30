@@ -389,11 +389,19 @@ def process_file(file_path):
                 db.update_edges(note_id, graph_data['relationships'])
                 logger.info(f"Updated structured edges for {title}")
         
-        # Fallback: if no graph_data but 'links' exist (WebUI or legacy), use those as basic wikilinks
+        # Fallback: if no graph_data but 'links_with_types' exist, use typed wikilinks
+        elif 'links_with_types' in parsed and parsed['links_with_types']:
+            # Convert typed links to edges format
+            edges = []
+            for link_data in parsed['links_with_types']:
+                edge_type = link_data.get('type') or 'wikilink'  # Use 'wikilink' as default
+                edges.append({'target': link_data['target'], 'type': edge_type})
+            db.update_edges(note_id, edges)
+            logger.info(f\"Updated edges from typed wikilinks for {title}: {len(edges)} links\")
+        # Legacy fallback for old documents
         elif parsed['links']:
-             # Convert simple links to edges format
-             edges = [{'target': link, 'type': 'wikilink'} for link in parsed['links']]
-             db.update_edges(note_id, edges)
+            edges = [{'target': link, 'type': 'wikilink'} for link in parsed['links']]
+            db.update_edges(note_id, edges)
 
         # 4. Enrich and Write-back (only for real files, not virtual webui://)
         if not file_path.startswith("webui://"):

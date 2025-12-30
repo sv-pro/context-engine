@@ -27,10 +27,35 @@ def parse_markdown(content):
         except yaml.YAMLError as e:
             logger.error(f"Error parsing YAML: {e}")
 
-    # 2. Extract Wikilinks
-    # Matches [[Link]] or [[Link|Alias]]
-    link_pattern = r'\[\[(.*?)(?:\|.*?)?\]\]'
-    links = re.findall(link_pattern, clean_content)
+    # 2. Extract Wikilinks with optional types
+    # Format: [[Entity]](type) for typed, [[Entity]] for untyped
+    links_with_types = []
+    
+    # First, find typed links: [[Entity]](type)
+    typed_pattern = r'\[\[([^\]]+)\]\]\(([^\)]+)\)'
+    for match in re.finditer(typed_pattern, clean_content):
+        links_with_types.append({
+            'target': match.group(1).strip(),
+            'type': match.group(2).strip(),
+            'is_typed': True
+        })
+    
+    # Then, find simple links [[Entity]] (excluding those already captured as typed)
+    # Use negative lookahead to skip typed ones
+    simple_pattern = r'\[\[([^\]]+)\]\](?!\()'
+    for match in re.finditer(simple_pattern, clean_content):
+        target = match.group(1).strip()
+        # Skip if it has an alias separator (|)
+        if '|' in target:
+            target = target.split('|')[0].strip()
+        links_with_types.append({
+            'target': target,
+            'type': None,
+            'is_typed': False
+        })
+    
+    # Extract just target names for backwards compatibility
+    links = [link['target'] for link in links_with_types]
 
     # 3. Strip existing footer sections to prevent duplication
     # Remove any "---\n## Related" footer blocks (including variations)
@@ -44,5 +69,6 @@ def parse_markdown(content):
     return {
         "metadata": metadata,
         "content": clean_content.strip(),
-        "links": links
+        "links": links,
+        "links_with_types": links_with_types
     }

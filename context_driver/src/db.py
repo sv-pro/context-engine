@@ -641,6 +641,27 @@ class Database:
                 "source_path": row[7]
             }
     
+    def get_edges_for_note(self, note_id, limit=10):
+        """
+        Get outgoing edges (relationships) for a specific note.
+        Returns list of dicts with 'type' and 'target_title'.
+        """
+        with self.conn.cursor() as cur:
+            cur.execute("""
+                SELECT DISTINCT e.type, e.target_title
+                FROM brain.edges e
+                WHERE e.source_id = %s
+                ORDER BY e.type, e.target_title
+                LIMIT %s
+            """, (note_id, limit))
+            results = []
+            for row in cur.fetchall():
+                results.append({
+                    "type": row[0],
+                    "target_title": row[1]
+                })
+            return results
+    
     def get_capsules(self, domain=None, intent=None, limit=50):
         """
         List capsules with optional filters.
