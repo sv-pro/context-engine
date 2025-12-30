@@ -242,11 +242,75 @@ def list_documents(domain: Optional[str] = None, intent: Optional[str] = None, l
         return f"Error listing documents: {e}"
 
 
+def get_related_documents(title: str) -> str:
+    """
+    Find related documents via knowledge graph links (see_also, emergency procedures, etc.).
+    
+    Use this when you find a general document but need specific procedures, emergency guides,
+    or related policies. For example, if you find "SSL_Certificate_Management" but need
+    the emergency rotation procedure, this will show you the link to "SSL_Certificate_Emergency".
+    
+    Args:
+        title: Title of the document to find relationships for
+    
+    Returns:
+        Formatted list of related document links with relationship types
+    """
+    db = _get_db()
+    
+    try:
+        # Find the note by title
+        with db.conn.cursor() as cur:
+            cur.execute("""
+                SELECT id, file_path FROM brain.notes 
+                WHERE title ILIKE %s 
+                LIMIT 1
+            """, (f"%{title}%",))
+            row = cur.fetchone()
+            
+        if not row:
+            return f"No document found with title matching: '{title}'"
+        
+        note_id, file_path = row
+        
+        # Get relationships from the edges table
+        with db.conn.cursor() as cur:
+            cur.execute("""
+                SELECT DISTINCT 
+                    e.predicate,
+                    n.title,
+                    n.file_path
+                FROM brain.edges e
+                JOIN brain.notes n ON (
+                    (e.source_id = %s AND e.target_id = n.id) OR
+                    (e.target_id = %s AND e.source_id = n.id)
+                )
+                WHERE e.source_id = %s OR e.target_id = %s
+                ORDER BY e.predicate, n.title
+                LIMIT 20
+            """, (note_id, note_id, note_id, note_id))
+            edges = cur.fetchall()
+        
+        if not edges:
+            return f"No related documents found for '{title}'"
+        
+        output = [f"Related documents for '{title}':"]
+        for predicate, related_title, related_path in edges:
+            output.append(f"• **{predicate}** -> [[{related_title}]]")
+        
+        return "\n".join(output)
+        
+    except Exception as e:
+        logger.error(f"get_related_documents failed: {e}")
+        return f"Error retrieving related documents: {e}"
+
+
 # Export tools for DSPy ReAct
 KNOWLEDGE_BASE_TOOLS = [
     search_knowledge_base,
     get_facts,
     get_rules,
     get_capsule,
-    list_documents
+    list_documents,
+    get_related_documents
 ]
