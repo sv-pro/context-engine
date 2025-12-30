@@ -1,5 +1,5 @@
 """
-Unit tests for ReAct Agent and ColBERTv2-compatible API.
+Unit tests for ReAct Agent and DSPy Tools.
 
 Run with: pytest test_react_agent.py -v
 """
@@ -11,38 +11,6 @@ import sys
 # Add src to path for imports
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
 
-
-# === ColBERT API Tests ===
-
-class TestColBERTApiResponseFormat:
-    """Test that ColBERT API returns DSPy-compatible format."""
-    
-    def test_colbert_result_model_structure(self):
-        """Verify ColBERTResult has required fields."""
-        from colbert_api import ColBERTResult
-        
-        # Verify the model has required fields
-        fields = ColBERTResult.model_fields
-        assert "pid" in fields
-        assert "long_text" in fields
-        assert "score" in fields
-        assert "rank" in fields
-    
-    def test_colbert_result_instantiation(self):
-        """Test creating a ColBERTResult instance."""
-        from colbert_api import ColBERTResult
-        
-        result = ColBERTResult(
-            pid=1,
-            long_text="Test content",
-            score=0.95,
-            rank=1
-        )
-        
-        assert result.pid == 1
-        assert result.long_text == "Test content"
-        assert result.score == 0.95
-        assert result.rank == 1
 
 
 # === DSPy Tools Tests ===
@@ -118,11 +86,13 @@ class TestDspyToolsSignatures:
             "get_capsule",
             "list_documents",
             "get_related_documents",
+            "get_document_section",
         }
         assert len(KNOWLEDGE_BASE_TOOLS) == len(expected_tools)
         assert {tool.__name__ for tool in KNOWLEDGE_BASE_TOOLS} == expected_tools
         for tool in KNOWLEDGE_BASE_TOOLS:
             assert callable(tool)
+
 
 
 # === ReAct Agent Tests ===
