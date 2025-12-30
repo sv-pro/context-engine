@@ -563,6 +563,11 @@ def ingest_raw_file(file_path):
 def save_capsule_to_file(title, capsule_data):
     """Save capsule as markdown file in brain/capsules/"""
     try:
+        # Skip saving capsules for Investigation documents (agent-generated, may contain hallucinations)
+        if title.startswith("Investigation_"):
+            logger.debug(f"Skipping capsule file for investigation: {title}")
+            return
+        
         # Sanitize filename
         safe_name = re.sub(r'[^a-zA-Z0-9_-]', '_', title)
         capsule_path = os.path.join(CAPSULES_DIR, f"{safe_name}.md")
