@@ -274,29 +274,25 @@ def get_related_documents(title: str) -> str:
         note_id, file_path = row
         
         # Get relationships from the edges table
+        # The edges table has: source_id, target_title, type
         with db.conn.cursor() as cur:
             cur.execute("""
                 SELECT DISTINCT 
-                    e.predicate,
-                    n.title,
-                    n.file_path
+                    e.type as relationship_type,
+                    e.target_title
                 FROM brain.edges e
-                JOIN brain.notes n ON (
-                    (e.source_id = %s AND e.target_id = n.id) OR
-                    (e.target_id = %s AND e.source_id = n.id)
-                )
-                WHERE e.source_id = %s OR e.target_id = %s
-                ORDER BY e.predicate, n.title
+                WHERE e.source_id = %s
+                ORDER BY e.type, e.target_title
                 LIMIT 20
-            """, (note_id, note_id, note_id, note_id))
+            """, (note_id,))
             edges = cur.fetchall()
         
         if not edges:
             return f"No related documents found for '{title}'"
         
         output = [f"Related documents for '{title}':"]
-        for predicate, related_title, related_path in edges:
-            output.append(f"• **{predicate}** -> [[{related_title}]]")
+        for relationship_type, related_title in edges:
+            output.append(f"• **{relationship_type}** -> [[{related_title}]]")
         
         return "\n".join(output)
         
