@@ -552,10 +552,15 @@ def ingest_raw_file(file_path):
         
         # 4. NEUROSYMBOLIC DISTILLATION (3-pass pipeline)
         # Run after graph extraction to store capsules, facts, and rules
-        try:
-            neurosymbolic_distill(content, title, file_path)
-        except Exception as e:
-            logger.error(f"Neurosymbolic distillation failed for {title}: {e}")
+        # Skip for Investigation documents - they are OUTPUT artifacts, not knowledge input
+        # Feeding them back would cause the system to learn from its own potential hallucinations
+        if title.startswith("Investigation_"):
+            logger.info(f"Skipping neurosymbolic distillation for investigation output: {title}")
+        else:
+            try:
+                neurosymbolic_distill(content, title, file_path)
+            except Exception as e:
+                logger.error(f"Neurosymbolic distillation failed for {title}: {e}")
 
     except Exception as e:
         logger.error(f"Error ingesting raw file {file_path}: {e}")
