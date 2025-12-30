@@ -216,9 +216,15 @@ class KnowledgeBaseReActAgent(dspy.Module):
         """Extract the reasoning trajectory from a ReAct result."""
         trajectory = []
         
+        # Debug: log what we're receiving
+        logger.debug(f"Extracting trajectory from result type: {type(result)}")
+        if hasattr(result, '__dict__'):
+            logger.debug(f"Result attributes: {list(result.__dict__.keys())}")
+        
         # DSPy ReAct stores trajectory as a dict with thought_N, tool_name_N, observation_N keys
         if hasattr(result, 'trajectory') and isinstance(result.trajectory, dict):
             traj_dict = result.trajectory
+            logger.debug(f"Trajectory dict keys: {list(traj_dict.keys())[:10]}")  # First 10 keys
             
             # Find all steps by looking for thought_N keys
             step_nums = set()
@@ -230,12 +236,13 @@ class KnowledgeBaseReActAgent(dspy.Module):
                     except (ValueError, IndexError):
                         pass
             
+            logger.info(f"Found {len(step_nums)} steps in trajectory")
+            
             # Extract each step
             for i in sorted(step_nums):
                 thought = traj_dict.get(f'thought_{i}', '')
                 tool_name = traj_dict.get(f'tool_name_{i}', '')
                 tool_args = traj_dict.get(f'tool_args_{i}', {})
-                observation = traj_dict.get(f'observation_{i}', '')
                 
                 # Format action as "tool_name(args)" if present
                 if tool_name and tool_name != 'finish':
@@ -248,15 +255,18 @@ class KnowledgeBaseReActAgent(dspy.Module):
                     "action": action,
                     "observation": observation
                 })
+        else:
+            logger.warning("No trajectory dict found in result")
         
         # Also include final reasoning if present
-        elif hasattr(result, 'reasoning') and result.reasoning:
+        if not trajectory and hasattr(result, 'reasoning') and result.reasoning:
             trajectory.append({
                 "thought": result.reasoning,
                 "action": "final_answer",
                 "observation": getattr(result, 'answer', '')
             })
         
+        logger.info(f"Extracted trajectory with {len(trajectory)} steps")
         return trajectory
 
 
