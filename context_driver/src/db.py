@@ -28,14 +28,23 @@ class Database:
         self._connect()
 
     def _connect(self):
-        try:
-            self.conn = psycopg2.connect(self.url)
-            self.conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
-            logger.info("Connected to PostgreSQL")
-            self._init_schema()
-        except Exception as e:
-            logger.error(f"Failed to connect to DB: {e}")
-            raise
+        import time
+        max_retries = 10
+        for i in range(max_retries):
+            try:
+                self.conn = psycopg2.connect(self.url)
+                self.conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
+                logger.info("Connected to PostgreSQL")
+                self._init_schema()
+                return
+            except Exception as e:
+                if i < max_retries - 1:
+                    wait = 2
+                    logger.warning(f"Failed to connect to DB (attempt {i+1}/{max_retries}): {e}. Retrying in {wait}s...")
+                    time.sleep(wait)
+                else:
+                    logger.error(f"Failed to connect to DB after {max_retries} attempts: {e}")
+                    raise
 
     def _init_schema(self):
         with self.conn.cursor() as cur:

@@ -50,10 +50,12 @@ def search_knowledge_base(query: str, limit: int = 5) -> str:
         
         output = []
         for i, r in enumerate(results, 1):
-            title = r.get("title", "Untitled")
-            section = r.get("section", "")
-            content = r.get("content", "")[:500]  # Truncate for readability
-            score = r.get("similarity", 0.0)
+            # Results are tuples: (file_path, title, content, section, similarity)
+            file_path = r[0] if len(r) > 0 else ""
+            title = r[1] if len(r) > 1 else "Untitled"
+            content = (r[2] or "")[:500] if len(r) > 2 else ""  # Truncate for readability
+            section = r[3] if len(r) > 3 else ""
+            score = r[4] if len(r) > 4 else 0.0
             
             section_info = f" > {section}" if section else ""
             output.append(f"[{i}] {title}{section_info} (score: {score:.2f})\n{content}\n")

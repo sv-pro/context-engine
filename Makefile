@@ -24,9 +24,9 @@ help:
 	@echo ""
 	@echo "Database backup/restore targets:"
 	@echo "  db-backup       Backup entire PostgreSQL database"
-	@echo "  db-restore      Restore entire PostgreSQL database (FILE=<path>)"
+	@echo "  db-restore      Restore entire PostgreSQL database (optional FILE=<path>)"
 	@echo "  db-backup-webui Backup only Open WebUI database"
-	@echo "  db-restore-webui Restore only Open WebUI database (FILE=<path>)"
+	@echo "  db-restore-webui Restore only Open WebUI database (optional FILE=<path>)"
 	@echo ""
 	@echo "Benchmark targets:"
 	@echo "  benchmark-help  Show benchmark usage and examples"
@@ -154,21 +154,38 @@ db-backup:
 	docker exec db pg_dumpall -U postgres --clean > $(BACKUP_DIR)/full_backup_$(TIMESTAMP).sql
 	@echo "Backup saved to: $(BACKUP_DIR)/full_backup_$(TIMESTAMP).sql"
 
+# List available backups
+db-backups:
+	@mkdir -p $(BACKUP_DIR)
+	@echo "Available Backups:"
+	@ls -lh $(BACKUP_DIR)/*.sql 2>/dev/null || echo "No backups found."
+
 # Restore entire PostgreSQL database
 db-restore:
-	@if [ -z "$(FILE)" ]; then \
-		echo "Usage: make db-restore FILE=<backup_file>"; \
-		echo "Available backups:"; \
-		ls -la $(BACKUP_DIR)/full_*.sql 2>/dev/null || echo "  No full backups found in $(BACKUP_DIR)/"; \
-		exit 1; \
-	fi
-	@echo "Stopping services that use the database..."
-	docker compose stop open-webui context-driver litellm
-	@echo "Restoring from $(FILE)..."
-	docker exec -i db psql -U postgres --single-transaction -v ON_ERROR_STOP=0 < $(FILE)
-	@echo "Restarting services..."
-	docker compose start open-webui context-driver litellm
-	@echo "Database restored from $(FILE)"
+	@RESTORE_FILE="$(FILE)"; \
+	if [ -z "$$RESTORE_FILE" ]; then \
+		RESTORE_FILE=$$(ls -t $(BACKUP_DIR)/full_*.sql 2>/dev/null | head -1); \
+		if [ -z "$$RESTORE_FILE" ]; then \
+			RESTORE_FILE=$$(ls -t $(BACKUP_DIR)/*.sql 2>/dev/null | head -1); \
+		fi; \
+		if [ -z "$$RESTORE_FILE" ]; then \
+			echo "No backups found in $(BACKUP_DIR)/"; \
+			echo "Usage: make db-restore [FILE=<backup_file>]"; \
+			exit 1; \
+		fi; \
+		echo "No FILE specified, using latest: $$RESTORE_FILE"; \
+	fi; \
+	DB_PASSWORD=$$(docker exec db printenv POSTGRES_PASSWORD 2>/dev/null | tr -d '\r'); \
+	if [ -z "$$DB_PASSWORD" ]; then DB_PASSWORD=postgres; fi; \
+	echo "Stopping services that use the database..."; \
+	docker compose stop open-webui context-driver litellm; \
+	echo "Restoring from $$RESTORE_FILE..."; \
+	docker exec -i db psql -U postgres -v ON_ERROR_STOP=0 < $$RESTORE_FILE; \
+	echo "Re-applying postgres password..."; \
+	docker exec db psql -U postgres -c "ALTER USER postgres WITH PASSWORD '$$DB_PASSWORD';"; \
+	echo "Restarting services..."; \
+	docker compose start open-webui context-driver litellm; \
+	echo "Database restored from $$RESTORE_FILE"
 
 # Backup only Open WebUI database
 db-backup-webui:
@@ -192,6 +209,8 @@ db-restore-webui:
 		fi; \
 		echo "No FILE specified, using latest: $$RESTORE_FILE"; \
 	fi; \
+	DB_PASSWORD=$$(docker exec db printenv POSTGRES_PASSWORD 2>/dev/null | tr -d '\r'); \
+	if [ -z "$$DB_PASSWORD" ]; then DB_PASSWORD=postgres; fi; \
 	echo "Stopping Open WebUI..."; \
 	docker compose stop open-webui; \
 	echo "Dropping and recreating webui database..."; \
@@ -200,6 +219,8 @@ db-restore-webui:
 	docker exec db psql -U postgres -c "CREATE DATABASE webui;"; \
 	echo "Restoring from $$RESTORE_FILE..."; \
 	docker exec -i db psql -U postgres -d webui < $$RESTORE_FILE; \
+	echo "Re-applying postgres password..."; \
+	docker exec db psql -U postgres -c "ALTER USER postgres WITH PASSWORD '$$DB_PASSWORD';"; \
 	echo "Restarting Open WebUI..."; \
 	docker compose start open-webui; \
 	echo "Open WebUI database restored from $$RESTORE_FILE"

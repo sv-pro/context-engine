@@ -223,10 +223,13 @@ def get_react_agent(max_iters: int = 5) -> KnowledgeBaseReActAgent:
         
     Returns:
         Configured KnowledgeBaseReActAgent
+        
+    Note: Caller must ensure DSPy is configured (via dspy.context() or dspy.configure())
     """
     global _agent_instance
     
-    _ensure_dspy_configured()
+    # Don't call _ensure_dspy_configured() here - caller is responsible
+    # This allows using dspy.context() for thread-safe configuration
     
     with _agent_lock:
         if _agent_instance is None:
@@ -247,8 +250,21 @@ def ask_question(question: str, max_iters: int = 5) -> Dict[str, Any]:
     Returns:
         Dict with 'answer', 'trajectory', and 'success' keys
     """
-    agent = get_react_agent(max_iters=max_iters)
-    return agent(question=question)
+    # Configure DSPy for this thread using context manager
+    # This avoids the "can only be changed by the thread that initially configured it" error
+    if os.environ.get("OPENAI_API_KEY"):
+        model = "openai/gpt-4o-mini"
+    elif os.environ.get("ANTHROPIC_API_KEY"):
+        model = "anthropic/claude-3-haiku-20240307"
+    else:
+        model = "ollama/llama3"
+    
+    lm = dspy.LM(model=model)
+    
+    # Use context manager for thread-safe configuration
+    with dspy.context(lm=lm):
+        agent = get_react_agent(max_iters=max_iters)
+        return agent(question=question)
 
 
 

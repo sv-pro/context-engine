@@ -1330,11 +1330,12 @@ def _save_investigation(query: str, answer: str, trajectory: list):
                     trace_md += f"**Observation:** {observation}\n\n"
         
         # Build document content
+        escaped_query = query.replace('"', '\\"')
         content = f"""---
 type: investigation
 status: closed
 date: {datetime.datetime.now().isoformat()}
-query: "{query.replace('"', '\\"')}"
+query: "{escaped_query}"
 tags: [react, investigation, auto-generated]
 ---
 
@@ -1377,12 +1378,16 @@ async def handle_react_request(request: Request, user_query: str, body: dict):
         body: The original request body
     
     Returns:
-        JSONResponse in OpenAI chat completion format
+        JSONResponse or StreamingResponse in OpenAI chat completion format
     """
     import time as _time
     import uuid
+    import json
+    from fastapi.responses import StreamingResponse
     
     start_time = _time.time()
+    is_stream = body.get("stream", False)
+    response_id = f"chatcmpl-react-{uuid.uuid4().hex[:8]}"
     
     try:
         from react_agent import ask_question
@@ -1421,9 +1426,66 @@ async def handle_react_request(request: Request, user_query: str, body: dict):
         if trajectory and len(trajectory) > 0:
             content += reasoning_trace
         
-        # Create OpenAI-compatible response
+        # Log cost if tracker available
+        cost_tracker = getattr(request.app.state, 'cost_tracker', None)
+        if cost_tracker:
+            try:
+                cost_tracker.log_request(
+                    operation="react-agent",
+                    model="brain-react",
+                    input_tokens=len(user_query.split()),
+                    output_tokens=len(content.split()),
+                    latency_ms=latency_ms
+                )
+            except Exception as log_e:
+                logger.warning(f"Failed to log ReAct cost: {log_e}")
+        
+        # Save as investigation artifact if successful and has trajectory
+        if success and trajectory:
+            _save_investigation(user_query, answer, trajectory)
+
+        logger.info(f"ReAct completed in {latency_ms}ms, success={success}, steps={len(trajectory)}")
+        
+        # Handle streaming response
+        if is_stream:
+            def generate_stream():
+                # Send the content in chunks to simulate streaming
+                chunk_size = 50  # characters per chunk
+                for i in range(0, len(content), chunk_size):
+                    chunk_content = content[i:i+chunk_size]
+                    chunk_data = {
+                        "id": response_id,
+                        "object": "chat.completion.chunk",
+                        "created": int(_time.time()),
+                        "model": "brain-react",
+                        "choices": [{
+                            "index": 0,
+                            "delta": {"content": chunk_content},
+                            "finish_reason": None
+                        }]
+                    }
+                    yield f"data: {json.dumps(chunk_data)}\n\n"
+                
+                # Send final chunk with finish_reason
+                final_chunk = {
+                    "id": response_id,
+                    "object": "chat.completion.chunk",
+                    "created": int(_time.time()),
+                    "model": "brain-react",
+                    "choices": [{
+                        "index": 0,
+                        "delta": {},
+                        "finish_reason": "stop"
+                    }]
+                }
+                yield f"data: {json.dumps(final_chunk)}\n\n"
+                yield "data: [DONE]\n\n"
+            
+            return StreamingResponse(generate_stream(), media_type="text/event-stream")
+        
+        # Non-streaming response
         response = {
-            "id": f"chatcmpl-react-{uuid.uuid4().hex[:8]}",
+            "id": response_id,
             "object": "chat.completion",
             "created": int(_time.time()),
             "model": "brain-react",
@@ -1438,31 +1500,12 @@ async def handle_react_request(request: Request, user_query: str, body: dict):
                 }
             ],
             "usage": {
-                "prompt_tokens": len(user_query.split()),  # Approximate
-                "completion_tokens": len(content.split()),  # Approximate
+                "prompt_tokens": len(user_query.split()),
+                "completion_tokens": len(content.split()),
                 "total_tokens": len(user_query.split()) + len(content.split())
             }
         }
         
-        # Log cost if tracker available
-        cost_tracker = getattr(request.app.state, 'cost_tracker', None)
-        if cost_tracker:
-            try:
-                cost_tracker.log_request(
-                    operation="react-agent",
-                    model="brain-react",
-                    input_tokens=response["usage"]["prompt_tokens"],
-                    output_tokens=response["usage"]["completion_tokens"],
-                    latency_ms=latency_ms
-                )
-            except Exception as log_e:
-                logger.warning(f"Failed to log ReAct cost: {log_e}")
-        
-        # Save as investigation artifact if successful and has trajectory
-        if success and trajectory:
-            _save_investigation(user_query, answer, trajectory)
-
-        logger.info(f"ReAct completed in {latency_ms}ms, success={success}, steps={len(trajectory)}")
         return JSONResponse(response)
         
     except Exception as e:
@@ -1504,20 +1547,18 @@ async def chat_completions(request: Request):
         model_name = body.get("model", "")
         logger.info(f"RAG Request: {user_query[:50]}... (model: {model_name})")
 
-        # Check if this is a brain-react model (ReAct reasoning mode)
-        is_react_mode = "brain-react" in model_name.lower() or "react" in model_name.lower()
-        
-        if is_react_mode:
-            # Use ReAct agent for this request
-            logger.info("Using ReAct reasoning mode...")
-            return await handle_react_request(request, user_query, body)
-
         # Check for Open WebUI meta-prompts (title, tags, follow-up suggestions)
-        # These internal tasks don't benefit from RAG context
-        is_meta_prompt = user_query.strip().startswith("### Task:")
+        # These internal tasks don't benefit from RAG context or ReAct reasoning
+        # Must check BEFORE ReAct routing to avoid expensive tool calls for simple tasks
+        is_meta_prompt = (
+            user_query.strip().startswith("### Task:") or
+            "Generate a concise" in user_query or
+            "Suggest 3-5 relevant follow-up" in user_query or
+            "Generate 1-3 broad tags" in user_query
+        )
         
         if is_meta_prompt:
-            logger.info("Detected meta-prompt, bypassing RAG retrieval...")
+            logger.info("Detected meta-prompt, bypassing RAG/ReAct...")
             # Forward directly to LLM without context augmentation
             proxy_body = body.copy()
             proxy_body["model"] = REAL_MODEL
@@ -1574,6 +1615,14 @@ async def chat_completions(request: Request):
                     logger.warning(f"Failed to log meta-prompt cost: {log_e}")
                     
                 return JSONResponse(status_code=response.status_code, content=resp_json)
+
+        # Check if this is a brain-react model (ReAct reasoning mode)
+        is_react_mode = "brain-react" in model_name.lower() or "react" in model_name.lower()
+        
+        if is_react_mode:
+            # Use ReAct agent for this request
+            logger.info("Using ReAct reasoning mode...")
+            return await handle_react_request(request, user_query, body)
 
         # 2. Semantic Search (only for real user queries)
         cost_tracker = getattr(request.app.state, 'cost_tracker', None)
