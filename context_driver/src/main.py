@@ -397,7 +397,7 @@ def process_file(file_path):
                 edge_type = link_data.get('type') or 'wikilink'  # Use 'wikilink' as default
                 edges.append({'target': link_data['target'], 'type': edge_type})
             db.update_edges(note_id, edges)
-            logger.info(f\"Updated edges from typed wikilinks for {title}: {len(edges)} links\")
+            logger.info(f"Updated edges from typed wikilinks for {title}: {len(edges)} links")
         # Legacy fallback for old documents
         elif parsed['links']:
             edges = [{'target': link, 'type': 'wikilink'} for link in parsed['links']]
