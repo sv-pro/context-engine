@@ -53,6 +53,11 @@ def search_knowledge_base(query: str, limit: int = 5) -> str:
             # Results are tuples: (file_path, title, content, section, similarity)
             file_path = r[0] if len(r) > 0 else ""
             title = r[1] if len(r) > 1 else "Untitled"
+            
+            # Skip previous investigation artifacts to avoid context pollution/loops
+            if title.startswith("Investigation_"):
+                continue
+                
             content = (r[2] or "")[:500] if len(r) > 2 else ""  # Truncate for readability
             section = r[3] if len(r) > 3 else ""
             score = r[4] if len(r) > 4 else 0.0

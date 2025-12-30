@@ -33,7 +33,58 @@ class AnswerWithContext(dspy.Signature):
     answer: str = dspy.OutputField(desc="Answer based on the provided context")
 
 
+class VerifyAnswer(dspy.Signature):
+    """Verify a draft answer against facts in the knowledge base.
+    
+    1. Extract key entities and claims from the draft answer.
+    2. Check if these conflict with known facts (provided in context).
+    3. If conflicts exist, provide a corrected answer.
+    4. If no conflicts, return the original answer.
+    """
+    
+    question: str = dspy.InputField(desc="The original question")
+    draft_answer: str = dspy.InputField(desc="The draft answer to verify")
+    knowledge_context: str = dspy.InputField(desc="Facts and rules relevant to the answer")
+    verification_result: str = dspy.OutputField(desc="Assessment of the answer (Correct/Incorrect/Partial)")
+    final_answer: str = dspy.OutputField(desc="The verified and corrected answer")
+
+
 # === ReAct Agent ===
+
+class KnowledgeBaseVerifier(dspy.Module):
+    """Module to verify answers against the knowledge graph."""
+    
+    def __init__(self):
+        super().__init__()
+        self.verify = dspy.ChainOfThought(VerifyAnswer)
+        
+    def forward(self, question: str, draft_answer: str):
+        # 1. Extract potential entities from answer (simple heuristic or LLM)
+        # For simplicity, we'll verify against a broad fact search for now.
+        # In a production system, we'd extract specific entities first.
+        from dspy_tools import get_facts, get_rules
+        
+        # Heuristic: search facts for capitalized words (Entities) in draft
+        # This is a basic implementation.
+        import re
+        entities = set(re.findall(r'\b[A-Z][a-zA-Z0-9_]*\b', draft_answer))
+        
+        facts = []
+        for entity in list(entities)[:5]: # Limit lookup
+            f = get_facts(subject=entity, limit=2)
+            if f: facts.extend([str(x) for x in f])
+            
+        # Also grab general rules
+        rules = get_rules(limit=5)
+        
+        context = "\n".join(facts) + "\n" + "\n".join([str(r) for r in rules])
+        
+        return self.verify(
+            question=question,
+            draft_answer=draft_answer,
+            knowledge_context=context
+        )
+
 
 class KnowledgeBaseReActAgent(dspy.Module):
     """
@@ -58,6 +109,8 @@ class KnowledgeBaseReActAgent(dspy.Module):
             max_iters=max_iters
         )
         
+        self.verifier = KnowledgeBaseVerifier()
+        
         # Fallback if ReAct doesn't find enough info
         self.fallback = dspy.Predict(AnswerWithContext)
     
@@ -74,8 +127,23 @@ class KnowledgeBaseReActAgent(dspy.Module):
         try:
             result = self.react(question=question)
             
+            # === Verify Step ===
+            logger.info("Verifying draft answer...")
+            
+            # extract answer safely
+            draft_answer = getattr(result, 'answer', None)
+            if not draft_answer:
+                 logger.warning("ReAct did not produce a final answer.")
+                 draft_answer = "No answer produced."
+
+            verification = self.verifier(question=question, draft_answer=draft_answer)
+            
+            final_answer = verification.final_answer
+            verification_note = f"\n\n(Verified: {verification.verification_result})"
+            print(f"VERIFICATION RESULT: {verification.verification_result}")
+            
             return {
-                "answer": result.answer,
+                "answer": final_answer + verification_note,
                 "trajectory": self._extract_trajectory(result),
                 "success": True
             }
