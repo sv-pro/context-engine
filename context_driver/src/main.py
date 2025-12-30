@@ -1478,6 +1478,7 @@ async def handle_react_request(request: Request, user_query: str, body: dict):
     import time as _time
     import uuid
     import json
+    import os
     from fastapi.responses import StreamingResponse
     
     start_time = _time.time()
@@ -1501,20 +1502,42 @@ async def handle_react_request(request: Request, user_query: str, body: dict):
         reasoning_trace = ""
         if trajectory:
             reasoning_trace = "\n\n---\n**🧠 Reasoning Trace:**\n"
+            has_trace_detail = False
+            try:
+                trace_obs_limit = int(os.environ.get("REACT_TRACE_OBS_MAX_LEN", "0"))
+            except ValueError:
+                trace_obs_limit = 0
             for i, step in enumerate(trajectory):
                 thought = step.get("thought", "")
                 action = step.get("action", "")
                 observation = step.get("observation", "")
                 
+                if thought and not isinstance(thought, str):
+                    thought = str(thought)
+                if action and not isinstance(action, str):
+                    action = str(action)
+                if observation and not isinstance(observation, str):
+                    try:
+                        observation = json.dumps(observation, ensure_ascii=True)
+                    except TypeError:
+                        observation = str(observation)
+
                 if thought:
                     reasoning_trace += f"\n**Step {i+1} - Thinking:** {thought}"
+                    has_trace_detail = True
                 if action:
                     reasoning_trace += f"\n**Action:** `{action}`"
+                    has_trace_detail = True
                 if observation:
-                    # Truncate long observations
-                    obs = observation[:500] + "..." if len(observation) > 500 else observation
+                    if trace_obs_limit > 0 and len(observation) > trace_obs_limit:
+                        obs = observation[:trace_obs_limit] + "..."
+                    else:
+                        obs = observation
                     reasoning_trace += f"\n**Observation:** {obs}"
+                    has_trace_detail = True
                 reasoning_trace += "\n"
+            if not has_trace_detail:
+                reasoning_trace += "\n_No reasoning steps were captured for this response._\n"
         
         # Build the response content
         content = answer

@@ -6,7 +6,9 @@ and uses knowledge base tools to answer complex questions.
 """
 
 import dspy
+import json
 import logging
+import re
 from typing import List, Dict, Any, Optional
 
 logger = logging.getLogger("react-agent")
@@ -42,6 +44,7 @@ class VerifyAnswer(dspy.Signature):
     
     question: str = dspy.InputField(desc="Original question")
     draft_answer: str = dspy.InputField(desc="Draft answer from ReAct agent")
+    knowledge_context: str = dspy.InputField(desc="Relevant facts and rules for verification")
     
     verified_answer: str = dspy.OutputField(desc="Verified/corrected answer")
     verification_status: str = dspy.OutputField(desc="Verification status: 'Correct', 'Partial', or 'Incorrect'")
@@ -174,9 +177,11 @@ class KnowledgeBaseReActAgent(dspy.Module):
 
             verification = self.verifier(question=question, draft_answer=draft_answer)
             
-            final_answer = verification.final_answer
-            verification_note = f"\n\n(Verified: {verification.verification_result})"
-            print(f"VERIFICATION RESULT: {verification.verification_result}")
+            final_answer = getattr(verification, "verified_answer", None) or draft_answer
+            verification_status = getattr(verification, "verification_status", None)
+            verification_note = f"\n\n(Verified: {verification_status})" if verification_status else ""
+            if verification_status:
+                logger.info(f"Verification status: {verification_status}")
             
             return {
                 "answer": final_answer + verification_note,
@@ -215,57 +220,164 @@ class KnowledgeBaseReActAgent(dspy.Module):
     def _extract_trajectory(self, result) -> List[Dict[str, Any]]:
         """Extract the reasoning trajectory from a ReAct result."""
         trajectory = []
+
+        def _coerce_text(value: Any) -> str:
+            if value is None:
+                return ""
+            if isinstance(value, str):
+                return value
+            try:
+                return json.dumps(value, ensure_ascii=True)
+            except TypeError:
+                return str(value)
+
+        def _normalize_action(action: Any, tool_args: Any) -> str:
+            action_text = _coerce_text(action)
+            if not action_text.strip():
+                return ""
+            if tool_args in (None, "", {}, []):
+                return action_text
+            args_text = _coerce_text(tool_args)
+            return f"{action_text}({args_text})"
+
+        def _build_step(thought: Any, action: Any, tool_args: Any, observation: Any) -> Optional[Dict[str, Any]]:
+            thought_text = _coerce_text(thought).strip()
+            action_text = _normalize_action(action, tool_args).strip()
+            observation_text = _coerce_text(observation).strip()
+            if not (thought_text or action_text or observation_text):
+                return None
+            return {
+                "thought": thought_text,
+                "action": action_text,
+                "observation": observation_text
+            }
+
+        def _pluck(source: Any, *keys: str) -> Any:
+            for key in keys:
+                if isinstance(source, dict) and key in source:
+                    return source.get(key)
+                if hasattr(source, key):
+                    return getattr(source, key)
+            return None
+
+        def _parse_step(step: Any) -> Optional[Dict[str, Any]]:
+            if step is None:
+                return None
+            if isinstance(step, dict):
+                thought = _pluck(step, "thought", "reasoning", "rationale", "analysis")
+                action = _pluck(step, "action", "tool", "tool_name", "toolname")
+                tool_args = _pluck(step, "tool_args", "action_input", "args", "input", "tool_input")
+                observation = _pluck(step, "observation", "result", "output", "response")
+
+                if isinstance(action, dict):
+                    tool_name = _pluck(action, "tool", "tool_name", "name")
+                    tool_args = tool_args or _pluck(action, "args", "input")
+                    action = tool_name or action
+
+                return _build_step(thought, action, tool_args, observation)
+
+            if isinstance(step, (list, tuple)) and len(step) >= 3:
+                thought, action, observation = step[0], step[1], step[2]
+                tool_args = step[3] if len(step) > 3 else None
+                return _build_step(thought, action, tool_args, observation)
+
+            if hasattr(step, "__dict__"):
+                return _parse_step(step.__dict__)
+
+            step_text = _coerce_text(step).strip()
+            if step_text:
+                return {
+                    "thought": step_text,
+                    "action": "",
+                    "observation": ""
+                }
+            return None
         
         # Debug: log what we're receiving
         logger.debug(f"Extracting trajectory from result type: {type(result)}")
         if hasattr(result, '__dict__'):
             logger.debug(f"Result attributes: {list(result.__dict__.keys())}")
         
-        # DSPy ReAct stores trajectory as a dict with thought_N, tool_name_N, observation_N keys
-        if hasattr(result, 'trajectory') and isinstance(result.trajectory, dict):
-            traj_dict = result.trajectory
-            logger.debug(f"Trajectory dict keys: {list(traj_dict.keys())[:10]}")  # First 10 keys
-            
-            # Find all steps by looking for thought_N keys
+        raw_traj = None
+        if isinstance(result, dict):
+            raw_traj = result.get("trajectory") or result.get("trace") or result.get("traces")
+        if raw_traj is None and hasattr(result, "trajectory"):
+            raw_traj = result.trajectory
+        if raw_traj is None and hasattr(result, "trace"):
+            raw_traj = result.trace
+        if raw_traj is None and hasattr(result, "traces"):
+            raw_traj = result.traces
+
+        # DSPy ReAct may store trajectory as dict with thought_N/tool_name_N keys
+        if isinstance(raw_traj, dict):
+            traj_dict = raw_traj
+            logger.debug(f"Trajectory dict keys: {list(traj_dict.keys())[:10]}")
+
             step_nums = set()
             for key in traj_dict.keys():
-                if key.startswith('thought_'):
+                match = re.search(r'_(\d+)$', key)
+                if match:
                     try:
-                        step_num = int(key.split('_')[1])
-                        step_nums.add(step_num)
-                    except (ValueError, IndexError):
+                        step_nums.add(int(match.group(1)))
+                    except ValueError:
                         pass
-            
-            logger.info(f"Found {len(step_nums)} steps in trajectory")
-            
-            # Extract each step
-            for i in sorted(step_nums):
-                thought = traj_dict.get(f'thought_{i}', '')
-                tool_name = traj_dict.get(f'tool_name_{i}', '')
-                tool_args = traj_dict.get(f'tool_args_{i}', {})
-                observation = traj_dict.get(f'observation_{i}', '')
-                
-                # Format action as "tool_name(args)" if present
-                if tool_name and tool_name != 'finish':
-                    action = f"{tool_name}({tool_args})" if tool_args else tool_name
-                else:
-                    action = tool_name or ''
-                
-                trajectory.append({
-                    "thought": thought,
-                    "action": action,
-                    "observation": observation
-                })
+
+            if step_nums:
+                logger.info(f"Found {len(step_nums)} steps in trajectory")
+                for i in sorted(step_nums):
+                    thought = _pluck(
+                        traj_dict,
+                        f"thought_{i}",
+                        f"thoughts_{i}",
+                        f"reasoning_{i}"
+                    )
+                    action = _pluck(
+                        traj_dict,
+                        f"action_{i}",
+                        f"tool_name_{i}",
+                        f"tool_{i}",
+                        f"toolname_{i}"
+                    )
+                    tool_args = _pluck(
+                        traj_dict,
+                        f"tool_args_{i}",
+                        f"action_input_{i}",
+                        f"args_{i}",
+                        f"input_{i}"
+                    )
+                    observation = _pluck(
+                        traj_dict,
+                        f"observation_{i}",
+                        f"result_{i}",
+                        f"output_{i}"
+                    )
+                    step = _build_step(thought, action, tool_args, observation)
+                    if step:
+                        trajectory.append(step)
+            else:
+                steps = None
+                if isinstance(traj_dict.get("steps"), list):
+                    steps = traj_dict.get("steps")
+                elif isinstance(traj_dict.get("trajectory"), list):
+                    steps = traj_dict.get("trajectory")
+                if steps:
+                    for step in steps:
+                        parsed = _parse_step(step)
+                        if parsed:
+                            trajectory.append(parsed)
+        elif isinstance(raw_traj, (list, tuple)):
+            for step in raw_traj:
+                parsed = _parse_step(step)
+                if parsed:
+                    trajectory.append(parsed)
         else:
-            logger.warning("No trajectory dict found in result")
+            logger.warning("No trajectory data found in result")
         
         # Also include final reasoning if present
-        if not trajectory and hasattr(result, 'reasoning') and result.reasoning:
-            trajectory.append({
-                "thought": result.reasoning,
-                "action": "final_answer",
-                "observation": getattr(result, 'answer', '')
-            })
+        if not trajectory and hasattr(result, "reasoning") and result.reasoning:
+            final_step = _build_step(result.reasoning, "final_answer", None, getattr(result, "answer", ""))
+            if final_step:
+                trajectory.append(final_step)
         
         logger.info(f"Extracted trajectory with {len(trajectory)} steps")
         return trajectory

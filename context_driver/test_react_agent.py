@@ -111,7 +111,16 @@ class TestDspyToolsSignatures:
         """Verify KNOWLEDGE_BASE_TOOLS exports are callable."""
         from dspy_tools import KNOWLEDGE_BASE_TOOLS
         
-        assert len(KNOWLEDGE_BASE_TOOLS) == 5
+        expected_tools = {
+            "search_knowledge_base",
+            "get_facts",
+            "get_rules",
+            "get_capsule",
+            "list_documents",
+            "get_related_documents",
+        }
+        assert len(KNOWLEDGE_BASE_TOOLS) == len(expected_tools)
+        assert {tool.__name__ for tool in KNOWLEDGE_BASE_TOOLS} == expected_tools
         for tool in KNOWLEDGE_BASE_TOOLS:
             assert callable(tool)
 
