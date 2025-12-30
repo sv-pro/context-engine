@@ -606,7 +606,28 @@ confidence: {capsule_data.get('confidence', 0.0)}
                         for edge in edges:
                             relation_type = edge['type']
                             target_title = edge['target_title']
-                            content += f"- [[{target_title}]] ({relation_type})\n"
+                            
+                            # Fetch summary for target if capsule exists
+                            summary = ""
+                            with db.conn.cursor() as cur2:
+                                cur2.execute("""
+                                    SELECT LEFT(c.summary, 120) 
+                                    FROM brain.capsules c 
+                                    JOIN brain.notes n ON c.source_id = n.id 
+                                    WHERE n.title = %s LIMIT 1
+                                """, (target_title,))
+                                summary_row = cur2.fetchone()
+                                if summary_row and summary_row[0]:
+                                    summary = summary_row[0].strip()
+                                    # Add ellipsis if truncated
+                                    if len(summary) >= 120:
+                                        summary = summary[:117] + "..."
+                            
+                            # Format with or without summary
+                            if summary:
+                                content += f"- [[{target_title}]] ({relation_type}): {summary}\n"
+                            else:
+                                content += f"- [[{target_title}]] ({relation_type})\n"
         except Exception as e:
             logger.warning(f"Could not add related documents to capsule {title}: {e}")
         
