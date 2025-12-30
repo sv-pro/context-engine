@@ -19,6 +19,10 @@ class AnswerQuestion(dspy.Signature):
     
     Use the available tools to search for relevant information, extract facts,
     and find applicable rules. Reason step-by-step before providing the final answer.
+    
+    IMPORTANT: When you find a relevant document, always check its relationships using
+    get_related_documents() to discover specific procedures, emergency guides, or policies
+    that might not surface in direct search results.
     """
     
     question: str = dspy.InputField(desc="The question to answer")
