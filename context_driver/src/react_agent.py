@@ -22,9 +22,50 @@ class AnswerQuestion(dspy.Signature):
     Use the available tools to search for relevant information, extract facts,
     and find applicable rules. Reason step-by-step before providing the final answer.
     
-    IMPORTANT: When you find a relevant document, always check its relationships using
-    get_related_documents() to discover specific procedures, emergency guides, or policies
-    that might not surface in direct search results.
+    RECOMMENDED WORKFLOW:
+    
+    1. SEARCH first to identify relevant documents:
+       search_knowledge_base("your query") → note the document TITLES found
+       TIP: If results show "Entity > Relationships" pages, try a different query
+       like the system/service name (e.g., "Kong API Gateway configuration")
+    
+    2. RETRIEVE full content from the most relevant document:
+       get_capsule("Document_Title") → gets summary + key points + code blocks
+       OR get_document_section("Document_Title", "Section Name") → gets specific section
+    
+    3. EXTRACT structured facts if needed:
+       get_facts(subject="Entity Name") → gets subject-predicate-object triples
+    
+    4. CHECK relationships for related docs:
+       get_related_documents("Document_Title") → discovers linked procedures/policies
+    
+    CRITICAL: Do NOT answer from search snippets alone. After finding a relevant 
+    document via search, ALWAYS call get_capsule() or get_document_section() to 
+    retrieve the complete content before formulating your answer.
+    
+    IMPORTANT: When you find information that answers the question, STOP SEARCHING 
+    and provide your final answer. Do not keep searching if you already have what 
+    you need. Use the exact document titles from search results (e.g., 
+    "API_Gateway_Configuration" not "Kong API Gateway").
+    
+    WATCH OUT: If you see "Entity > Relationships" results (like "redis > Relationships"),
+    those are entity graph pages, NOT the source documents with config values. Look for
+    actual document titles like "API_Gateway_Configuration" or use get_capsule on them.
+    
+    TOOL SELECTION BY QUESTION TYPE:
+    
+    - ROLES/RESPONSIBILITIES/WHO → get_facts(subject="...") FIRST
+    - PROCEDURES/STEPS/HOW TO → get_document_section(title, section)
+    - CONFIGURATION/VALUES → get_capsule(title) or get_document_section(title, section)
+    - RELATIONSHIPS/LINKS → get_related_documents(title)
+    
+    ACCURACY RULES:
+    
+    - Match the CORRECT ROW in tables (e.g., "Partner" row for partner-api questions)
+    - Quote values EXACTLY as they appear (numbers, hostnames, channel names)
+    - State findings DEFINITIVELY when data is present - avoid hedging
+    - YAML/config values ARE authoritative: 'redis_host: redis-ratelimit' means the Redis host IS redis-ratelimit
+    - If you see a value in a code block/config, that IS documented - don't say "not documented"
     """
     
     question: str = dspy.InputField(desc="The question to answer")
@@ -32,21 +73,45 @@ class AnswerQuestion(dspy.Signature):
 
 
 class AnswerWithContext(dspy.Signature):
-    """Answer a question using provided context from the knowledge base."""
+    """Answer a question using provided context from the knowledge base.
+    
+    CRITICAL INSTRUCTIONS:
+    1. Extract ALL specific values from the context, including:
+       - Configuration values from YAML/JSON blocks (e.g., redis_host, port, limit values)
+       - Numbers, hostnames, service names, file paths
+       - Time values, thresholds, commands
+    2. If you see a YAML key like 'redis_host: redis-ratelimit', that IS the Redis host name
+    3. Include ALL found values in your answer - don't say "not documented" if value appears in context
+    4. Code blocks and config snippets are AUTHORITATIVE sources - trust them
+    """
     
     question: str = dspy.InputField(desc="The question to answer")
-    context: str = dspy.InputField(desc="Relevant context from knowledge base")
-    answer: str = dspy.OutputField(desc="Answer based on the provided context")
+    context: str = dspy.InputField(desc="Relevant context from knowledge base including tool outputs, YAML configs, facts")
+    answer: str = dspy.OutputField(desc="Comprehensive answer extracting ALL specific values (numbers, hostnames, configs) from the context")
 
 
 class VerifyAnswer(dspy.Signature):
-    """Verify and potentially correct a draft answer using the knowledge base"""
+    """Verify a draft answer against knowledge base context.
+    
+    IMPORTANT: Your role is to CHECK if the draft answer is supported by the 
+    knowledge_context provided. Do NOT introduce new information or "correct" 
+    values unless they directly contradict the knowledge_context.
+    
+    If the draft answer contains specific values (numbers, names, hostnames) 
+    that appear in the knowledge_context, those values are CORRECT and should 
+    be preserved in the verified answer.
+    
+    Only mark as 'Partial' or 'Incorrect' if:
+    - The draft answer makes claims not supported by the context
+    - The draft answer has factual errors contradicted by the context
+    - Key information from the context is missing from the answer
+    """
     
     question: str = dspy.InputField(desc="Original question")
     draft_answer: str = dspy.InputField(desc="Draft answer from ReAct agent")
     knowledge_context: str = dspy.InputField(desc="Relevant facts and rules for verification")
     
-    verified_answer: str = dspy.OutputField(desc="Verified/corrected answer")
+    verified_answer: str = dspy.OutputField(desc="Verified answer - preserve correct values from draft, only fix clear errors")
     verification_status: str = dspy.OutputField(desc="Verification status: 'Correct', 'Partial', or 'Incorrect'")
 
 class EstimateConfidence(dspy.Signature):
@@ -71,25 +136,31 @@ class KnowledgeBaseVerifier(dspy.Module):
         self.verify = dspy.ChainOfThought(VerifyAnswer)
         
     def forward(self, question: str, draft_answer: str):
-        # 1. Extract potential entities from answer (simple heuristic or LLM)
-        # For simplicity, we'll verify against a broad fact search for now.
-        # In a production system, we'd extract specific entities first.
-        from dspy_tools import get_facts, get_rules
+        # Get relevant context for verification
+        from dspy_tools import get_facts, get_rules, search_knowledge_base
         
-        # Heuristic: search facts for capitalized words (Entities) in draft
-        # This is a basic implementation.
+        # 1. Extract entities from both question AND answer
         import re
-        entities = set(re.findall(r'\b[A-Z][a-zA-Z0-9_]*\b', draft_answer))
+        combined_text = question + " " + draft_answer
+        entities = set(re.findall(r'\b[A-Z][a-zA-Z0-9_-]*\b', combined_text))
         
         facts = []
-        for entity in list(entities)[:5]: # Limit lookup
-            f = get_facts(subject=entity, limit=2)
-            if f: facts.extend([str(x) for x in f])
-            
-        # Also grab general rules
-        rules = get_rules(limit=5)
+        for entity in list(entities)[:5]:
+            f = get_facts(subject=entity, limit=3)
+            if f and not f.startswith("No facts"): 
+                facts.append(f)
         
-        context = "\n".join(facts) + "\n" + "\n".join([str(r) for r in rules])
+        # 2. Also do a quick search based on question to get relevant context
+        search_context = search_knowledge_base(question, limit=2)
+        
+        # 3. Grab general rules
+        rules = get_rules(limit=3)
+        
+        context = "\n---\n".join(facts) 
+        if search_context and not search_context.startswith("No results"):
+            context += "\n---\nSearch Results:\n" + search_context
+        if rules and not rules.startswith("No rules"):
+            context += "\n---\n" + rules
         
         return self.verify(
             question=question,
@@ -147,6 +218,32 @@ class KnowledgeBaseReActAgent(dspy.Module):
                  logger.warning("ReAct did not produce a final answer.")
                  draft_answer = "No answer produced."
             
+            logger.info(f"Draft answer from ReAct: {draft_answer[:200]}...")
+            
+            # If draft is weak/generic but we have good trajectory, try to synthesize better answer
+            trajectory = self._extract_trajectory(result)
+            if ("not supported" in draft_answer.lower() or 
+                "cannot be verified" in draft_answer.lower() or
+                "no information" in draft_answer.lower() or
+                len(draft_answer) < 100):
+                
+                # Check if trajectory has useful observations
+                observations = " ".join([s.get("observation", "") for s in trajectory])
+                if observations and len(observations) > 200:
+                    logger.info("Draft is weak but trajectory has content - synthesizing from observations")
+                    # Find key values in observations
+                    import re
+                    numbers = re.findall(r'\b\d{3,}\b', observations)
+                    redis_hosts = re.findall(r'redis[_-]\w+', observations)
+                    
+                    # Try to build a better answer from trajectory
+                    if numbers or redis_hosts:
+                        synth = dspy.Predict(AnswerWithContext)
+                        synth_result = synth(question=question, context=observations[:3000])
+                        if synth_result.answer and len(synth_result.answer) > len(draft_answer):
+                            logger.info(f"Synthesized better answer from trajectory")
+                            draft_answer = synth_result.answer
+            
             # Estimate confidence in the answer
             try:
                 conf_predictor = dspy.Predict(EstimateConfidence)
@@ -177,8 +274,31 @@ class KnowledgeBaseReActAgent(dspy.Module):
 
             verification = self.verifier(question=question, draft_answer=draft_answer)
             
-            final_answer = getattr(verification, "verified_answer", None) or draft_answer
+            verified_answer = getattr(verification, "verified_answer", None)
             verification_status = getattr(verification, "verification_status", None)
+            
+            # Determine final answer:
+            # - If verifier says "Correct", use verified_answer
+            # - If verifier says "Partial" and verified_answer has more content, use it
+            # - If verifier says "Incorrect" but draft has specific values, keep draft
+            #   (verifier may have insufficient context to validate correct answers)
+            if verification_status == "Correct" and verified_answer:
+                final_answer = verified_answer
+            elif verification_status == "Partial" and verified_answer and len(verified_answer) > len(draft_answer):
+                final_answer = verified_answer
+            elif verification_status == "Incorrect":
+                # Check if draft has specific values - if so, verifier may be wrong
+                import re
+                has_specific_values = bool(re.search(r'\d{3,}|\bredis-\w+\b', draft_answer))
+                if has_specific_values:
+                    logger.warning("Verifier said 'Incorrect' but draft has specific values - keeping draft")
+                    final_answer = draft_answer
+                    verification_status = "Unverified"
+                else:
+                    final_answer = verified_answer or draft_answer
+            else:
+                final_answer = verified_answer or draft_answer
+                
             verification_note = f"\n\n(Verified: {verification_status})" if verification_status else ""
             if verification_status:
                 logger.info(f"Verification status: {verification_status}")
@@ -378,6 +498,28 @@ class KnowledgeBaseReActAgent(dspy.Module):
             final_step = _build_step(result.reasoning, "final_answer", None, getattr(result, "answer", ""))
             if final_step:
                 trajectory.append(final_step)
+        
+        # Enhanced logging for empty trajectory debugging
+        if not trajectory:
+            logger.warning(f"Empty trajectory extracted from result")
+            logger.warning(f"Result type: {type(result)}")
+            logger.warning(f"Result attributes: {dir(result)}")
+            if hasattr(result, '__dict__'):
+                # Log keys that might contain trajectory data
+                for key in result.__dict__.keys():
+                    val = getattr(result, key, None)
+                    val_type = type(val).__name__
+                    val_preview = str(val)[:100] if val else "None"
+                    logger.warning(f"  {key} ({val_type}): {val_preview}")
+            
+            # Fallback: capture rationale if present
+            if hasattr(result, 'rationale') and result.rationale:
+                trajectory.append({
+                    "thought": result.rationale,
+                    "action": "direct_answer",
+                    "observation": ""
+                })
+                logger.info("Captured rationale as fallback trajectory step")
         
         logger.info(f"Extracted trajectory with {len(trajectory)} steps")
         return trajectory

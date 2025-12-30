@@ -91,6 +91,7 @@ services:
       - SEARCH_STRATEGY=${CONTEXT_DRIVER_SEARCH_STRATEGY:-super_hybrid}
       - LOG_PROMPTS=${CONTEXT_DRIVER_LOG_PROMPTS:-false}
       - EXTERNAL_URL=${CONTEXT_DRIVER_EXTERNAL_URL:-}
+      # - REACT_TRACE_OBS_MAX_LEN=${CONTEXT_DRIVER_REACT_TRACE_OBS_MAX_LEN:-20000}
     depends_on:
       - db
       - litellm

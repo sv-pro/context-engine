@@ -1489,7 +1489,7 @@ async def handle_react_request(request: Request, user_query: str, body: dict):
         from react_agent import ask_question
         
         # Use ReAct agent to answer the question
-        result = ask_question(user_query, max_iters=5)
+        result = ask_question(user_query, max_iters=7)
         
         latency_ms = int((_time.time() - start_time) * 1000)
         

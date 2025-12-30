@@ -26,6 +26,10 @@ def search_knowledge_base(query: str, limit: int = 5) -> str:
     """
     Search the knowledge base for documents relevant to the query.
     
+    NOTE: Search results show snippets only. If you see truncated tables or 
+    YAML configs (ending with incomplete lines), use get_document_section() 
+    or get_capsule() to retrieve the full content.
+    
     Args:
         query: Natural language search query
         limit: Maximum number of results (default 5)
@@ -43,27 +47,76 @@ def search_knowledge_base(query: str, limit: int = 5) -> str:
         return "Error: Failed to generate query embedding."
     
     try:
-        results = db.semantic_search(vector, limit=limit)
+        # Fetch more results so we can filter and prioritize
+        results = db.semantic_search(vector, limit=limit * 3)
         
         if not results:
             return f"No results found for query: '{query}'"
         
-        output = []
-        for i, r in enumerate(results, 1):
-            # Results are tuples: (file_path, title, content, section, similarity)
+        # Separate documents from entities - prioritize actual documents
+        documents = []
+        entities = []
+        
+        for r in results:
             file_path = r[0] if len(r) > 0 else ""
             title = r[1] if len(r) > 1 else "Untitled"
             
             # Skip previous investigation artifacts to avoid context pollution/loops
             if title.startswith("Investigation_"):
                 continue
-                
-            content = (r[2] or "")[:500] if len(r) > 2 else ""  # Truncate for readability
+            
+            # Classify by file path
+            if '/entities/' in file_path:
+                entities.append(r)
+            else:
+                documents.append(r)
+        
+        # Prioritize: documents first, then entities (with note about source)
+        prioritized = documents[:limit] + entities[:(limit - len(documents[:limit]))]
+        
+        output = []
+        for i, r in enumerate(prioritized, 1):
+            file_path = r[0] if len(r) > 0 else ""
+            title = r[1] if len(r) > 1 else "Untitled"
+            raw_content = r[2] or "" if len(r) > 2 else ""
             section = r[3] if len(r) > 3 else ""
             score = r[4] if len(r) > 4 else 0.0
             
+            # Smart truncation: try to preserve complete code blocks and tables
+            # Increase limit for config-heavy content
+            max_len = 800 if ('```' in raw_content or '|' in raw_content) else 500
+            
+            if len(raw_content) > max_len:
+                # Try to cut at a natural boundary
+                content = raw_content[:max_len]
+                # If we're in the middle of a code block, try to find its end
+                if '```' in content and content.count('```') % 2 == 1:
+                    # Incomplete code block - extend to close it or note truncation
+                    next_close = raw_content.find('```', max_len)
+                    if next_close != -1 and next_close < max_len + 300:
+                        content = raw_content[:next_close + 3]
+                    else:
+                        content += "\n# ... [truncated - use get_document_section() for full content]"
+                else:
+                    content += "\n... [truncated]"
+            else:
+                content = raw_content
+            
             section_info = f" > {section}" if section else ""
-            output.append(f"[{i}] {title}{section_info} (score: {score:.2f})\n{content}\n")
+            
+            # Add hint for entity pages pointing to source documents
+            if '/entities/' in file_path:
+                # Try to find source document from relationships
+                source_hint = ""
+                if 'configured_by' in raw_content.lower() or 'from' in raw_content.lower():
+                    # Extract document references from wiki links
+                    import re
+                    refs = re.findall(r'\[\[([^\]]+)\]\]', raw_content)
+                    if refs:
+                        source_hint = f"\n[TIP: For config values, try get_capsule(\"{refs[0]}\")]"
+                output.append(f"[{i}] {title}{section_info} (score: {score:.2f}) [ENTITY PAGE]{source_hint}\n{content}\n")
+            else:
+                output.append(f"[{i}] {title}{section_info} (score: {score:.2f})\n{content}\n")
         
         return "\n".join(output)
         
@@ -77,7 +130,7 @@ def get_facts(subject: Optional[str] = None, predicate: Optional[str] = None, li
     Query extracted facts (subject-predicate-object triples) from the knowledge base.
     
     Args:
-        subject: Filter by subject entity (optional)
+        subject: Filter by subject entity (optional) - supports fuzzy matching
         predicate: Filter by predicate/relationship (optional)
         limit: Maximum number of facts to return (default 10)
     
@@ -88,6 +141,37 @@ def get_facts(subject: Optional[str] = None, predicate: Optional[str] = None, li
     
     try:
         facts = db.get_facts(subject=subject, predicate=predicate, limit=limit)
+        
+        # If no exact match and subject provided, try fuzzy matching
+        if not facts and subject:
+            logger.info(f"No exact match for subject '{subject}', trying fuzzy match")
+            
+            # Try to find similar entities
+            with db.conn.cursor() as cur:
+                # Search for entities containing the subject term or similar
+                cur.execute("""
+                    SELECT DISTINCT subject FROM brain.facts 
+                    WHERE subject ILIKE %s OR subject ILIKE %s
+                    LIMIT 5
+                """, (f"%{subject}%", f"%{subject.replace(' ', '_')}%"))
+                similar_subjects = [row[0] for row in cur.fetchall()]
+            
+            if similar_subjects:
+                logger.info(f"Found similar entities: {similar_subjects}")
+                for similar in similar_subjects:
+                    similar_facts = db.get_facts(subject=similar, predicate=predicate, limit=limit)
+                    facts.extend(similar_facts)
+                
+                if facts:
+                    # Deduplicate
+                    seen = set()
+                    unique_facts = []
+                    for f in facts:
+                        key = (f.get("subject"), f.get("predicate"), f.get("object"))
+                        if key not in seen:
+                            seen.add(key)
+                            unique_facts.append(f)
+                    facts = unique_facts[:limit]
         
         if not facts:
             filters = []
@@ -159,11 +243,15 @@ def get_capsule(title: str) -> str:
     """
     Get the condensed capsule (summary) for a specific document.
     
+    For procedure documents (intent=procedure), this also includes extracted 
+    procedure steps and code blocks to ensure complete information.
+    
     Args:
         title: Document title to look up
     
     Returns:
-        Formatted capsule with summary, key points, and metadata
+        Formatted capsule with summary, key points, and metadata.
+        For procedures, also includes steps and commands.
     """
     db = _get_db()
     
@@ -171,7 +259,7 @@ def get_capsule(title: str) -> str:
         # First find the note by title
         with db.conn.cursor() as cur:
             cur.execute("""
-                SELECT id FROM brain.notes 
+                SELECT id, content FROM brain.notes 
                 WHERE title ILIKE %s 
                 LIMIT 1
             """, (f"%{title}%",))
@@ -180,7 +268,7 @@ def get_capsule(title: str) -> str:
         if not row:
             return f"No document found with title matching: '{title}'"
         
-        note_id = row[0]
+        note_id, full_content = row
         capsule = db.get_capsule(note_id)
         
         if not capsule:
@@ -197,6 +285,33 @@ def get_capsule(title: str) -> str:
         
         for point in capsule.get("key_points", []):
             output.append(f"• {point}")
+        
+        # For procedure documents, extract and include procedure steps and code blocks
+        intent = capsule.get('intent', '').lower()
+        if intent == 'procedure' and full_content:
+            import re
+            
+            # Extract numbered steps (1. Step, 2. Step, etc.)
+            numbered_steps = re.findall(r'^\s*\d+\.\s+\*?\*?(.+?)(?:\*?\*?)$', full_content, re.MULTILINE)
+            if numbered_steps:
+                output.append("")
+                output.append("## Procedure Steps:")
+                for i, step in enumerate(numbered_steps[:15], 1):  # Limit to 15 steps
+                    output.append(f"{i}. {step.strip()}")
+            
+            # Extract code blocks
+            code_blocks = re.findall(r'```(?:\w+)?\n(.*?)```', full_content, re.DOTALL)
+            if code_blocks:
+                output.append("")
+                output.append("## Key Commands:")
+                for block in code_blocks[:5]:  # Limit to 5 code blocks
+                    # Trim long blocks
+                    block_lines = block.strip().split('\n')
+                    if len(block_lines) > 10:
+                        block_content = '\n'.join(block_lines[:10]) + '\n# ... (truncated)'
+                    else:
+                        block_content = block.strip()
+                    output.append(f"```\n{block_content}\n```")
         
         # Add navigation footer with related documents
         edges = db.get_edges_for_note(note_id, limit=8)
@@ -311,6 +426,92 @@ def get_related_documents(title: str) -> str:
         return f"Error retrieving related documents: {e}"
 
 
+def get_document_section(title: str, section_name: str) -> str:
+    """
+    Extract a specific section from a document, including full code blocks and procedures.
+    
+    Use this when you need complete procedure steps, YAML configurations, or command examples
+    that may be truncated in search results. This returns the FULL content of the matching section.
+    
+    Args:
+        title: Document title to search in
+        section_name: Name of the section to extract (e.g., "Recovery Procedures", "Rate Limiting", "PITR")
+    
+    Returns:
+        Full content of the matching section including all code blocks and steps
+    """
+    db = _get_db()
+    
+    try:
+        # Find the note by title
+        with db.conn.cursor() as cur:
+            cur.execute("""
+                SELECT id, content FROM brain.notes 
+                WHERE title ILIKE %s 
+                LIMIT 1
+            """, (f"%{title}%",))
+            row = cur.fetchone()
+            
+        if not row:
+            return f"No document found with title matching: '{title}'"
+        
+        note_id, content = row
+        
+        if not content:
+            return f"Document '{title}' has no content"
+        
+        # Try to find the section by header
+        import re
+        
+        # Match markdown headers (## Section Name or ### Section Name)
+        section_pattern = rf'^(#{1,4})\s*.*{re.escape(section_name)}.*$'
+        lines = content.split('\n')
+        
+        section_start = None
+        section_level = None
+        
+        for i, line in enumerate(lines):
+            match = re.match(section_pattern, line, re.IGNORECASE)
+            if match:
+                section_start = i
+                section_level = len(match.group(1))  # Number of # symbols
+                break
+        
+        if section_start is None:
+            # Try fuzzy matching on section headers
+            for i, line in enumerate(lines):
+                if line.startswith('#') and section_name.lower() in line.lower():
+                    section_start = i
+                    section_level = len(re.match(r'^(#+)', line).group(1))
+                    break
+        
+        if section_start is None:
+            return f"Section '{section_name}' not found in document '{title}'. Available sections: " + \
+                   ", ".join([l.lstrip('#').strip() for l in lines if l.startswith('#')][:10])
+        
+        # Extract until next section of same or higher level
+        section_lines = [lines[section_start]]
+        for i in range(section_start + 1, len(lines)):
+            line = lines[i]
+            # Check if this is a new section at same or higher level
+            header_match = re.match(r'^(#+)\s+', line)
+            if header_match and len(header_match.group(1)) <= section_level:
+                break
+            section_lines.append(line)
+        
+        section_content = '\n'.join(section_lines).strip()
+        
+        # Ensure we got meaningful content
+        if len(section_content) < 50:
+            return f"Section '{section_name}' found but appears empty or too short"
+        
+        return f"## Section from '{title}':\n\n{section_content}"
+        
+    except Exception as e:
+        logger.error(f"get_document_section failed: {e}")
+        return f"Error retrieving document section: {e}"
+
+
 # Export tools for DSPy ReAct
 KNOWLEDGE_BASE_TOOLS = [
     search_knowledge_base,
@@ -318,5 +519,6 @@ KNOWLEDGE_BASE_TOOLS = [
     get_rules,
     get_capsule,
     list_documents,
-    get_related_documents
+    get_related_documents,
+    get_document_section
 ]
