@@ -591,6 +591,25 @@ confidence: {capsule_data.get('confidence', 0.0)}
         for point in capsule_data.get('key_points', []):
             content += f"- {point}\n"
         
+        # Add Related Documents footer from graph edges
+        try:
+            # Find note_id for this title
+            with db.conn.cursor() as cur:
+                cur.execute("SELECT id FROM brain.notes WHERE title = %s LIMIT 1", (title,))
+                row = cur.fetchone()
+                if row:
+                    note_id = row[0]
+                    edges = db.get_edges_for_note(note_id, limit=10)
+                    
+                    if edges:
+                        content += "\n## Related Documents\n"
+                        for edge in edges:
+                            relation_type = edge['type']
+                            target_title = edge['target_title']
+                            content += f"- [[{target_title}]] ({relation_type})\n"
+        except Exception as e:
+            logger.warning(f"Could not add related documents to capsule {title}: {e}")
+        
         with open(capsule_path, 'w', encoding='utf-8') as f:
             f.write(content)
         
