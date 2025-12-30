@@ -155,12 +155,169 @@ BRAIN_SUBDIR=projects/myapp
 
 ---
 
+## Chapter 7: The Brain-React Pseudo Model
+
+**Commits: `60e96f4` → `c05fbc4`**
+
+**From Tool Use to Verified Reasoning**
+
+> The `brain-react` pseudo model represents the culmination of the architecture:
+> a **DSPy-powered ReAct agent** that thinks, acts, verifies, and learns.
+
+### 🧠 Architecture Overview
+
+The brain-react model is a **pseudo-model** — it appears as a standard LLM in LiteLLM's model list but internally routes to a sophisticated reasoning pipeline:
+
+```
+LiteLLM → brain-react → Context Driver → DSPy ReAct Agent → Knowledge Tools
+                                              ↓
+                                    Verification Layer
+                                              ↓
+                                    Confidence Assessment
+                                              ↓
+                                  Investigation Artifact (saved)
+```
+
+**Key Insight:** Unlike `brain-rag` (single-pass retrieval), `brain-react` performs *iterative multi-step reasoning* with explicit tool calls, allowing it to:
+
+1. **Search** → find relevant documents
+2. **Navigate** → follow knowledge graph relationships  
+3. **Extract** → retrieve specific facts, rules, or sections
+4. **Verify** → validate answers against the knowledge base
+5. **Learn** → save successful investigations as reusable artifacts
+
+### 🔧 The Tool Arsenal (`dspy_tools.py`)
+
+Seven specialized tools give the agent deep access to the knowledge base:
+
+| Tool | Purpose | Use Case |
+|------|---------|----------|
+| `search_knowledge_base()` | Semantic + keyword search | Initial document discovery |
+| `get_facts(subject, predicate)` | Query S-P-O triples | Entity relationships, roles |
+| `get_rules(domain, severity)` | Query IF-THEN logic | Procedures, constraints |
+| `get_capsule(title)` | Document summary + key points | Quick understanding |
+| `get_document_section(title, section)` | Extract full section content | Complete procedures, configs |
+| `get_related_documents(title)` | Knowledge graph navigation | Find linked policies, procedures |
+| `list_documents(domain, intent)` | Browse the knowledge base | Discovery, exploration |
+
+**Architectural Choice:** Tools return *formatted text*, not raw objects — enabling the LLM to naturally incorporate tool outputs into its reasoning.
+
+### 🔄 The Reasoning Loop (`react_agent.py`)
+
+The `KnowledgeBaseReActAgent` uses DSPy's `dspy.ReAct` pattern:
+
+```python
+self.react = dspy.ReAct(
+    signature=AnswerQuestion,
+    tools=KNOWLEDGE_BASE_TOOLS,
+    max_iters=7
+)
+```
+
+**The AnswerQuestion Signature** contains extensive guidance:
+
+- **Workflow hints:** Search → Get Capsule → Extract Facts → Check Relations
+- **Tool selection by question type:** Roles → `get_facts()`, Procedures → `get_document_section()`
+- **Accuracy rules:** Match correct table rows, quote values exactly, trust YAML configs
+
+### ✅ Answer Verification (`KnowledgeBaseVerifier`)
+
+Before returning an answer, the agent runs verification:
+
+1. **Extract entities** from the question and draft answer
+2. **Query facts** for each entity
+3. **Search** the knowledge base for corroboration
+4. **Cross-check** with operational rules
+5. **Produce verdict:** `Correct`, `Partial`, `Incorrect`, or `Unverified`
+
+**Defensive Logic:** If the verifier says "Incorrect" but the draft contains specific values (numbers, hostnames), the draft is kept — the verifier may lack sufficient context to validate correct answers.
+
+### 📊 Confidence Self-Assessment (`EstimateConfidence`)
+
+A dedicated DSPy signature estimates answer confidence:
+
+```python
+class EstimateConfidence(dspy.Signature):
+    question: str
+    gathered_info: str
+    current_answer: str
+    
+    confidence_score: float  # 0.0 to 1.0
+    missing_aspects: str
+    recommendation: str  # "finish" or next steps
+```
+
+This enables:
+- **Early termination** when confidence is high
+- **Targeted follow-up** when specific aspects are missing
+- **User warnings** when confidence is low (< 0.8)
+
+### 📝 The Investigation Artifact Loop
+
+Every successful ReAct session generates an **Investigation artifact**:
+
+```markdown
+---
+type: investigation
+status: closed
+date: 2025-12-30T20:00:00Z
+query: "What happens if the DB connection fails?"
+tags: [react, investigation, auto-generated]
+---
+
+# Investigation: What happens if the DB connection fails?
+
+## Executive Summary
+The system pages the DBA on connection failure...
+
+## Reasoning Trace
+### Step 1
+**Thought:** I need to check for failure handling rules...
+**Action:** `get_rules(domain="database", severity="critical")`
+**Observation:** > RULE_DB_SSL_001: IF SSL fails THEN page DBA...
+```
+
+**Self-Improvement Loop:**
+1. Investigation saved to `volumes/raw/investigations/`
+2. Watchdog detects the new file
+3. File ingested into knowledge base (as `type: investigation`)
+4. **Neurosymbolic distillation skipped** — investigations don't generate new facts/rules to prevent hallucination loops
+5. Investigation becomes searchable context for future questions
+
+### 🛡️ Stability Improvements
+
+Recent commits hardened the system:
+
+- **Thread-safe DSPy:** `dspy.context(lm=lm)` per-request configuration
+- **Trajectory extraction:** Robust parsing of DSPy's dict-format ReAct results
+- **Empty trace handling:** Fallback to rationale capture when trajectory parsing fails
+- **Typed wikilinks:** `[[Entity]](type)` syntax for richer graph navigation
+- **Investigation filtering:** Skipped in search to prevent context pollution
+
+### ⚡ Performance Characteristics
+
+| Metric | brain-rag | brain-react |
+|--------|-----------|-------------|
+| Latency | 1-3s | 5-30s |
+| Accuracy (complex) | 60% | 85%+ |
+| Tool calls | 0 | 3-7 |
+| Self-verification | ❌ | ✅ |
+| Learning | ❌ | ✅ (Investigation) |
+
+**When to use `brain-react`:**
+- Multi-hop questions (A relates to B which affects C)
+- Procedure lookups requiring section extraction
+- Questions about relationships between entities
+- Complex troubleshooting inquiries
+
+---
+
 ## The Evolution Arc
 
 ```
-Infrastructure → Memory → Search → RAG → GraphRAG → Neurosymbolic → Agentic
-     ↓            ↓        ↓       ↓        ↓            ↓            ↓
-   Docker       pgvector  Hybrid  Citations  Entities    DSPy        ReAct
+Infrastructure → Memory → Search → RAG → GraphRAG → Neurosymbolic → Agentic → Verified ReAct
+      ↓            ↓        ↓       ↓        ↓            ↓            ↓           ↓
+    Docker       pgvector  Hybrid  Citations  Entities    DSPy        ReAct    brain-react
 ```
 
 ---
@@ -180,6 +337,8 @@ Infrastructure → Memory → Search → RAG → GraphRAG → Neurosymbolic → 
 | Neurosymbolic | Facts, rules, and capsule extraction |
 | **ReAct reasoning** | Multi-step thinking with tool use |
 | **Sub-brains** | Scoped knowledge domains |
+| **brain-react** | Verified reasoning with confidence assessment |
+| **Investigation artifacts** | Self-learning through reasoning traces |
 
 ---
 
@@ -190,7 +349,8 @@ Infrastructure → Memory → Search → RAG → GraphRAG → Neurosymbolic → 
 > that turns raw documents into executable knowledge,
 > without fine-tuning.
 >
-> From Docker → pgvector → RAG → GraphRAG → DSPy → Lore Extraction → **ReAct Reasoning**.
+> From Docker → pgvector → RAG → GraphRAG → DSPy → Lore Extraction → ReAct → **`brain-react`**.
 >
 > **The future isn't retrieval.**
-> **It's reasoning over distilled knowledge.** 🥃🧠
+> **It's verified reasoning over distilled knowledge.** 🥃🧠✅
+

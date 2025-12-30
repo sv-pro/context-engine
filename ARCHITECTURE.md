@@ -1,113 +1,233 @@
-# LLM Box Architecture
+# Context Engine Architecture
 
 ## 1. System Overview
 
-**LLM Box** is a personal, high-context Large Language Model (LLM) workstation designed to provide a unified chat interface with advanced, personalized context retrieval capabilities ("Big Context"). It integrates best-in-class open-source tools to create a local-first, privacy-respecting, and highly customizable AI environment.
+**Context Engine** is a neurosymbolic knowledge system that transforms raw documents into executable domain knowledge. It provides a unified chat interface with advanced retrieval, structured knowledge extraction, and agentic reasoning capabilities.
 
 ### Core Value Proposition
-- **Unified Interface**: Single glass pane for all LLM interactions.
-- **Model Agnostic**: Seamless switching between local (Ollama, vLLM) and hosted (OpenAI, Anthropic, Gemini) models.
-- **Big Context**: Dynamic injection of personal knowledge base data (notes, docs) based on semantic and graph relationships.
-- **Workflow Automation**: Complex multi-step reasoning and task execution.
+
+- **Neurosymbolic Knowledge**: Extracts Facts (S-P-O triples), Rules (IF-THEN logic), and Capsules (summaries) from documents
+- **Multi-Mode Retrieval**: Semantic, keyword, hybrid, and graph-based search
+- **Agentic Reasoning**: ReAct agents that think, act, and verify answers
+- **Pseudo-Models**: `brain-rag` (fast retrieval) and `brain-react` (verified reasoning)
 
 ## 2. High-Level Architecture
-
-The system is composed of four primary layers:
-
-1. **Presentation Layer** (UI)
-2. **Gateway & Interception Layer** (Model Access)
-3. **Intelligence & Workflow Layer** (Execution)
-4. **Context Layer** (Data & Storage)
 
 ```mermaid
 graph TD
     User[User] -->|Browser| WebUI[Open WebUI]
-    WebUI -->|Chat Completions API| LiteLLM[LiteLLM Gateway]
+    WebUI -->|Chat API| LiteLLM[LiteLLM Gateway]
     
-    subgraph "Context Engine (Big Context)"
-        Docs[Markdown Files] -->|Watch| Ingester[Context Driver]
-        Ingester -->|Parse| GraphDB[(Graph Database)]
-        Ingester -->|Embed| VectorDB[(Vector Index)]
+    LiteLLM -->|brain-rag| ContextDriver[Context Driver]
+    LiteLLM -->|brain-react| ContextDriver
+    LiteLLM -->|Other models| ExternalLLMs[Cloud LLMs]
+    
+    subgraph "Context Driver"
+        RAGProxy[RAG Proxy] --> Retrieval[Hybrid Search]
+        ReactHandler[ReAct Handler] --> Agent[DSPy ReAct Agent]
+        Agent --> Tools[Knowledge Tools]
     end
     
-    LiteLLM -->|Hook Strategy| Hook[Context Hook]
-    Hook -->|Query| Ingester
-    Ingester -->|Context Fragment| Hook
+    subgraph "Neurosymbolic Layer"
+        Ingester[Ingestion Pipeline] --> Distiller[DSPy Distillation]
+        Distiller --> Facts[(Facts)]
+        Distiller --> Rules[(Rules)]
+        Distiller --> Capsules[(Capsules)]
+    end
     
-    LiteLLM -->|Route| ExternalLLMs["Cloud LLMs (Gemini, GPT-4)"]
-    LiteLLM -->|Route| Dify[Dify Workflows]
+    subgraph "Storage"
+        Notes[(brain.notes)] --> Embeddings[pgvector]
+        Edges[(brain.edges)] --> Graph[Knowledge Graph]
+    end
+    
+    Tools --> Notes
+    Tools --> Facts
+    Tools --> Rules
+    Retrieval --> Notes
+    
+    Docs[Markdown Files] -->|watchdog| Ingester
+    Agent -->|Investigation| Docs
 ```
 
 ## 3. Component Details
 
 ### 3.1. User Interface: Open WebUI
 
-**Role**: The primary interaction point.
+**Role**: Primary interaction point for users.
 
-- **Responsibility**: Chat history, user management, prompt templates, RAG integration (client-side), and model selection.
-- **Configuration**: Pointed solely to the LiteLLM Gateway, treating it as an OpenAI-compatible endpoint.
+- Chat history and conversation management
+- Model selection (including `brain-rag` and `brain-react`)
+- Treats LiteLLM as an OpenAI-compatible endpoint
 
 ### 3.2. Model Gateway: LiteLLM
 
-**Role**: The central router and control point.
+**Role**: Central router and pseudo-model registration.
 
-- **Responsibility**:
-  - API normalization (OpenAI format).
-  - Authentication and Budgeting.
-  - **Hook Integration**: Crucial for "Big Context". Custom hooks intercept the prompt before it goes to the upstream model to inject context.
+**Configured Models:**
+```yaml
+model_list:
+  - model_name: brain-rag       # Single-pass RAG
+  - model_name: brain-react     # Multi-step reasoning
+  - model_name: gpt-4o-mini     # Direct OpenAI
+  - model_name: claude-3-haiku  # Direct Anthropic
+```
 
-### 3.3. Intelligence: Dify & LLMs
+Routes `brain-*` models to Context Driver at `http://context-driver:8000/v1`.
 
-**Role**: The brains of the operation.
+### 3.3. Context Driver
 
-- **External LLMs**: Direct access to SOTA models.
-- **Dify**: An "LLM App" builder. LiteLLM can route specific model names (e.g., `model: workflow-research`) to a Dify API endpoint, effectively triggering an agent or workflow instead of a raw completion.
+**Role**: The intelligence layer — RAG proxy, ReAct orchestration, and ingestion.
 
-### 3.4. Context Driver: The "Big Context"
+**Key Endpoints:**
+| Endpoint | Purpose |
+|----------|---------|
+| `POST /v1/chat/completions` | OpenAI-compatible chat (RAG or ReAct) |
+| `POST /v1/context` | Preview retrieved context |
+| `GET /tools/search` | Hybrid search API |
+| `GET /tools/facts` | Query extracted facts |
+| `GET /tools/rules` | Query extracted rules |
 
-**Role**: Manages the Source of Truth (SoT) and retrieval.
+### 3.4. Pseudo-Models
 
-#### 3.4.1. Source of Truth (SoT)
+#### brain-rag
+Single-pass retrieval-augmented generation:
+1. Receive query
+2. Hybrid search (semantic + BM25 + RRF)
+3. Inject context into system prompt
+4. Forward to real LLM
+5. Return with source citations
 
-- **Format**: Plain text files (Markdown) in a designated directory.
-- **Structure**: Obsidian-style capabilities (Wikilinks `[[Link]]`, Frontmatter YAML).
+#### brain-react
+Multi-step verified reasoning:
+1. Receive query
+2. Initialize DSPy ReAct agent
+3. Agent iteratively: **Think → Act → Observe**
+4. Verify draft answer against knowledge base
+5. Estimate confidence (0.0–1.0)
+6. Save successful investigations as artifacts
+7. Return answer with reasoning trace
 
-#### 3.4.2. Ingestion Pipeline
+### 3.5. DSPy ReAct Agent
 
-- **File Watcher**: Detects changes in real-time.
-- **Parser**: Extracts structure (headers, links) and content.
-- **Indexer**: Updates the Graph and Vector indices.
+**File:** `react_agent.py`
 
-#### 3.4.3. Data Structures
+```python
+class KnowledgeBaseReActAgent(dspy.Module):
+    def __init__(self, max_iters=7):
+        self.react = dspy.ReAct(
+            signature=AnswerQuestion,
+            tools=KNOWLEDGE_BASE_TOOLS,
+            max_iters=max_iters
+        )
+        self.verifier = KnowledgeBaseVerifier()
+```
 
-- **Graph Index**: Represents the explicit relationships between notes.
-  - *Nodes*: Files, Sections.
-  - *Edges*: Links, Parent/Child relationships.
-  - *Purpose*: Navigation-based retrieval (e.g., "Give me the context of the linked project").
-- **Vector Index**: Represents semantic meaning.
-  - *Purpose*: Similarity-based retrieval (e.g., "Find notes related to 'architecture'").
+**Available Tools:**
+- `search_knowledge_base(query)` — Hybrid search
+- `get_facts(subject, predicate)` — Query S-P-O triples
+- `get_rules(domain, severity)` — Query IF-THEN rules
+- `get_capsule(title)` — Document summary
+- `get_document_section(title, section)` — Extract section
+- `get_related_documents(title)` — Graph navigation
+- `list_documents(domain, intent)` — Browse knowledge base
+
+### 3.6. Neurosymbolic Primitives
+
+Extracted during ingestion via DSPy signatures:
+
+| Primitive | Schema | Purpose |
+|-----------|--------|---------|
+| **Capsule** | summary, key_points, intent, domain | High-level doc understanding |
+| **Fact** | subject, predicate, object, confidence | Entity relationships |
+| **Rule** | condition, action, severity | Executable constraints |
+
+### 3.7. Storage Layer
+
+**PostgreSQL with pgvector:**
+
+| Table | Contents |
+|-------|----------|
+| `brain.notes` | Documents with embeddings |
+| `brain.chunks` | Document chunks for fine-grained retrieval |
+| `brain.facts` | S-P-O triples |
+| `brain.rules` | IF-THEN rules |
+| `brain.capsules` | Document summaries |
+| `brain.edges` | Knowledge graph links |
 
 ## 4. Workflows
 
-### 4.1. Chat with Context
+### 4.1. Chat with RAG (brain-rag)
 
-1. User sends message: "How does the caching works in our app?"
-2. **Open WebUI** sends request to **LiteLLM**.
-3. **LiteLLM Hook** pauses the request.
-4. Hook sends query "caching works app" to **Context Driver**.
-5. **Context Driver** performs hybrid search:
-   - **Vector**: Finds `cache-strategy.md` and `redis-config.md`.
-   - **Graph**: Finds `app-architecture.md` (linked by `cache-strategy`).
-6. **Context Driver** returns a consolidated context block.
-7. **LiteLLM** prepends context to the system prompt.
-8. Request forwarded to **LLM**.
-9. Response flows back to User.
+```
+User: "How do I renew SSL certificates?"
+  ↓
+LiteLLM routes to Context Driver (brain-rag)
+  ↓
+Hybrid search finds: SSL_Certificates.md, HTTPS_Setup.md
+  ↓
+Context injected into system prompt
+  ↓
+Forward to gpt-4o-mini
+  ↓
+Response: "To renew SSL certificates... [Source 1: SSL_Certificates.md]"
+```
 
-## 5. Technology Stack Proposals
+### 4.2. Chat with ReAct Reasoning (brain-react)
 
-- **Language**: Rust or Python (for Context Driver).
-- **Core Libraries**:
-  - *LiteLLM* (Python).
-  - *FastEmbed* or *SentenceTransformers* (Embeddings).
-  - *Qdrant* or *Chroma* (Vector Store).
-  - *Petgraph* (Rust) or *NetworkX* (Python) (Graph).
+```
+User: "What happens if the database connection fails?"
+  ↓
+LiteLLM routes to Context Driver (brain-react)
+  ↓
+DSPy ReAct Agent initialized
+  ↓
+Thought: "I need to find failure handling rules for databases"
+Action: get_rules(domain="database", severity="critical")
+Observation: "RULE_DB_001: IF connection fails THEN page DBA"
+  ↓
+Thought: "Found the rule. Let me verify with search"
+Action: search_knowledge_base("database connection failure")
+Observation: "Found: Database_Operations.md..."
+  ↓
+Draft answer synthesized
+  ↓
+Verification: Correct ✓
+Confidence: 0.92
+  ↓
+Investigation artifact saved
+  ↓
+Response includes reasoning trace
+```
+
+## 5. Technology Stack
+
+| Component | Technology |
+|-----------|------------|
+| **UI** | Open WebUI |
+| **Gateway** | LiteLLM |
+| **Context Driver** | Python, FastAPI |
+| **Database** | PostgreSQL 16 + pgvector |
+| **Embeddings** | OpenAI text-embedding-3-large |
+| **Agent Framework** | DSPy |
+| **File Watching** | watchdog |
+| **Containerization** | Docker Compose |
+
+## 6. Directory Structure
+
+```
+context-engine/
+├── docker-compose.yml      # Service orchestration
+├── Makefile                # Developer commands
+├── config/
+│   └── litellm/config.yaml # Model routing
+├── context_driver/
+│   └── src/
+│       ├── main.py         # FastAPI app, RAG proxy
+│       ├── db.py           # Database + ingestion
+│       ├── react_agent.py  # DSPy ReAct agent
+│       └── dspy_tools.py   # Knowledge base tools
+└── volumes/
+    ├── raw/                # Source markdown files
+    ├── postgres/           # Database storage
+    └── redis/              # Cache storage
+```
