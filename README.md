@@ -36,6 +36,7 @@ LLM Response: "Private keys are stored in HashiCorp Vault
 - **Chunked Embeddings** - 500-token chunks for precise retrieval
 - **Vendor LLM Priority** - OpenAI → Anthropic → Ollama fallback
 - **Meta-prompt Bypass** - Internal prompts skip RAG for efficiency
+- **Adaptive RAG** - Automatically selects best search strategy (Semantic/Graph/Hybrid)
 
 ### Knowledge Base
 - **55+ Knowledge Articles** - Scrubbing Center Portal documentation
@@ -164,6 +165,7 @@ Each chunk gets its own embedding, enabling precise semantic matching.
 | `RAW_DIR`           | Raw document ingestion source      | `/app/raw`            |
 | `BRAIN_SUBDIR`      | Default sub-brain scope (optional) | - (full brain)        |
 | `OLLAMA_API_BASE`   | Ollama API endpoint                | `http://ollama:11434` |
+| `SEARCH_STRATEGY`   | Retrieval strategy (`adaptive`, `semantic`, `graph`) | `adaptive` |
 
 ### LLM Priority
 

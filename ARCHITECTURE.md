@@ -9,6 +9,7 @@
 - **Neurosymbolic Knowledge**: Extracts Facts (S-P-O triples), Rules (IF-THEN logic), and Capsules (summaries) from documents
 - **Multi-Mode Retrieval**: Semantic, keyword, hybrid, and graph-based search
 - **Agentic Reasoning**: ReAct agents that think, act, and verify answers
+- **Adaptive RAG**: Automatically classifies queries to choose the best strategy (Semantic vs Graph vs Hybrid)
 - **Pseudo-Models**: `brain-rag` (fast retrieval) and `brain-react` (verified reasoning)
 
 ## 2. High-Level Architecture
@@ -23,8 +24,14 @@ graph TD
     LiteLLM -->|Other models| ExternalLLMs[Cloud LLMs]
     
     subgraph "Context Driver"
-        RAGProxy[RAG Proxy] --> Retrieval[Hybrid Search]
-        ReactHandler[ReAct Handler] --> Agent[DSPy ReAct Agent]
+        RAGProxy[RAG Proxy] --> Router{Query Classifier}
+        Router -->|Semantic| Semantic[Vector Search]
+        Router -->|Graph| Graph[Graph-Hybrid 2.0]
+        Router -->|ReAct| ReactHandler[ReAct Handler]
+        
+        Graph -->|Hub Detection| Graph
+        
+        ReactHandler --> Agent[DSPy ReAct Agent]
         Agent --> Tools[Knowledge Tools]
     end
     
@@ -86,6 +93,22 @@ Routes `brain-*` models to Context Driver at `http://context-driver:8000/v1`.
 | `GET /tools/search` | Hybrid search API |
 | `GET /tools/facts` | Query extracted facts |
 | `GET /tools/rules` | Query extracted rules |
+
+### 3.4. Adaptive Context Retrieval
+
+The system now employs **Adaptive RAG** to optimize retrieval based on query intent:
+
+**1. Query Classification:**
+Incoming queries are classified into strategies:
+- **Semantic**: Simple fact lookups (e.g., "What is error 500?")
+- **Graph**: Multi-hop reasoning or relationship queries (e.g., "Who manages the project that uses logical replication?")
+- **Super Hybrid**: Complex queries requiring both exact facts and structural context.
+
+**2. Graph-Hybrid Search 2.0:**
+When "Graph" or "Super Hybrid" is selected, the system performs a sophisticated traversal:
+- **Wide Semantic Sweep**: Finds top 15 candidate chunks.
+- **Hub Detection (PageRank-lite)**: Identifies "Hub" documents that are heavily referenced by the candidates, even if they don't semantically match the query (e.g., a central "Glossary" or "Architecture Overview").
+- **Query-Aware Edge Filtering**: Uses an LLM to extract relevant relationship types from the query (e.g., "managed_by", "uses") to prefer relevant edges during traversal.
 
 ### 3.4. Pseudo-Models
 

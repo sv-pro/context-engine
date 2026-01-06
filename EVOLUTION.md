@@ -312,6 +312,29 @@ Recent commits hardened the system:
 
 ---
 
+
+## Chapter 8: Adaptive Intelligence
+
+**Commits: `c05fbc4` → `present`**
+
+**The Graph Wakes Up**
+
+> We realized that not all questions are created equal.
+> "What is error 500?" needs a dictionary.
+> "Who manages the project that uses logical replication?" needs a map.
+
+**Adaptive RAG** was born. The system now:
+1. **Classifies** every query (Semantic vs. Graph vs. Hybrid)
+2. **Routes** it to the optimal strategy
+3. **Adapts** retrieval depth based on complexity
+
+**Graph Search 2.0** brought a major upgrade: **"Hub Detection"**.
+Instead of just finding documents with matching keywords, the system now performs a local PageRank-style analysis during search to find "Hub" documents—central nodes that are heavily linked to by the search results, even if they don't contain the keyword themselves.
+
+*Example:* Searching for "connection timeout" might find 5 different error logs. The **Hub Detector** notices they all link to `Network_Troubleshooting_Guide.md`. The guide is retrieved, providing the *solution* context that was missing from the logs.
+
+---
+
 ## The Evolution Arc
 
 ```
