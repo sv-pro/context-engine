@@ -3,8 +3,6 @@
 ## Overview
 We have successfully transformed the Context Engine into a GraphRAG system. 
 
-## Changes
-1.  **Source/Graph Separation**:
 # Walkthrough - GraphRAG Entity Extraction & Multi-Hop Reasoning
 
 ## Core Components Implemented
@@ -109,6 +107,9 @@ The system performed **3 Rounds** of iterative retrieval:
 > 3. **Commander Voss** - Commander of Echo Station"
 
  This demonstrates **Graph Aggregation**: collecting a group of entities defined by a relationship in a parent node.
+
+## Artifacts Created
+-   `src/graph_navigator.py`: The CLI tool.
 -   `volumes/raw/graph_test.md`: Verification/Test data.
 -   `IMPLEMENTATION_PLAN.md`: Saved in project root.
 
